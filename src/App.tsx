@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from './lib/store';
 import { useRoute, go } from './lib/router';
 import SignIn, { restorePlace } from './screens/SignIn';
+import { supabase, configured } from './lib/supabase';
 import Setup from './screens/Setup';
 import Friends from './screens/Friends';
 import Friend from './screens/Friend';
@@ -24,6 +25,13 @@ export default function App() {
   // After signing in, go back to where the person was headed (an invite link, for example).
   useEffect(() => { if (session) restorePlace(); }, [session]);
 
+  // No sign-in screen: the first open quietly creates an account on this phone, and it stays signed in.
+  const [autoFailed, setAutoFailed] = useState(false);
+  useEffect(() => {
+    if (!ready || session || !configured) return;
+    void supabase.auth.signInAnonymously().then(({ error }) => { if (error) setAutoFailed(true); });
+  }, [ready, session]);
+
   // While the app is open, ring the 11:11 alarm on screen too (push covers when it's closed).
   useEffect(() => {
     let last = '';
@@ -41,8 +49,8 @@ export default function App() {
 
   if (!ready) return null;
   if (!session) {
-    // Keep an invite link in the address so it opens after sign-in.
-    return <SignIn />;
+    if (autoFailed || !configured) return <SignIn />;
+    return <main className="app" style={{ justifyContent: 'center' }}><p className="muted center">Opening Signed…</p></main>;
   }
   if (!me) return <main className="app"><p className="muted">Opening your desk…</p></main>;
   if (!me.onboarded && r0 !== 'setup') { go('setup/seal'); return null; }
