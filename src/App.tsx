@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './lib/store';
 import { useRoute, go } from './lib/router';
-import { applySealIcon } from './lib/icon';
 import SignIn from './screens/SignIn';
 import Setup from './screens/Setup';
 import Friends from './screens/Friends';
@@ -21,11 +20,6 @@ export default function App() {
   const { session, ready, me, friends, toast } = useStore();
   const [r0, r1] = useRoute();
   const [alarm, setAlarm] = useState(false);
-
-  // The tab icon and Home Screen icon are your own seal.
-  useEffect(() => {
-    if (me) void applySealIcon(me);
-  }, [me?.wax, me?.monogram, me?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // While the app is open, ring the 11:11 alarm on screen too (push covers when it's closed).
   useEffect(() => {

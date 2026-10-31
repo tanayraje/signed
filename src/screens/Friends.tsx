@@ -26,7 +26,7 @@ export default function Friends() {
 
   return (
     <main className="app">
-      <div className="top"><div className="grow"><Wordmark me={me} /></div></div>
+      <div className="top"><div className="grow"><Wordmark /></div></div>
       <h1>Your friends</h1>
       {friends.length === 0 && (
         <div className="stone stack center" style={{ padding: 24, alignItems: 'center' }}>

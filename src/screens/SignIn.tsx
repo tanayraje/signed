@@ -20,7 +20,7 @@ export default function SignIn() {
   return (
     <main className="app" style={{ justifyContent: 'center' }}>
       <div className="center stack" style={{ alignItems: 'center', gap: 6 }}>
-        <div className="wordmark"><span style={{ fontSize: 76 }}>Signed</span><img src="/assets/wax-oxblood.png" alt="" width={34} height={34} style={{ marginBottom: 12 }} /></div>
+        <div className="wordmark"><span style={{ fontSize: 76 }}>Signed</span><img src="/assets/logo-seal.png" alt="" width={38} height={38} style={{ marginBottom: 10 }} /></div>
         <p className="muted">Letters between friends, carried by owls.</p>
       </div>
       {!configured && <p className="card small" style={{ padding: 14 }}>This build has no Supabase project yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then rebuild.</p>}

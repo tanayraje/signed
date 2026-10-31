@@ -106,11 +106,13 @@ export function Nav({ on }: { on: 'friends' | 'wall' | 'seals' | 'profile' }) {
   );
 }
 
-export function Wordmark({ me, size = 46 }: { me: Profile; size?: number }) {
+/** The Signed wordmark: the name, closed with the Signed seal. */
+export function Wordmark({ size = 46 }: { size?: number }) {
+  const s = Math.round(size * 0.46);
   return (
     <div className="wordmark">
       <span style={{ fontSize: size }}>Signed</span>
-      <Seal p={me} size={Math.round(size * 0.44)} />
+      <img src="/assets/logo-seal.png" alt="" width={s} height={s} style={{ marginBottom: Math.round(size * 0.15) }} />
     </div>
   );
 }
