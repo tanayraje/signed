@@ -8,22 +8,9 @@ import { useStore } from '../lib/store';
 /** A pressed wax seal: real wax image with the person's monogram embossed into it. */
 const ON_TOP = ['gold', 'glitter', 'twigs', 'petals'];
 
-/** Marks that can be pressed into the wax instead of letters. Filled shapes plus round strokes, 24 unit box. */
-const L = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
-export const MARKS: Record<string, [string, ReactNode]> = {
-  moon: ['Moon', <path d="M15.5 3.2a8.8 8.8 0 1 0 5.6 15.4A7.2 7.2 0 0 1 15.5 3.2z" />],
-  star: ['Star', <path d="M12 2.6l2.75 5.95 6.5.75-4.85 4.4 1.35 6.4L12 16.85 6.25 20.1l1.35-6.4L2.75 9.3l6.5-.75z" />],
-  sun: ['Sun', <><circle cx="12" cy="12" r="4.4" /><path {...L} d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" /></>],
-  comet: ['Comet', <><circle cx="16.6" cy="7.4" r="3.4" /><path {...L} d="M13.6 10.4L3.8 20.2M12.2 7.6L6.6 13.2M16.4 11.8l-5.6 5.6" /></>],
-  leaf: ['Leaf', <><path d="M4.5 19.5C4.5 10.5 10 4 20.5 3.5c-.5 10.5-7 16-16 16z" /><path d="M5.5 18.5L14 10" fill="none" stroke="rgba(255,255,255,.25)" strokeWidth="1.2" strokeLinecap="round" /></>],
-  lotus: ['Lotus', <><path d="M12 3.6c2.6 3.2 2.6 8.4 0 12.6c-2.6-4.2-2.6-9.4 0-12.6z" /><path d="M11.2 16.4C8 15.6 4.8 12.6 3.8 8.4c3.4.2 6.6 3.4 7.4 8zM12.8 16.4c3.2-.8 6.4-3.8 7.4-8c-3.4.2-6.6 3.4-7.4 8z" /><path {...L} d="M4.5 19.4h15" /></>],
-  feather: ['Feather', <><path d="M20 3.6C13 3.8 7.6 8.8 7.6 15.4v1.6l1.4 1.4h1.6C17.2 18.4 20.2 11 20 3.6z" /><path {...L} d="M16.4 7.6L4 20" /></>],
-  key: ['Key', <><circle {...L} cx="7.6" cy="12" r="3.8" /><path {...L} d="M11.4 12h9.4M17.6 12v3.2M20.8 12v2.4" /></>]
-};
-
-function MarkIcon({ k }: { k: string }) {
-  return <svg className="mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{MARKS[k][1]}</svg>;
-}
+/** Marks that can be pressed into the wax instead of letters (pre-rendered reliefs that sit on any wax). */
+export const MARKS: [string, string][] = [['owl', 'Owl'], ['letter', 'Letter'], ['quill', 'Quill and ink'], ['comet', 'Comet'], ['moon', 'Moon and stars'], ['sprig', 'Forget-me-nots'], ['rose', 'Rose'], ['key', 'Key']];
+const isMark = (k?: string | null) => !!k && MARKS.some(([m]) => m === k);
 
 export function Seal({ p, size = 56, label }: { p: Pick<Profile, 'wax' | 'monogram' | 'name'> & Partial<Pick<Profile, 'mixins' | 'edge' | 'mark'>>; size?: number; label?: string }) {
   const mono = (p.monogram || p.name.slice(0, 1) || '·').toUpperCase();
@@ -31,10 +18,10 @@ export function Seal({ p, size = 56, label }: { p: Pick<Profile, 'wax' | 'monogr
   return (
     <span className="seal" role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}
       style={{ width: size, height: size, fontSize: size * (mono.length > 1 ? 0.24 : 0.32) }}>
-      {mix.includes('ribbon') && <img src="/assets/mix-ribbon.png" alt="" width={size} height={size} />}
+      {mix.includes('ribbon') && <img className="ribbon" src={`/assets/mix-ribbon-${p.wax}.png`} alt="" />}
       <img src={`/assets/wax-${p.wax}${p.edge === 'clean' ? '-clean' : ''}.png`} alt="" width={size} height={size} />
       {ON_TOP.filter((m) => mix.includes(m)).map((m) => <img key={m} src={`/assets/mix-${m}.png`} alt="" width={size} height={size} />)}
-      <span className="mono">{p.mark && MARKS[p.mark] ? <MarkIcon k={p.mark} /> : <span>{mono}</span>}</span>
+      <span className="mono">{isMark(p.mark) ? <img src={`/assets/mark-${p.mark}.png`} alt="" /> : <span>{mono}</span>}</span>
     </span>
   );
 }

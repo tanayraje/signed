@@ -23,14 +23,14 @@ export function SealDesigner({ draft, set }: { draft: Profile; set: (p: Partial<
       <section className="stack"><h2>Pressed into the centre</h2>
         <div className="chips">
           <button className={`chip${!draft.mark ? ' on' : ''}`} aria-pressed={!draft.mark} onClick={() => set({ mark: null })}>Letters</button>
-          <button className={`chip${draft.mark ? ' on' : ''}`} aria-pressed={!!draft.mark} onClick={() => set({ mark: draft.mark || 'moon' })}>A mark</button>
+          <button className={`chip${draft.mark ? ' on' : ''}`} aria-pressed={!!draft.mark} onClick={() => set({ mark: draft.mark || 'owl' })}>A mark</button>
         </div>
         {!draft.mark ? (
           <input id="mono" type="text" aria-label="Pressed letters" value={draft.monogram} maxLength={2} onChange={(e) => set({ monogram: e.target.value.toUpperCase() })} placeholder={draft.name.slice(0, 1).toUpperCase() || 'T'} />
         ) : (
-          <div className="mark-pick">{Object.entries(MARKS).map(([k, [label, art]]) => (
+          <div className="mark-pick">{MARKS.map(([k, label]) => (
             <button key={k} className={draft.mark === k ? 'on' : ''} aria-label={label} aria-pressed={draft.mark === k} onClick={() => set({ mark: k })}>
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{art}</svg>
+              <Seal p={{ ...draft, mixins: [], mark: k }} size={64} />
             </button>
           ))}</div>
         )}
