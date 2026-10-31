@@ -29,6 +29,11 @@ export function SealDesigner({ draft, set }: { draft: Profile; set: (p: Partial<
           <button key={k} className={`sw${draft.wax === k ? ' on' : ''}`} style={swatch(hex)} aria-label={label} aria-pressed={draft.wax === k} onClick={() => set({ wax: k })} />
         ))}</div>
       </section>
+      <section className="stack"><h2>Edge</h2>
+        <div className="chips">{([['uneven', 'Poured'], ['clean', 'Pressed clean']] as const).map(([k, label]) => (
+          <button key={k} className={`chip${(draft.edge ?? 'uneven') === k ? ' on' : ''}`} aria-pressed={(draft.edge ?? 'uneven') === k} onClick={() => set({ edge: k })}>{label}</button>
+        ))}</div>
+      </section>
       <section className="stack"><h2>Pressed into the wax</h2>
         <div className="chips">{MIXINS.map(([k, label]) => {
           const on = draft.mixins.includes(k);
@@ -81,7 +86,7 @@ export default function Setup({ step }: { step: 'seal' | 'owl' }) {
         <SealDesigner draft={draft} set={set} />
         <div className="foot">
           <button className="btn wax" disabled={!draft.name.trim()} onClick={async () => {
-            await saveMe({ name: draft.name.trim(), monogram: draft.monogram, wax: draft.wax, mixins: draft.mixins });
+            await saveMe({ name: draft.name.trim(), monogram: draft.monogram, wax: draft.wax, mixins: draft.mixins, edge: draft.edge ?? 'uneven' });
             go(me.onboarded ? 'profile' : 'setup/owl');
           }}>{me.onboarded ? 'Save my seal' : 'Press your seal'}</button>
         </div>

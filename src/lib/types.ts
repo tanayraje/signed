@@ -8,6 +8,7 @@ export interface Profile {
   monogram: string;
   wax: Wax;
   mixins: string[];
+  edge: 'uneven' | 'clean';
   plume: Plume;
   eye: Eye;
   owl_name: string;

@@ -6,13 +6,18 @@ import { go } from '../lib/router';
 import { useStore } from '../lib/store';
 
 /** A pressed wax seal: real wax image with the person's monogram embossed into it. */
-export function Seal({ p, size = 56, label }: { p: Pick<Profile, 'wax' | 'monogram' | 'name'>; size?: number; label?: string }) {
+const ON_TOP = ['gold', 'glitter', 'twigs', 'petals'];
+
+export function Seal({ p, size = 56, label }: { p: Pick<Profile, 'wax' | 'monogram' | 'name'> & Partial<Pick<Profile, 'mixins' | 'edge'>>; size?: number; label?: string }) {
   const mono = (p.monogram || p.name.slice(0, 1) || '·').toUpperCase();
+  const mix = p.mixins ?? [];
   return (
     <span className="seal" role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}
       style={{ width: size, height: size, fontSize: size * (mono.length > 1 ? 0.24 : 0.32) }}>
-      <img src={`/assets/wax-${p.wax}.png`} alt="" width={size} height={size} />
-      <span className="mono">{mono}</span>
+      {mix.includes('ribbon') && <img src="/assets/mix-ribbon.png" alt="" width={size} height={size} />}
+      <img src={`/assets/wax-${p.wax}${p.edge === 'clean' ? '-clean' : ''}.png`} alt="" width={size} height={size} />
+      {ON_TOP.filter((m) => mix.includes(m)).map((m) => <img key={m} src={`/assets/mix-${m}.png`} alt="" width={size} height={size} />)}
+      <span className="mono"><span>{mono}</span></span>
     </span>
   );
 }

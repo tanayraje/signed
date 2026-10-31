@@ -67,9 +67,10 @@ textarea { resize: vertical; line-height: 1.5 }
 .wordmark .seal { margin-bottom: 7px }
 
 .seal { position: relative; display: inline-block; flex: none; line-height: 0 }
-.seal img { width: 100%; height: 100% }
+.seal img { position: absolute; inset: 0; width: 100%; height: 100% }
 .seal .mono { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-style: italic; font-weight: 600; line-height: 1;
-  color: rgba(0, 0, 0, .34); text-shadow: 0 1px 0 rgba(255, 255, 255, .22), 0 -1px 1px rgba(0, 0, 0, .25); transform: translateY(-2%) }
+  color: rgba(0, 0, 0, .34); text-shadow: 0 1px 0 rgba(255, 255, 255, .22), 0 -1px 1px rgba(0, 0, 0, .25) }
+.seal .mono span { display: block; transform: translateY(var(--mono-y, .03em)) }
 .owl { display: block; flex: none }
 .stamp { flex: none }
 
