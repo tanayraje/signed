@@ -1,3 +1,16 @@
 {
-  "rewrites": [{ "source": "/((?!assets/|sw.js|manifest.webmanifest|workbox-).*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/privacy",
+      "destination": "/privacy.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/((?!assets/|sw.js|manifest.webmanifest|workbox-|privacy|terms).*)",
+      "destination": "/index.html"
+    }
+  ]
 }
