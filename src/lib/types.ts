@@ -9,6 +9,7 @@ export interface Profile {
   wax: Wax;
   mixins: string[];
   edge: 'uneven' | 'clean';
+  mark: string | null;
   plume: Plume;
   eye: Eye;
   owl_name: string;

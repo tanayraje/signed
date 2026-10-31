@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
 import type { Eye, Plume, Profile, Wax } from '../lib/types';
-import { Owl, Seal, Top } from '../components/bits';
+import { MARKS, Owl, Seal, Top } from '../components/bits';
 import { go } from '../lib/router';
 
 export const WAX: [Wax, string, string][] = [['oxblood', 'Oxblood', '#96261F'], ['forest', 'Forest', '#2C5C4E'], ['ink', 'Ink blue', '#2C3A68'], ['mustard', 'Mustard', '#B48028'], ['plum', 'Plum', '#5C2C50'], ['soot', 'Soot', '#302A26']];
@@ -20,10 +20,21 @@ export function SealDesigner({ draft, set }: { draft: Profile; set: (p: Partial<
         <input id="name" type="text" value={draft.name} maxLength={30} autoComplete="given-name"
           onChange={(e) => set({ name: e.target.value })} placeholder="How friends know you" />
       </div>
-      <div className="stack">
-        <label htmlFor="mono"><h2>Pressed letters</h2></label>
-        <input id="mono" type="text" value={draft.monogram} maxLength={2} onChange={(e) => set({ monogram: e.target.value.toUpperCase() })} placeholder={draft.name.slice(0, 1).toUpperCase() || 'T'} />
-      </div>
+      <section className="stack"><h2>Pressed into the centre</h2>
+        <div className="chips">
+          <button className={`chip${!draft.mark ? ' on' : ''}`} aria-pressed={!draft.mark} onClick={() => set({ mark: null })}>Letters</button>
+          <button className={`chip${draft.mark ? ' on' : ''}`} aria-pressed={!!draft.mark} onClick={() => set({ mark: draft.mark || 'moon' })}>A mark</button>
+        </div>
+        {!draft.mark ? (
+          <input id="mono" type="text" aria-label="Pressed letters" value={draft.monogram} maxLength={2} onChange={(e) => set({ monogram: e.target.value.toUpperCase() })} placeholder={draft.name.slice(0, 1).toUpperCase() || 'T'} />
+        ) : (
+          <div className="mark-pick">{Object.entries(MARKS).map(([k, [label, art]]) => (
+            <button key={k} className={draft.mark === k ? 'on' : ''} aria-label={label} aria-pressed={draft.mark === k} onClick={() => set({ mark: k })}>
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{art}</svg>
+            </button>
+          ))}</div>
+        )}
+      </section>
       <section className="stack"><h2>Wax</h2>
         <div className="swatches">{WAX.map(([k, label, hex]) => (
           <button key={k} className={`sw${draft.wax === k ? ' on' : ''}`} style={swatch(hex)} aria-label={label} aria-pressed={draft.wax === k} onClick={() => set({ wax: k })} />
@@ -86,7 +97,7 @@ export default function Setup({ step }: { step: 'seal' | 'owl' }) {
         <SealDesigner draft={draft} set={set} />
         <div className="foot">
           <button className="btn wax" disabled={!draft.name.trim()} onClick={async () => {
-            await saveMe({ name: draft.name.trim(), monogram: draft.monogram, wax: draft.wax, mixins: draft.mixins, edge: draft.edge ?? 'uneven' });
+            await saveMe({ name: draft.name.trim(), monogram: draft.monogram, wax: draft.wax, mixins: draft.mixins, edge: draft.edge ?? 'uneven', mark: draft.mark ?? null });
             go(me.onboarded ? 'profile' : 'setup/owl');
           }}>{me.onboarded ? 'Save my seal' : 'Press your seal'}</button>
         </div>
