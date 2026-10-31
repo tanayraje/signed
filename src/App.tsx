@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './lib/store';
 import { useRoute, go } from './lib/router';
-import SignIn from './screens/SignIn';
+import SignIn, { restorePlace } from './screens/SignIn';
 import Setup from './screens/Setup';
 import Friends from './screens/Friends';
 import Friend from './screens/Friend';
@@ -20,6 +20,9 @@ export default function App() {
   const { session, ready, me, friends, toast } = useStore();
   const [r0, r1] = useRoute();
   const [alarm, setAlarm] = useState(false);
+
+  // After signing in, go back to where the person was headed (an invite link, for example).
+  useEffect(() => { if (session) restorePlace(); }, [session]);
 
   // While the app is open, ring the 11:11 alarm on screen too (push covers when it's closed).
   useEffect(() => {
