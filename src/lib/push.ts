@@ -19,8 +19,12 @@ export async function enablePush(userId: string): Promise<string> {
   if (!pushSupported()) {
     return isInstalled() ? 'This device does not support notifications.' : 'Add Signed to your Home Screen first, then turn on notifications.';
   }
-  const key = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
-  if (!key) return 'Notifications are not set up on the server yet.';
+  let key = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+  if (!key) {
+    const { data } = await supabase.rpc('vapid_public_key');
+    key = (data as string | null) ?? undefined;
+  }
+  if (!key) return 'Notifications are still being set up. Try again in a minute.';
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return 'Notifications are off. You can turn them on in your phone settings.';
   const reg = await navigator.serviceWorker.ready;

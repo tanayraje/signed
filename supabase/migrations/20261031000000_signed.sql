@@ -1,6 +1,6 @@
 -- Signed: letters between friends, carried by owls.
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 -- People ---------------------------------------------------------------
 create table public.profiles (
@@ -51,7 +51,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 create table public.invites (
-  code text primary key default encode(gen_random_bytes(6), 'hex'),
+  code text primary key default encode(extensions.gen_random_bytes(6), 'hex'),
   from_user uuid not null references public.profiles on delete cascade,
   used_by uuid references public.profiles,
   created_at timestamptz not null default now()
@@ -87,7 +87,7 @@ create index letters_sender_idx on public.letters (sender, sent_at);
 create index letters_undelivered_idx on public.letters (arrive_at) where notified = false;
 
 create or replace function public.haversine_km(lat1 float8, lon1 float8, lat2 float8, lon2 float8) returns float8
-language sql immutable as $$
+language sql immutable set search_path = public as $$
   select 2 * 6371 * asin(sqrt(
     power(sin(radians(lat2 - lat1) / 2), 2) +
     cos(radians(lat1)) * cos(radians(lat2)) * power(sin(radians(lon2 - lon1) / 2), 2)));

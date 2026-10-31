@@ -6,11 +6,28 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import webpush from 'npm:web-push@3.6.7';
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-webpush.setVapidDetails(
-  Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@example.com',
-  Deno.env.get('VAPID_PUBLIC_KEY')!,
-  Deno.env.get('VAPID_PRIVATE_KEY')!
-);
+
+async function secret(key: string): Promise<string | null> {
+  const { data } = await supabase.rpc('get_app_secret', { k: key });
+  return (data as string | null) ?? null;
+}
+
+// Push keys live in the database. The first run makes a pair, so nobody has to copy keys around.
+let pushReady: Promise<void> | null = null;
+function setupPush() {
+  pushReady ??= (async () => {
+    let pub = Deno.env.get('VAPID_PUBLIC_KEY') ?? (await secret('vapid_public'));
+    let priv = Deno.env.get('VAPID_PRIVATE_KEY') ?? (await secret('vapid_private'));
+    if (!pub || !priv) {
+      const keys = webpush.generateVAPIDKeys();
+      pub = keys.publicKey; priv = keys.privateKey;
+      await supabase.rpc('set_app_secret', { k: 'vapid_public', v: pub });
+      await supabase.rpc('set_app_secret', { k: 'vapid_private', v: priv });
+    }
+    webpush.setVapidDetails(Deno.env.get('VAPID_SUBJECT') ?? 'mailto:hello@signed.app', pub, priv);
+  })();
+  return pushReady;
+}
 
 type Profile = { id: string; name: string; owl_name: string; tz: string };
 
@@ -96,9 +113,9 @@ async function wishAlarm() {
 
 Deno.serve(async (req) => {
   const auth = req.headers.get('Authorization') ?? '';
-  if (auth !== `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` && auth !== `Bearer ${Deno.env.get('TICK_SECRET')}`) {
-    return new Response('Not allowed', { status: 401 });
-  }
+  const tick = Deno.env.get('TICK_SECRET') ?? (await secret('tick'));
+  if (!tick || auth !== `Bearer ${tick}`) return new Response('Not allowed', { status: 401 });
+  await setupPush();
   const [delivered, posted, wished] = await Promise.all([deliver(), postDay(), wishAlarm()]);
   return Response.json({ delivered, posted, wished });
 });

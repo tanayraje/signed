@@ -1,12 +1,9 @@
--- Run once in the Supabase SQL editor after deploying the `tick` function.
--- Replace YOUR-PROJECT and YOUR-TICK-SECRET (the same value you set as the TICK_SECRET function secret).
-create extension if not exists pg_cron;
-create extension if not exists pg_net;
-
+-- Run once in the SQL editor (replace YOUR-PROJECT with your project ref).
+-- The secret is read from the database, so nothing needs copying.
 select cron.schedule('signed-tick', '* * * * *', $$
   select net.http_post(
     url := 'https://YOUR-PROJECT.supabase.co/functions/v1/tick',
-    headers := '{"Authorization": "Bearer YOUR-TICK-SECRET", "Content-Type": "application/json"}'::jsonb,
+    headers := jsonb_build_object('Authorization', 'Bearer ' || public.get_app_secret('tick'), 'Content-Type', 'application/json'),
     body := '{}'::jsonb
   );
 $$);
