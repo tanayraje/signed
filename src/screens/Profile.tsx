@@ -1,38 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
-import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { ago } from '../lib/format';
 import { enablePush, isInstalled } from '../lib/push';
 import type { Profile as P } from '../lib/types';
 import { Nav, Seal, signOut } from '../components/bits';
 import { OwlEditor } from './Setup';
-
-/** Your account lives on this phone. Adding an email lets you open it on a new phone later. */
-function KeepAccount() {
-  const { say } = useStore();
-  const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
-  return (
-    <div className="card stack" style={{ padding: '14px 16px', gap: 10 }}>
-      <span className="stack" style={{ gap: 0 }}>
-        <span>Keep your letters if you change phones</span>
-        <span className="small muted">Add your email once. You won't need it to open Signed, only to move to a new phone.</span>
-      </span>
-      {sent ? <p className="small">Check your email and tap the link to confirm. You can then close that tab.</p> : (
-        <form className="row" onSubmit={async (e) => {
-          e.preventDefault();
-          const { error } = await supabase.auth.updateUser({ email: email.trim() });
-          if (error) say('That email did not save. Check it and try again.'); else setSent(true);
-        }}>
-          <label htmlFor="keepEmail" className="sr-only" style={{ position: 'absolute', left: -9999 }}>Email</label>
-          <input id="keepEmail" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-          <button className="chip">Save</button>
-        </form>
-      )}
-    </div>
-  );
-}
 
 export default function Profile() {
   const { me, friends, saveMe, saveFriendSettings, session, say } = useStore();
@@ -97,10 +70,9 @@ export default function Profile() {
           <input type="checkbox" checked={draft.quick_flights} onChange={(e) => set({ quick_flights: e.target.checked })} />
         </label>
       </div>
-      {session!.user.is_anonymous && <KeepAccount />}
       <div className="chips">
         <button className="chip" onClick={() => go('wish')}>Preview the 11:11 alarm</button>
-        {!session!.user.is_anonymous && <button className="chip" onClick={() => void signOut()}>Sign out</button>}
+        <button className="chip" onClick={() => void signOut()}>Sign out</button>
       </div>
       <Nav on="profile" />
     </main>
