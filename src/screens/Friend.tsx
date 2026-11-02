@@ -78,13 +78,13 @@ export default function Friend({ id }: { id: string }) {
       : <FlightMap zoom from={[me.last_lat, me.last_lon!]} to={[p.last_lat, p.last_lon!]} fromLabel="You" toLabel={p.name} />
   ) : null;
   const mapCard = mapEl && (
-    <button className="card stack map-card" onClick={() => flight && go(`flight/${flight.l.id}`)} disabled={!flight} aria-label={flight ? 'Watch the flight' : `Map: ${dist?.toLocaleString()} km between you`}>
+    <div className="card stack map-card">
       {mapEl}
-      <span className="row" style={{ padding: '10px 14px 12px' }}>
+      <button className="row map-cap" onClick={() => flight && go(`flight/${flight.l.id}`)} disabled={!flight}>
         <span className="grow" style={{ fontWeight: 600 }}>{dist != null ? `${dist.toLocaleString()} km between you` : 'Between you'}</span>
-        <span className="small muted">{flight ? 'Tap to watch' : 'as the crow flies'}</span>
-      </span>
-    </button>
+        <span className="small muted">{flight ? 'Watch the flight' : 'as the crow flies'}</span>
+      </button>
+    </div>
   );
 
   return (

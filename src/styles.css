@@ -114,7 +114,12 @@ textarea { resize: vertical; line-height: 1.5 }
 
 /* map */
 .map { position: relative; width: 100%; aspect-ratio: 390/560; max-width: 100%; border-radius: 14px; overflow: hidden; background: #E9E4D8 }
+.map-zoom { position: absolute; inset: 0; transform-origin: 0 0; will-change: transform }
 .map-in { position: absolute }
+.map .pin { transform: translate(-50%, calc(-100% - 10px / var(--zs, 1))) scale(calc(1 / var(--zs, 1))); transform-origin: 50% 100% }
+.map-zoom-btns { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 3 }
+.map-zoom-btns button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(43, 38, 34, .15); background: rgba(251, 246, 238, .92); color: #2B2622; font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(43, 38, 34, .15); cursor: pointer; padding: 0 }
+.map-zoom-btns button:disabled { opacity: .4 }
 .map img.base { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover }
 .map svg { position: absolute; inset: 0; width: 100%; height: 100% }
 .map .flyer { position: absolute; width: 12%; transform: translate(-50%, -50%); transition: left 1s linear, top 1s linear }
@@ -123,9 +128,14 @@ textarea { resize: vertical; line-height: 1.5 }
 .bar i { display: block; height: 3px; background: var(--wax) }
 
 /* wall */
-.wall { position: relative; background: #E9E6E0 url(/assets/plaster.jpg) center/cover; border-radius: 12px; padding: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 14px; min-height: 280px; box-shadow: inset 0 1px 6px rgba(0, 0, 0, .12) }
+.wall { position: relative; background: #B88A55 url(/assets/cork.jpg) center/370px; border-radius: 6px; padding: 22px 16px 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 14px; min-height: 300px;
+  border: 10px solid #5B4330; border-image: linear-gradient(135deg, #7B5A3E, #4A3524 40%, #6C4E35 70%, #3E2C1E) 1;
+  box-shadow: inset 0 2px 8px rgba(40, 22, 8, .45), inset 0 0 0 1px rgba(255, 230, 190, .12), 0 6px 18px rgba(43, 30, 18, .22) }
+.wall > p { color: #3A2614; background: rgba(251, 246, 238, .85); border-radius: 10px; align-self: center; padding: 18px 14px !important; box-shadow: 0 2px 6px rgba(40, 22, 8, .2) }
 .pinned { position: relative; color: #2B2622; border: 0; background: none; padding: 0; text-align: left }
-.tack { position: absolute; left: 50%; top: -6px; width: 13px; height: 13px; border-radius: 7px; transform: translateX(-50%); box-shadow: 1px 3px 3px rgba(0, 0, 0, .35); z-index: 2 }
+.tack { position: absolute; left: 50%; top: -8px; width: 17px; height: 17px; border-radius: 50%; transform: translateX(-50%); box-shadow: 2px 4px 4px rgba(30, 14, 4, .45), inset -2px -2px 3px rgba(0, 0, 0, .25); z-index: 2 }
+.tack::after { content: ''; position: absolute; left: 4px; top: 3px; width: 5px; height: 4px; border-radius: 50%; background: rgba(255, 255, 255, .55) }
+.pinned > .polaroid, .pinned > .mini { box-shadow: 0 1px 1px rgba(0, 0, 0, .25), 3px 10px 16px rgba(40, 20, 6, .38) }
 
 /* calendar */
 .cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center }
@@ -235,7 +245,8 @@ body.ench .ench-switch .knob { transform: translateX(40px); background: var(--go
 .app:has(> .nav) { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) }
 body:has(.app > .nav) .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)) }
 .map-card { padding: 0; overflow: hidden; border: 1px solid var(--line); text-align: left; color: inherit; width: 100% }
-.map-card:disabled { opacity: 1; cursor: default }
+.map-cap { padding: 10px 14px 12px; border: 0; background: none; color: inherit; text-align: left; width: 100%; font: inherit; cursor: pointer }
+.map-cap:disabled { opacity: 1; cursor: default }
 .map-card .map { border-radius: 0 }
 
 /* press-and-hold gestures (lifting a seal, the 11:11 wish) must not select text or pop up image menus.
