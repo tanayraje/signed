@@ -48,3 +48,6 @@ end $$;
 revoke execute on function public.test_friend_tick() from public, anon, authenticated;
 
 select cron.schedule('signed-test-friend', '* * * * *', 'select public.test_friend_tick()');
+
+-- (Later revision, also applied live as TEST_test_friend_answers: Juniper answers the questions you ask.
+--  The live function body includes an answers jsonb built from your letter's question and question scraps.)
