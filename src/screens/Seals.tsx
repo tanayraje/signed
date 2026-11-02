@@ -26,7 +26,7 @@ export default function Seals() {
     cells.push(
       <div key={d} className="day">
         {who ? (
-          <button onClick={() => go(`read/${l!.id}`)} aria-label={`${who.name}, ${d}`} style={{ border: 0, background: 'none', padding: 0, position: 'absolute', inset: 0 }}>
+          <button onClick={() => go(`read/${l!.id}/seals`)} aria-label={`${who.name}, ${d}`} style={{ border: 0, background: 'none', padding: 0, position: 'absolute', inset: 0 }}>
             <Seal p={who} size={40} />
           </button>
         ) : d}

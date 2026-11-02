@@ -20,7 +20,7 @@ export default function Wall() {
         {pinned.map((l, i) => {
           const f = friend(l.sender)?.profile;
           return (
-            <button key={l.id} className="pinned" style={{ transform: `rotate(${((i % 3) - 1) * 3}deg)` }} onClick={() => go(`read/${l.id}`)}>
+            <button key={l.id} className="pinned" style={{ transform: `rotate(${((i % 3) - 1) * 3}deg)` }} onClick={() => go(`read/${l.id}/wall`)}>
               <span className="tack" style={{ background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,.5), ${TACKS[i % 4]} 70%)` }} />
               {l.photo_path ? (
                 <figure className="polaroid" style={{ width: '100%' }}><MediaImg path={l.photo_path} alt={l.photo_caption || 'Polaroid'} /><figcaption>{l.photo_caption}</figcaption></figure>
@@ -52,7 +52,7 @@ export default function Wall() {
               const f = friend(l.sender)?.profile;
               return (
                 <li key={l.id}>
-                  <button className="item" onClick={() => go(`read/${l.id}`)}>
+                  <button className="item" onClick={() => go(`read/${l.id}/wall`)}>
                     {f && <Seal p={f} size={36} />}
                     <span className="grow">{f?.name ?? 'A friend'}{l.kind === 'bundle' ? ', a bundle of scraps' : ''}</span>
                     <span className="small muted">{longDate(l.sent_at)}</span>

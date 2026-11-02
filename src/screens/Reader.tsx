@@ -6,7 +6,8 @@ import { longDate } from '../lib/format';
 import { Icon, Polaroid, Seal, useSigned } from '../components/bits';
 import type { Letter } from '../lib/types';
 
-export default function Reader({ id }: { id: string }) {
+/** `from` is the page the letter was opened from (wall, seals); closing goes back there. */
+export default function Reader({ id, from }: { id: string; from?: string }) {
   const { me, letters, friend, session, refresh, say } = useStore();
   const l = letters.find((x) => x.id === id);
   if (!me || !l) return null;
@@ -26,7 +27,7 @@ export default function Reader({ id }: { id: string }) {
     <div className="slate">
       <main className="app">
         <div className="top">
-          <button className="icon" onClick={() => go(`friend/${other.id}`)} aria-label="Close letter">{Icon.close}</button>
+          <button className="icon" onClick={() => go(from === 'wall' || from === 'seals' ? from : `friend/${other.id}`)} aria-label="Close letter">{Icon.close}</button>
           <span className="grow muted">{fromMe ? `To ${other.name}` : `From ${other.name}`}, {longDate(l.sent_at)}</span>
         </div>
         <article className={`sheet unfold stack${l.enchanted ? ' parch' : ''}`} style={{ gap: 16, minHeight: '60vh' }}>

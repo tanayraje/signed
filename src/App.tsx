@@ -20,7 +20,7 @@ import Cutter from './screens/Cutter';
 
 export default function App() {
   const { session, ready, me, friends, toast } = useStore();
-  const [r0, r1] = useRoute();
+  const [r0, r1, r2] = useRoute();
   const [alarm, setAlarm] = useState(false);
 
   // After signing in, go back to where the person was headed (an invite link, for example).
@@ -58,7 +58,7 @@ export default function App() {
     case 'write': screen = <Compose id={r1} />; break;
     case 'flight': screen = <Flight id={r1} />; break;
     case 'open': screen = <Opening id={r1} />; break;
-    case 'read': screen = <Reader id={r1} />; break;
+    case 'read': screen = <Reader id={r1} from={r2} />; break;
     case 'wall': screen = <Wall />; break;
     case 'seals': screen = <Seals />; break;
     case 'stamps': screen = <Stamps />; break;
