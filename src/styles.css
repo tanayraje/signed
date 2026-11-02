@@ -256,3 +256,11 @@ input, textarea, [contenteditable], .selectable { -webkit-user-select: text; use
 .selectable { -webkit-touch-callout: default }
 img, svg { -webkit-touch-callout: none; -webkit-user-drag: none }
 .seal img, .cutstamp img, .cutstamp svg, .owl, .flyer, .map img, .wordmark img, .press * { pointer-events: none }
+
+/* pocket scraps can be taken out */
+.scrap { position: relative }
+.scrap > .qcard, .scrap > .mini { width: 100% }
+.scrap-x { position: absolute; top: -10px; right: -10px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(43, 38, 34, .15); background: #FBF8F2; color: #5E554C;
+  display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 6px rgba(43, 38, 34, .2); cursor: pointer; z-index: 2 }
+.scrap-x svg { width: 14px; height: 14px }
+.scrap-x::before { content: ''; position: absolute; inset: -8px } /* bigger touch target */

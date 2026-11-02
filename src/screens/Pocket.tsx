@@ -5,7 +5,7 @@ import { go } from '../lib/router';
 import { DAYS, randomQuestion } from '../lib/format';
 import { shrinkImage, upload } from '../lib/media';
 import type { Scrap } from '../lib/types';
-import { MediaImg, Top } from '../components/bits';
+import { Icon, MediaImg, Top } from '../components/bits';
 
 export default function Pocket({ id }: { id: string }) {
   const { friend, session, say, saveFriendSettings, refresh } = useStore();
@@ -29,6 +29,14 @@ export default function Pocket({ id }: { id: string }) {
     await load();
   }
 
+  async function remove(s: Scrap) {
+    setScraps((all) => all.filter((x) => x.id !== s.id));
+    const { error } = await supabase.from('scraps').delete().eq('id', s.id);
+    if (error) { say('Could not take it out. Try again.'); await load(); return; }
+    if (s.media_path) void supabase.storage.from('mail').remove([s.media_path]);
+    say('Taken out of your pocket.');
+  }
+
   return (
     <main className="app">
       <Top title={`Pocket for ${p.name}`} back={`friend/${id}`} />
@@ -37,9 +45,17 @@ export default function Pocket({ id }: { id: string }) {
         {scraps.length === 0 && <p className="muted center" style={{ width: '100%', padding: '30px 0' }}>Your pocket is empty. Drop in a line, a photo or a question as the week goes.</p>}
         {scraps.map((s, i) => {
           const tilt = ((i % 3) - 1) * 3;
-          if (s.type === 'photo' && s.media_path) return <figure key={s.id} className="polaroid" style={{ width: '46%', transform: `rotate(${tilt}deg)` }}><MediaImg path={s.media_path} alt="Photo scrap" /><figcaption>{s.text}</figcaption></figure>;
-          if (s.type === 'question') return <div key={s.id} className="qcard" style={{ width: '62%', transform: `rotate(${tilt}deg)` }}><small>A question for {p.name}</small>{s.text}</div>;
-          return <div key={s.id} className="mini" style={{ width: '62%', transform: `rotate(${tilt}deg)` }}>{s.text}</div>;
+          const body = s.type === 'photo' && s.media_path
+            ? <figure className="polaroid" style={{ width: '100%' }}><MediaImg path={s.media_path} alt="Photo scrap" /><figcaption>{s.text}</figcaption></figure>
+            : s.type === 'question'
+              ? <div className="qcard"><small>A question for {p.name}</small>{s.text}</div>
+              : <div className="mini">{s.text}</div>;
+          return (
+            <div key={s.id} className="scrap" style={{ width: s.type === 'photo' ? '46%' : '62%', transform: `rotate(${tilt}deg)` }}>
+              {body}
+              <button className="scrap-x" onClick={() => void remove(s)} aria-label="Take this scrap out">{Icon.close}</button>
+            </div>
+          );
         })}
       </div>
       <div className="card stack" style={{ padding: '12px 14px', gap: 10 }}>
