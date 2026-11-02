@@ -36,7 +36,7 @@ export default function InTheAir({ flights }: { flights: Flight[] }) {
         if (!p) return null;
         return (
           <li key={f.id}>
-            <button className="item air" onClick={() => go(`flight/${f.id}`)}>
+            <button className="item air" onClick={() => go(`friend/${f.friendId}`)}>
               <span className="air-owl"><Owl p={f.out ? me : p} width={34} /></span>
               <span className="grow stack" style={{ gap: 4 }}>
                 <span className="row" style={{ gap: 8 }}>
