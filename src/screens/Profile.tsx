@@ -4,8 +4,7 @@ import { go } from '../lib/router';
 import { ago } from '../lib/format';
 import { enablePush, isInstalled } from '../lib/push';
 import type { Profile as P } from '../lib/types';
-import { Nav, Seal, signOut } from '../components/bits';
-import { OwlEditor } from './Setup';
+import { Nav, Owl, Seal, signOut } from '../components/bits';
 
 export default function Profile() {
   const { me, friends, saveMe, saveFriendSettings, session, say } = useStore();
@@ -22,14 +21,18 @@ export default function Profile() {
 
   return (
     <main className="app">
-      <div className="top"><h1 className="grow">Your owl</h1></div>
-      <OwlEditor draft={draft} set={set} />
+      <div className="top"><h1 className="grow">{me.name || 'You'}</h1></div>
 
       <div className="card" style={{ padding: '2px 16px' }}>
-        <div className="row" style={{ minHeight: 60 }}>
+        <div className="row" style={{ minHeight: 64 }}>
           <Seal p={me} size={42} />
           <span className="grow">Your seal</span>
           <button className="chip" onClick={() => go('setup/seal')}>Redesign</button>
+        </div>
+        <div className="row" style={{ minHeight: 64, borderTop: '1px solid var(--line)' }}>
+          <span style={{ width: 42, display: 'flex', justifyContent: 'center' }}><Owl p={me} width={34} /></span>
+          <span className="grow stack" style={{ gap: 0 }}><span>{me.owl_name}</span><span className="small muted">Your owl</span></span>
+          <button className="chip" onClick={() => go('setup/owl')}>Preen</button>
         </div>
         <div className="row" style={{ minHeight: 60, borderTop: '1px solid var(--line)' }}>
           <span className="grow stack" style={{ gap: 0 }}>

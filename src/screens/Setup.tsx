@@ -96,6 +96,7 @@ export default function Setup({ step }: { step: 'seal' | 'owl' }) {
         </div>
         <SealDesigner draft={draft} set={set} />
         <div className="foot">
+          {me.onboarded && <button className="btn" onClick={() => go('profile')}>Cancel</button>}
           <button className="btn wax" disabled={!draft.name.trim()} onClick={async () => {
             await saveMe({ name: draft.name.trim(), monogram: draft.monogram, wax: draft.wax, mixins: draft.mixins, edge: draft.edge ?? 'uneven', mark: draft.mark ?? null });
             go(me.onboarded ? 'profile' : 'setup/owl');
@@ -106,14 +107,14 @@ export default function Setup({ step }: { step: 'seal' | 'owl' }) {
   }
   return (
     <main className="app">
-      <Top title="Meet your owl" back="setup/seal" />
+      <Top title={me.onboarded ? 'Preen your owl' : 'Meet your owl'} back={me.onboarded ? 'profile' : 'setup/seal'} />
       <p className="muted">Your owl carries every letter you send. Make it yours.</p>
       <OwlEditor draft={draft} set={set} />
       <div className="foot">
         <button className="btn wax" onClick={async () => {
           await saveMe({ plume: draft.plume, eye: draft.eye, owl_name: draft.owl_name.trim() || 'Wren', onboarded: true });
-          go('friends');
-        }}>Start writing</button>
+          go(me.onboarded ? 'profile' : 'friends');
+        }}>{me.onboarded ? 'Save my owl' : 'Start writing'}</button>
       </div>
     </main>
   );
