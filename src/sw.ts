@@ -9,6 +9,8 @@ self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); })
 
 self.addEventListener('push', (event) => {
   const data = (() => { try { return event.data?.json() ?? {}; } catch { return { title: 'Signed', body: event.data?.text() }; } })();
+  const nav = self.navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void> };
+  if (typeof data.badge === 'number' && nav.setAppBadge) void nav.setAppBadge(data.badge).catch(() => undefined);
   event.waitUntil(
     self.registration.showNotification(data.title ?? 'Signed', {
       body: data.body ?? '',

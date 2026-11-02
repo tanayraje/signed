@@ -60,7 +60,10 @@ async function deliver() {
   const byId = new Map((people ?? []).map((p: Profile) => [p.id, p]));
   for (const l of landed) {
     const from = byId.get(l.sender);
+    const { count } = await supabase.from('letters').select('id', { count: 'exact', head: true })
+      .eq('recipient', l.recipient).is('opened_at', null).lte('arrive_at', new Date().toISOString());
     await push(l.recipient, {
+      badge: count ?? 1,
       title: `${from?.name || 'A friend'} wrote to you`,
       body: `${from?.owl_name || 'Their owl'} just landed${l.kind === 'bundle' ? ' with a bundle of scraps' : ''}. It's waiting on your desk.`,
       url: `/#/friend/${l.sender}`,

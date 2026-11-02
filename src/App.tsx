@@ -17,9 +17,10 @@ import Wish from './screens/Wish';
 import Invite from './screens/Invite';
 import Stamps from './screens/Stamps';
 import Cutter from './screens/Cutter';
+import { Owl } from './components/bits';
 
 export default function App() {
-  const { session, ready, me, friends, toast } = useStore();
+  const { session, ready, me, friends, toast, letters, friend } = useStore();
   const [r0, r1, r2] = useRoute();
   const [alarm, setAlarm] = useState(false);
 
@@ -37,6 +38,17 @@ export default function App() {
     document.addEventListener('visibilitychange', on);
     return () => document.removeEventListener('visibilitychange', on);
   }, []);
+
+  // Letters that have landed and wait to be opened: a badge on the app icon, an owl perched up top.
+  const [, tickNow] = useState(0);
+  useEffect(() => { const t = window.setInterval(() => tickNow((n) => n + 1), 15000); return () => window.clearInterval(t); }, []);
+  const uid = session?.user.id;
+  const waiting = letters.filter((l) => l.recipient === uid && !l.opened_at && new Date(l.arrive_at).getTime() <= Date.now());
+  useEffect(() => {
+    const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
+    if (waiting.length) void nav.setAppBadge?.(waiting.length).catch(() => undefined);
+    else void nav.clearAppBadge?.().catch(() => undefined);
+  }, [waiting.length]);
 
   // While the app is open, ring the 11:11 alarm on screen too (push covers when it's closed).
   useEffect(() => {
@@ -83,6 +95,16 @@ export default function App() {
   return (
     <>
       {screen}
+      {waiting.length > 0 && !['open', 'read', 'cutter', 'wish', 'setup'].includes(r0) && (() => {
+        const l = waiting[0]; const p = friend(l.sender)?.profile;
+        if (!p) return null;
+        return (
+          <button className="perch" onClick={() => go(`open/${l.id}`)} aria-label={`${p.owl_name} landed with a letter from ${p.name}. Open it.`}>
+            <Owl p={p} width={26} />
+            {waiting.length > 1 && <span className="perch-n">{waiting.length}</span>}
+          </button>
+        );
+      })()}
       {alarm && r0 !== 'wish' && <Wish onClose={() => setAlarm(false)} />}
       {toast && <div className="toast" role="status">{toast}</div>}
     </>
