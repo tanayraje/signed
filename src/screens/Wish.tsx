@@ -11,7 +11,7 @@ export default function Wish({ onClose }: { onClose?: () => void }) {
   const raf = useRef(0);
   const t0 = useRef(0);
   if (!me) return null;
-  const close = () => (onClose ? onClose() : go('friends'));
+  const close = () => (onClose ? onClose() : go('wall'));
   const together = friends.filter((f) => f.mine.wish_1111 && f.theirs?.wish_1111).map((f) => f.profile);
   const names = together.map((p) => p.name).join(' and ');
 

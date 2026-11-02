@@ -26,13 +26,13 @@ export default function App() {
   // After signing in, go back to where the person was headed (an invite link, for example).
   useEffect(() => { if (session) restorePlace(); }, [session]);
 
-  // Coming back after a while away starts on Friends too (a half-written letter keeps its draft).
+  // Coming back after a while away starts on the Wall too (a half-written letter keeps its draft).
   useEffect(() => {
     let hiddenAt = 0;
     const on = () => {
       if (document.hidden) { hiddenAt = Date.now(); return; }
       const route = window.location.hash.replace(/^#\/?/, '').split('/')[0];
-      if (hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000 && !['friends', 'write', 'setup', 'open', 'read', 'wish', 'invite'].includes(route)) go('friends');
+      if (hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000 && !['wall', 'write', 'setup', 'open', 'read', 'wish', 'invite'].includes(route)) go('wall');
     };
     document.addEventListener('visibilitychange', on);
     return () => document.removeEventListener('visibilitychange', on);
@@ -71,13 +71,13 @@ export default function App() {
     case 'flight': screen = <Flight id={r1} />; break;
     case 'open': screen = <Opening id={r1} />; break;
     case 'read': screen = <Reader id={r1} from={r2} />; break;
-    case 'wall': screen = <Wall />; break;
     case 'seals': screen = <Seals />; break;
     case 'stamps': screen = <Stamps />; break;
     case 'cutter': screen = <Cutter />; break;
     case 'profile': screen = <Profile />; break;
     case 'wish': screen = <Wish />; break;
-    default: screen = <Friends />;
+    case 'friends': screen = <Friends />; break;
+    default: screen = <Wall />;
   }
 
   return (

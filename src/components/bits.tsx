@@ -130,7 +130,7 @@ export function Top({ title, back, children }: { title: ReactNode; back?: string
 }
 
 export function Nav({ on }: { on: 'friends' | 'wall' | 'stamps' | 'seals' | 'profile' }) {
-  const items: [typeof on, string, ReactNode][] = [['friends', 'Friends', Icon.mail], ['wall', 'Wall', Icon.wall], ['stamps', 'Stamps', Icon.stamp], ['seals', 'Seals', Icon.cal], ['profile', 'Profile', Icon.me]];
+  const items: [typeof on, string, ReactNode][] = [['wall', 'Wall', Icon.wall], ['friends', 'Friends', Icon.mail], ['stamps', 'Stamps', Icon.stamp], ['seals', 'Seals', Icon.cal], ['profile', 'Profile', Icon.me]];
   return (
     <nav className="nav" aria-label="Main">
       {items.map(([k, label, icon]) => (
@@ -153,5 +153,5 @@ export function Wordmark({ size = 46 }: { size?: number }) {
 
 export async function signOut() {
   await supabase.auth.signOut();
-  go('friends');
+  go('wall');
 }
