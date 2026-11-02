@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { longDate } from '../lib/format';
-import { Icon, Polaroid, Seal, useSigned } from '../components/bits';
+import { Icon, Polaroid, Stamp, useSigned } from '../components/bits';
 import type { Letter } from '../lib/types';
 
 /** `from` is the page the letter was opened from (wall, seals); closing goes back there. */
@@ -44,7 +44,7 @@ export default function Reader({ id, from }: { id: string; from?: string }) {
           {l.question && <div className="qcard" style={{ transform: 'rotate(-2deg)', width: '80%' }}><small>{fromMe ? 'You asked' : `${other.name} asks you`}</small>{l.question}</div>}
           <div className="spacer" />
           <div className="row" style={{ alignItems: 'flex-end' }}>
-            <Seal p={author} size={56} label={`${author.name}'s seal`} />
+            <span style={{ transform: 'rotate(-4deg)', display: 'inline-block' }}><Stamp id={l.stamp} size={58} /></span>
             <div className="grow" style={{ textAlign: 'right' }}>
               <div style={{ fontStyle: 'italic' }}>yours,</div>
               <div className="sig">{author.name}</div>
