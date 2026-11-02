@@ -5,11 +5,13 @@ import { go } from '../lib/router';
 import { longDate } from '../lib/format';
 import { Icon, Polaroid, Stamp, useSigned } from '../components/bits';
 import type { Letter } from '../lib/types';
+import { toAnswer, toggleAnswer } from '../lib/answers';
 
 /** `from` is the page the letter was opened from (wall, seals); closing goes back there. */
 export default function Reader({ id, from }: { id: string; from?: string }) {
   const { me, letters, friend, session, refresh, say, stamps } = useStore();
   const [peek, setPeek] = useState(false);
+  const [, bump] = useState(0);
   const l = letters.find((x) => x.id === id);
   if (!me || !l) return null;
   const uid = session!.user.id;
@@ -17,6 +19,26 @@ export default function Reader({ id, from }: { id: string; from?: string }) {
   const other = friend(fromMe ? l.recipient : l.sender)?.profile;
   if (!other) return null;
   const author = fromMe ? me : other;
+
+  const picked = new Set(toAnswer(other.id).map((x) => x.key));
+  const answeredHere = new Set(letters.filter((x) => x.sender === uid && x.recipient === other.id).flatMap((x) => (x.answers ?? []).map((a) => `${a.letter_id}:${a.question}`)));
+  function QCard({ label, q, k, tilt = 0 }: { label: string; q: string; k: string; tilt?: number }) {
+    const on = picked.has(k);
+    const done = answeredHere.has(`${l!.id}:${q}`);
+    return (
+      <div className="qcard" style={{ transform: `rotate(${tilt}deg)`, width: '86%' }}>
+        <small>{label}</small>{q}
+        {!fromMe && (
+          done ? <span className="q-done">You answered this</span> : (
+            <button className={`q-answer${on ? ' on' : ''}`} aria-pressed={on} onClick={() => {
+              const now = toggleAnswer(other!.id, { key: k, question: q, letter_id: l!.id });
+              say(now ? `It’ll be waiting in your next letter to ${other!.name}.` : 'Taken off your list.'); bump((n) => n + 1);
+            }}>{on ? '✓ Answering in my reply' : 'Answer this'}</button>
+          )
+        )}
+      </div>
+    );
+  }
 
   async function file(where: 'wall' | 'trunk') {
     await supabase.rpc('file_letter', { letter_id: l!.id, where_to: where });
@@ -38,11 +60,22 @@ export default function Reader({ id, from }: { id: string; from?: string }) {
           {l.audio_path ? <TalkingBody letter={l} /> : l.body && <div className="body selectable">{l.body}</div>}
           {(l.scraps ?? []).map((s, i) =>
             s.type === 'photo' && s.media_path ? <Polaroid key={i} path={s.media_path} caption={s.text} width="55%" tilt={((i % 3) - 1) * 3} />
-              : s.type === 'question' ? <div key={i} className="qcard"><small>A question</small>{s.text}</div>
+              : s.type === 'question' ? <QCard key={i} label={fromMe ? 'You asked' : `${other.name} asks you`} q={s.text ?? ''} k={`${l.id}:${i}`} />
                 : <p key={i} style={{ fontStyle: 'italic', borderBottom: '1px dashed #D9CDB9', paddingBottom: 8 }}>{s.text}</p>
           )}
           {l.photo_path && <div style={{ marginLeft: 'auto', width: '58%' }}><Polaroid path={l.photo_path} caption={l.photo_caption} width="100%" tilt={4} /></div>}
-          {l.question && <div className="qcard" style={{ transform: 'rotate(-2deg)', width: '80%' }}><small>{fromMe ? 'You asked' : `${other.name} asks you`}</small>{l.question}</div>}
+          {l.question && <QCard label={fromMe ? 'You asked' : `${other.name} asks you`} q={l.question} k={`${l.id}:q`} tilt={-2} />}
+          {(l.answers ?? []).length > 0 && (
+            <div className="stack" style={{ gap: 10 }}>
+              {l.answers!.map((a, i) => (
+                <div key={i} className="answer">
+                  <small>{fromMe ? `${other.name} asked` : 'You asked'}</small>
+                  <span className="answer-q">{a.question}</span>
+                  <span className="answer-a selectable">{a.answer}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="spacer" />
           <div className="row" style={{ alignItems: 'flex-end' }}>
             <button className="stamp-tap" onClick={() => setPeek(true)} aria-label="Look at the stamp"><Stamp id={l.stamp} size={58} /></button>

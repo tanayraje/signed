@@ -54,6 +54,7 @@ export interface Letter {
   kind: 'letter' | 'bundle';
   body: string;
   question: string | null;
+  answers: { question: string; answer: string; letter_id: string }[] | null;
   stamp: string;
   photo_path: string | null;
   photo_caption: string | null;

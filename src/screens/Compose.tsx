@@ -7,8 +7,9 @@ import { extFor, shrinkImage, upload } from '../lib/media';
 import type { WordTiming } from '../lib/types';
 import { BUILT_IN_STAMPS, Icon, Seal, Stamp } from '../components/bits';
 import Cutter from './Cutter';
+import { setToAnswer, toAnswer, type ToAnswer } from '../lib/answers';
 
-interface Draft { body: string; caption: string; question: string | null; stamp: string }
+interface Draft { body: string; caption: string; question: string | null; stamp: string; answers?: Record<string, string> }
 const draftKey = (id: string) => `signed.draft.${id}`;
 
 type SpeechRec = { start: () => void; stop: () => void; continuous: boolean; interimResults: boolean; lang: string;
@@ -28,6 +29,7 @@ export default function Compose({ id }: { id: string }) {
   const [live, setLive] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [cutting, setCutting] = useState(false);
+  const [asked, setAsked] = useState<ToAnswer[]>(() => toAnswer(id));
   const rec = useRef<MediaRecorder | null>(null);
   const speech = useRef<SpeechRec | null>(null);
 
@@ -86,13 +88,15 @@ export default function Compose({ id }: { id: string }) {
   }
 
   async function seal() {
-    if (!draft.body.trim() && !photo && !audio && !video) { say('Write something first, even one line.'); return; }
+    if (!draft.body.trim() && !photo && !audio && !video && !asked.some((q) => draft.answers?.[q.key]?.trim())) { say('Write something first, even one line.'); return; }
     setBusy('Sealing…');
+    const answers = asked.map((q) => ({ question: q.question, answer: (draft.answers?.[q.key] ?? '').trim(), letter_id: q.letter_id, key: q.key })).filter((a) => a.answer);
     const { data, error } = await supabase.from('letters').insert({
       sender: uid, recipient: id, kind: 'letter', body: draft.body.trim(), question: draft.question, stamp: stampOk ? draft.stamp : 'lotus',
       photo_path: photo?.path ?? null, photo_caption: draft.caption || null,
       audio_path: audio?.path ?? null, video_path: video?.path ?? null, transcript: audio?.words.length ? audio.words : null,
-      enchanted: enchanted || Boolean(audio || video)
+      enchanted: enchanted || Boolean(audio || video),
+      answers: answers.length ? answers.map(({ key: _k, ...a }) => a) : null
     }).select('id').single();
     setBusy(null);
     if (error || !data) {
@@ -100,6 +104,8 @@ export default function Compose({ id }: { id: string }) {
       say('Your letter did not send. Check your connection and try again.'); return;
     }
     try { localStorage.removeItem(draftKey(id)); } catch { /* fine */ }
+    const done = new Set(answers.map((a) => a.key));
+    setToAnswer(id, toAnswer(id).filter((q) => !done.has(q.key)));
     await refresh();
     say('Signed and sealed.');
     go(`flight/${data.id}`);
@@ -145,6 +151,16 @@ export default function Compose({ id }: { id: string }) {
       <div className={`sheet stack${enchanted ? ' parch' : ''}`} style={{ gap: 14 }}>
         <label htmlFor="bodyIn" className="small" style={{ fontStyle: 'italic', opacity: 0.7 }}>{enchanted ? 'The words your letter will say' : 'Your letter'}</label>
         <textarea id="bodyIn" rows={9} value={recording && live ? live : draft.body} onChange={(e) => set({ body: e.target.value })} placeholder={`Dear ${p.name},`} />
+        {asked.map((q) => (
+          <div key={q.key} className="answer-box">
+            <div className="row" style={{ alignItems: 'flex-start', gap: 8 }}>
+              <span className="grow"><small>{p.name} asked</small><span className="answer-q">{q.question}</span></span>
+              <button className="answer-x" onClick={() => { const next = asked.filter((x) => x.key !== q.key); setAsked(next); setToAnswer(id, next); }} aria-label="Don't answer this one">{Icon.close}</button>
+            </div>
+            <textarea rows={2} value={draft.answers?.[q.key] ?? ''} placeholder="Your answer" aria-label={`Answer: ${q.question}`}
+              onChange={(e) => set({ answers: { ...(draft.answers ?? {}), [q.key]: e.target.value } })} />
+          </div>
+        ))}
         {photo && <PreviewPolaroid url={photo.url} caption={draft.caption} />}
         {draft.question && <div className="qcard" style={{ transform: 'rotate(-2deg)' }}><small>You ask {p.name}</small>{draft.question}</div>}
         <div className="row" style={{ justifyContent: 'flex-end', alignItems: 'flex-end' }}>
