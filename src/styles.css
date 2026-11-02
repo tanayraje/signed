@@ -264,3 +264,12 @@ img, svg { -webkit-touch-callout: none; -webkit-user-drag: none }
   display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 6px rgba(43, 38, 34, .2); cursor: pointer; z-index: 2 }
 .scrap-x svg { width: 14px; height: 14px }
 .scrap-x::before { content: ''; position: absolute; inset: -8px } /* bigger touch target */
+
+/* letters in the air */
+.air { align-items: center }
+.air-owl { width: 44px; display: flex; justify-content: center; flex: none }
+.air .bar { width: 100%; margin-top: 2px }
+.callout { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--card) url(/assets/card.jpg) center/cover; text-align: left; color: inherit; cursor: pointer; box-shadow: 0 2px 6px rgba(60, 44, 30, .08) }
+.callout.landed { background: #7A2420; border-color: #7A2420; color: #FBF6EE; box-shadow: 0 4px 12px rgba(74, 20, 16, .3) }
+.callout.landed .small { color: #F1DCC8 }
+.stamp-tap { border: 0; background: none; padding: 0; transform: rotate(-4deg); cursor: zoom-in }

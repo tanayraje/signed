@@ -8,7 +8,8 @@ import type { Letter } from '../lib/types';
 
 /** `from` is the page the letter was opened from (wall, seals); closing goes back there. */
 export default function Reader({ id, from }: { id: string; from?: string }) {
-  const { me, letters, friend, session, refresh, say } = useStore();
+  const { me, letters, friend, session, refresh, say, stamps } = useStore();
+  const [peek, setPeek] = useState(false);
   const l = letters.find((x) => x.id === id);
   if (!me || !l) return null;
   const uid = session!.user.id;
@@ -44,13 +45,28 @@ export default function Reader({ id, from }: { id: string; from?: string }) {
           {l.question && <div className="qcard" style={{ transform: 'rotate(-2deg)', width: '80%' }}><small>{fromMe ? 'You asked' : `${other.name} asks you`}</small>{l.question}</div>}
           <div className="spacer" />
           <div className="row" style={{ alignItems: 'flex-end' }}>
-            <span style={{ transform: 'rotate(-4deg)', display: 'inline-block' }}><Stamp id={l.stamp} size={58} /></span>
+            <button className="stamp-tap" onClick={() => setPeek(true)} aria-label="Look at the stamp"><Stamp id={l.stamp} size={58} /></button>
             <div className="grow" style={{ textAlign: 'right' }}>
               <div style={{ fontStyle: 'italic' }}>yours,</div>
               <div className="sig">{author.name}</div>
             </div>
           </div>
         </article>
+        {peek && (() => {
+          const cs = l.stamp.startsWith('custom:') ? stamps.find((s) => `custom:${s.id}` === l.stamp) : undefined;
+          return (
+            <div className="sheet-back" onClick={() => setPeek(false)}>
+              <div className="stamp-sheet stack" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Stamp" style={{ color: '#2B2622' }}>
+                <div className="row" style={{ justifyContent: 'center', padding: '8px 0 4px' }}><Stamp id={l.stamp} size={cs?.cutter === 'wide' ? 250 : 200} /></div>
+                <div className="center stack" style={{ gap: 2 }}>
+                  {cs?.caption && <span style={{ fontSize: 20, fontStyle: 'italic' }}>{cs.caption}</span>}
+                  <span className="small muted">{cs ? `Cut by ${cs.made_by === uid ? 'you' : other.name}${cs.postmark_place ? `, posted near ${cs.postmark_place}` : ''}, ${longDate(cs.postmark_at ?? l.sent_at)}` : `A Signed stamp, ${longDate(l.sent_at)}`}</span>
+                </div>
+                <button className="btn primary block" onClick={() => setPeek(false)}>Done</button>
+              </div>
+            </div>
+          );
+        })()}
         {!fromMe && (
           <>
             <div className="foot">

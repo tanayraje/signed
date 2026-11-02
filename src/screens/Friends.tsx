@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { DAYS, timeLeft } from '../lib/format';
 import { Icon, Nav, Seal, Wordmark } from '../components/bits';
+import InTheAir, { useFlights } from '../components/InTheAir';
 
 export default function Friends() {
   const { me, friends, letters, incoming, say, session } = useStore();
@@ -12,6 +13,9 @@ export default function Friends() {
   useEffect(() => { const t = window.setInterval(() => tick((n) => n + 1), 1000); return () => window.clearInterval(t); }, []);
   if (!me) return null;
   const uid = session!.user.id;
+  const flights = useFlights();
+  const flying = new Set(flights.map((f) => f.friendId));
+  const grounded = friends.filter(({ profile }) => !flying.has(profile.id));
 
   async function makeInvite() {
     const { data, error } = await supabase.from('invites').insert({ from_user: uid }).select('code').single();
@@ -27,15 +31,22 @@ export default function Friends() {
   return (
     <main className="app">
       <div className="top"><div className="grow"><Wordmark /></div></div>
-      <h1>Your friends</h1>
+      {flights.length > 0 && (
+        <section className="stack" style={{ gap: 10 }}>
+          <h2>In the air</h2>
+          <InTheAir flights={flights} />
+        </section>
+      )}
+      <h1>{flights.length > 0 ? 'Everyone else' : 'Your friends'}</h1>
       {friends.length === 0 && (
         <div className="stone stack center" style={{ padding: 24, alignItems: 'center' }}>
           <p>No one to write to yet.</p>
           <p className="small muted">Send an invite link. Once your friend opens it and signs in, you can start writing.</p>
         </div>
       )}
+      {grounded.length === 0 && friends.length > 0 && <p className="small muted">Every friend has a letter in the air.</p>}
       <ul className="list">
-        {friends.map(({ profile: f, mine }) => {
+        {grounded.map(({ profile: f, mine }) => {
           const waiting = letters.filter((l) => l.sender === f.id && l.recipient === uid && !l.opened_at && new Date(l.arrive_at).getTime() <= Date.now());
           const inc = incoming.filter((l) => l.sender === f.id);
           const out = letters.filter((l) => l.sender === uid && l.recipient === f.id && new Date(l.arrive_at).getTime() > Date.now());
