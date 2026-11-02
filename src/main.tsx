@@ -7,6 +7,12 @@ import './styles.css';
 
 registerSW({ immediate: true });
 
+// Opening the app always starts on Friends. Links that bring you somewhere on purpose
+// (an invite, a landed letter from a notification, the 11:11 alarm) are kept.
+const KEEP = ['invite', 'friend', 'wish', 'open', 'read'];
+const first = window.location.hash.replace(/^#\/?/, '').split('/')[0];
+if (first && !KEEP.includes(first)) history.replaceState(null, '', `${window.location.pathname}#/friends`);
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <StoreProvider>

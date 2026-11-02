@@ -26,6 +26,18 @@ export default function App() {
   // After signing in, go back to where the person was headed (an invite link, for example).
   useEffect(() => { if (session) restorePlace(); }, [session]);
 
+  // Coming back after a while away starts on Friends too (a half-written letter keeps its draft).
+  useEffect(() => {
+    let hiddenAt = 0;
+    const on = () => {
+      if (document.hidden) { hiddenAt = Date.now(); return; }
+      const route = window.location.hash.replace(/^#\/?/, '').split('/')[0];
+      if (hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000 && !['friends', 'write', 'setup', 'open', 'read', 'wish', 'invite'].includes(route)) go('friends');
+    };
+    document.addEventListener('visibilitychange', on);
+    return () => document.removeEventListener('visibilitychange', on);
+  }, []);
+
   // While the app is open, ring the 11:11 alarm on screen too (push covers when it's closed).
   useEffect(() => {
     let last = '';
