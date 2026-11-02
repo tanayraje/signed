@@ -30,6 +30,7 @@ export async function upload(userId: string, blob: Blob, ext: string): Promise<s
 
 const cache = new Map<string, { url: string; until: number }>();
 export async function signedUrl(path: string): Promise<string | null> {
+  if (path.startsWith('/assets/test/')) return path; // TESTING ONLY: the test friend's stamps ship with the app
   const hit = cache.get(path);
   if (hit && hit.until > Date.now()) return hit.url;
   const { data } = await supabase.storage.from('mail').createSignedUrl(path, 3600);
