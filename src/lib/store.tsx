@@ -57,7 +57,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       supabase.from('friend_settings').select('*').or(`owner.eq.${uid},friend.eq.${uid}`),
       supabase.from('letters').select('*').or(`sender.eq.${uid},recipient.eq.${uid}`).order('sent_at', { ascending: false }).limit(500),
       supabase.rpc('incoming_flights'),
-      supabase.from('stamps').select('id, image_path').order('created_at')
+      supabase.from('stamps').select('*').order('created_at', { ascending: false })
     ]);
     if (meRow) setMe(meRow as Profile);
     const mine = (settings ?? []).filter((s: FriendSettings) => s.owner === uid);

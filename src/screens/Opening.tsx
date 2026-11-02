@@ -6,7 +6,7 @@ import { Seal, Stamp } from '../components/bits';
 
 /** Press and hold the seal: it lifts off (kept for the calendar), the flap folds back, the letter rises. */
 export default function Opening({ id }: { id: string }) {
-  const { me, letters, friend, refresh } = useStore();
+  const { me, letters, friend, refresh, say } = useStore();
   const [opened, setOpened] = useState(false);
   const [progress, setProgress] = useState(0);
   const raf = useRef(0);
@@ -22,7 +22,10 @@ export default function Opening({ id }: { id: string }) {
     setOpened(true);
     await supabase.rpc('open_letter', { letter_id: l!.id });
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.setTimeout(() => { void refresh(); go(`read/${l!.id}`); }, reduce ? 400 : 2300);
+    window.setTimeout(() => {
+      void refresh(); go(`read/${l!.id}`);
+      if (l!.stamp.startsWith('custom:')) say(`${f!.name}’s stamp is yours now. It’s in your trunk.`);
+    }, reduce ? 400 : 2300);
   }
   const step = () => {
     const k = Math.min(1, (Date.now() - t0.current) / 800);

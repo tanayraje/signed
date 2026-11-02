@@ -1,12 +1,12 @@
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { longDate } from '../lib/format';
-import { MediaImg, Nav, Seal } from '../components/bits';
+import { CutStamp, MediaImg, Nav, Seal } from '../components/bits';
 
 const TACKS = ['#8E231C', '#2C3A68', '#A9761E', '#2F5D50'];
 
 export default function Wall() {
-  const { letters, friend, session } = useStore();
+  const { letters, friend, session, stamps } = useStore();
   const uid = session!.user.id;
   const received = letters.filter((l) => l.recipient === uid && l.opened_at);
   const pinned = received.filter((l) => l.place === 'wall');
@@ -36,6 +36,16 @@ export default function Wall() {
       </div>
       <section className="stack">
         <h2>In the trunk</h2>
+        {(() => {
+          const got = stamps.filter((s) => s.owner === uid && s.status === 'collected');
+          if (!got.length) return null;
+          return (
+            <button className="item card" style={{ padding: '10px 14px' }} onClick={() => go('stamps')}>
+              <span className="trunk-stamps">{got.slice(0, 4).map((s) => <CutStamp key={s.id} s={s} size={30} postmark={false} />)}</span>
+              <span className="grow">{got.length} {got.length === 1 ? 'stamp' : 'stamps'} collected from friends</span>
+            </button>
+          );
+        })()}
         {trunk.length === 0 ? <p className="small muted">Letters you fold away live here.</p> : (
           <ul className="list">
             {trunk.map((l) => {

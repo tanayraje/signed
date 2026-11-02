@@ -6,6 +6,7 @@ import { randomQuestion } from '../lib/format';
 import { extFor, shrinkImage, upload } from '../lib/media';
 import type { WordTiming } from '../lib/types';
 import { BUILT_IN_STAMPS, Icon, Seal, Stamp } from '../components/bits';
+import Cutter from './Cutter';
 
 interface Draft { body: string; caption: string; question: string | null; stamp: string }
 const draftKey = (id: string) => `signed.draft.${id}`;
@@ -26,6 +27,7 @@ export default function Compose({ id }: { id: string }) {
   const [recording, setRecording] = useState(false);
   const [live, setLive] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const [cutting, setCutting] = useState(false);
   const rec = useRef<MediaRecorder | null>(null);
   const speech = useRef<SpeechRec | null>(null);
 
@@ -87,20 +89,24 @@ export default function Compose({ id }: { id: string }) {
     if (!draft.body.trim() && !photo && !audio && !video) { say('Write something first, even one line.'); return; }
     setBusy('Sealing…');
     const { data, error } = await supabase.from('letters').insert({
-      sender: uid, recipient: id, kind: 'letter', body: draft.body.trim(), question: draft.question, stamp: draft.stamp,
+      sender: uid, recipient: id, kind: 'letter', body: draft.body.trim(), question: draft.question, stamp: stampOk ? draft.stamp : 'lotus',
       photo_path: photo?.path ?? null, photo_caption: draft.caption || null,
       audio_path: audio?.path ?? null, video_path: video?.path ?? null, transcript: audio?.words.length ? audio.words : null,
       enchanted: enchanted || Boolean(audio || video)
     }).select('id').single();
     setBusy(null);
-    if (error || !data) { say('Your letter did not send. Check your connection and try again.'); return; }
+    if (error || !data) {
+      if (error?.message.includes('stamp')) { set({ stamp: 'lotus' }); await refresh(); say('That stamp has already flown. Pick another.'); return; }
+      say('Your letter did not send. Check your connection and try again.'); return;
+    }
     try { localStorage.removeItem(draftKey(id)); } catch { /* fine */ }
     await refresh();
     say('Signed and sealed.');
     go(`flight/${data.id}`);
   }
 
-  const stampKeys = [...BUILT_IN_STAMPS, ...stamps.map((s) => `custom:${s.id}`)];
+  const stampKeys = [...stamps.filter((s) => s.owner === uid && s.status === 'mine').map((s) => `custom:${s.id}`), ...BUILT_IN_STAMPS];
+  const stampOk = stampKeys.includes(draft.stamp);
 
   return (
     <main className="app">
@@ -160,24 +166,15 @@ export default function Compose({ id }: { id: string }) {
         <input id="capIn" type="text" maxLength={28} value={draft.caption} onChange={(e) => set({ caption: e.target.value })} /></>)}
 
       <section className="stack"><h2>Stamp</h2>
-        <div className="chips">
+        <div className="stamp-row">
+          <button className="stamp-cut" onClick={() => setCutting(true)} aria-label="Cut a new stamp">{Icon.camera}<span>Cut one</span></button>
           {stampKeys.map((k) => (
-            <button key={k} className={`chip${draft.stamp === k ? ' on' : ''}`} aria-pressed={draft.stamp === k} style={{ padding: '0 6px', minHeight: 62 }} onClick={() => set({ stamp: k })}><Stamp id={k} /></button>
+            <button key={k} className={`stamp-pick${(stampOk ? draft.stamp : 'lotus') === k ? ' on' : ''}`} aria-pressed={draft.stamp === k} onClick={() => set({ stamp: k })}><Stamp id={k} size={48} /></button>
           ))}
-          <label className="chip" htmlFor="stampIn" style={{ minHeight: 62 }}>Make a stamp</label>
-          <input id="stampIn" type="file" accept="image/*" hidden onChange={async (e) => {
-            const file = e.target.files?.[0]; if (!file) return;
-            try {
-              const path = await upload(uid, await shrinkImage(file, 300), 'jpg');
-              const { data } = await supabase.from('stamps').insert({ owner: uid, image_path: path }).select('id').single();
-              await refresh();
-              if (data) set({ stamp: `custom:${data.id}` });
-              say('Your stamp is ready. It stays in your collection.');
-            } catch (err) { say((err as Error).message); }
-            e.target.value = '';
-          }} />
         </div>
+        {draft.stamp.startsWith('custom:') && stampOk && <p className="small muted">This stamp goes to {p.name} for good.</p>}
       </section>
+      {cutting && <Cutter onDone={(sid) => { setCutting(false); if (sid) set({ stamp: `custom:${sid}` }); }} />}
 
       <div className="foot">
         <button className="btn wax" disabled={Boolean(busy) || recording} onClick={seal}>

@@ -15,6 +15,8 @@ import Seals from './screens/Seals';
 import Profile from './screens/Profile';
 import Wish from './screens/Wish';
 import Invite from './screens/Invite';
+import Stamps from './screens/Stamps';
+import Cutter from './screens/Cutter';
 
 export default function App() {
   const { session, ready, me, friends, toast } = useStore();
@@ -59,6 +61,8 @@ export default function App() {
     case 'read': screen = <Reader id={r1} />; break;
     case 'wall': screen = <Wall />; break;
     case 'seals': screen = <Seals />; break;
+    case 'stamps': screen = <Stamps />; break;
+    case 'cutter': screen = <Cutter />; break;
     case 'profile': screen = <Profile />; break;
     case 'wish': screen = <Wish />; break;
     default: screen = <Friends />;
