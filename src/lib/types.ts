@@ -77,6 +77,8 @@ export interface Incoming {
   from_lat: number | null; from_lon: number | null; to_lat: number | null; to_lon: number | null;
 }
 
+export interface WallPin { id: string; letter_id: string; media_path: string; caption: string | null; created_at: string }
+
 export interface CustomStamp {
   id: string; image_path: string; owner: string; made_by: string | null; from_user: string | null;
   cutter: 'classic' | 'square' | 'wide' | 'oval'; caption: string | null;

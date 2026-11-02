@@ -30,6 +30,7 @@ export default function Compose({ id }: { id: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [cutting, setCutting] = useState(false);
   const [asked, setAsked] = useState<ToAnswer[]>(() => toAnswer(id));
+  const [nudge, setNudge] = useState(false);
   const rec = useRef<MediaRecorder | null>(null);
   const speech = useRef<SpeechRec | null>(null);
 
@@ -88,7 +89,9 @@ export default function Compose({ id }: { id: string }) {
   }
 
   async function seal() {
-    if (!draft.body.trim() && !photo && !audio && !video && !asked.some((q) => draft.answers?.[q.key]?.trim())) { say('Write something first, even one line.'); return; }
+    const unanswered = asked.filter((q) => !draft.answers?.[q.key]?.trim());
+    if (unanswered.length) { setNudge(true); say(unanswered.length === 1 ? 'Answer the question first, or tap × to skip it.' : `Answer the ${unanswered.length} questions first, or tap × to skip them.`); return; }
+    if (!draft.body.trim() && !photo && !audio && !video && !asked.length) { say('Write something first, even one line.'); return; }
     setBusy('Sealing…');
     const answers = asked.map((q) => ({ question: q.question, answer: (draft.answers?.[q.key] ?? '').trim(), letter_id: q.letter_id, key: q.key })).filter((a) => a.answer);
     const { data, error } = await supabase.from('letters').insert({
@@ -152,9 +155,9 @@ export default function Compose({ id }: { id: string }) {
         <label htmlFor="bodyIn" className="small" style={{ fontStyle: 'italic', opacity: 0.7 }}>{enchanted ? 'The words your letter will say' : 'Your letter'}</label>
         <textarea id="bodyIn" rows={9} value={recording && live ? live : draft.body} onChange={(e) => set({ body: e.target.value })} placeholder={`Dear ${p.name},`} />
         {asked.map((q) => (
-          <div key={q.key} className="answer-box">
+          <div key={q.key} className={`answer-box${nudge && !draft.answers?.[q.key]?.trim() ? ' need' : ''}`}>
             <div className="row" style={{ alignItems: 'flex-start', gap: 8 }}>
-              <span className="grow"><small>{p.name} asked</small><span className="answer-q">{q.question}</span></span>
+              <span className="grow"><small>{p.name} asked · answer before sending</small><span className="answer-q">{q.question}</span></span>
               <button className="answer-x" onClick={() => { const next = asked.filter((x) => x.key !== q.key); setAsked(next); setToAnswer(id, next); }} aria-label="Don't answer this one">{Icon.close}</button>
             </div>
             <textarea rows={2} value={draft.answers?.[q.key] ?? ''} placeholder="Your answer" aria-label={`Answer: ${q.question}`}

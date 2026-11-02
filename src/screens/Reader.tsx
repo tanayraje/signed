@@ -9,7 +9,7 @@ import { toAnswer, toggleAnswer } from '../lib/answers';
 
 /** `from` is the page the letter was opened from (wall, seals); closing goes back there. */
 export default function Reader({ id, from }: { id: string; from?: string }) {
-  const { me, letters, friend, session, refresh, say, stamps } = useStore();
+  const { me, letters, friend, session, refresh, say, stamps, pins } = useStore();
   const [peek, setPeek] = useState(false);
   const [, bump] = useState(0);
   const l = letters.find((x) => x.id === id);
@@ -40,6 +40,19 @@ export default function Reader({ id, from }: { id: string; from?: string }) {
     );
   }
 
+  function PinPhoto({ path, caption }: { path: string; caption?: string | null }) {
+    if (fromMe) return null;
+    const pin = pins.find((x) => x.media_path === path);
+    return (
+      <button className={`pin-photo${pin ? ' on' : ''}`} onClick={async () => {
+        if (pin) { await supabase.from('wall_pins').delete().eq('id', pin.id); await refresh(); say('Taken off your wall.'); return; }
+        const { error } = await supabase.from('wall_pins').insert({ letter_id: l!.id, media_path: path, caption: caption ?? null });
+        if (error) { say('Could not pin it. Try again.'); return; }
+        await refresh(); say('Polaroid pinned to your wall.');
+      }}>{pin ? '✓ On your wall' : 'Pin this photo'}</button>
+    );
+  }
+
   async function file(where: 'wall' | 'trunk') {
     await supabase.rpc('file_letter', { letter_id: l!.id, where_to: where });
     await refresh();
@@ -59,11 +72,11 @@ export default function Reader({ id, from }: { id: string; from?: string }) {
           {l.video_path && <Video path={l.video_path} />}
           {l.audio_path ? <TalkingBody letter={l} /> : l.body && <div className="body selectable">{l.body}</div>}
           {(l.scraps ?? []).map((s, i) =>
-            s.type === 'photo' && s.media_path ? <Polaroid key={i} path={s.media_path} caption={s.text} width="55%" tilt={((i % 3) - 1) * 3} />
+            s.type === 'photo' && s.media_path ? <div key={i} className="stack" style={{ width: '55%', gap: 8 }}><Polaroid path={s.media_path} caption={s.text} width="100%" tilt={((i % 3) - 1) * 3} /><PinPhoto path={s.media_path} caption={s.text} /></div>
               : s.type === 'question' ? <QCard key={i} label={fromMe ? 'You asked' : `${other.name} asks you`} q={s.text ?? ''} k={`${l.id}:${i}`} />
                 : <p key={i} style={{ fontStyle: 'italic', borderBottom: '1px dashed #D9CDB9', paddingBottom: 8 }}>{s.text}</p>
           )}
-          {l.photo_path && <div style={{ marginLeft: 'auto', width: '58%' }}><Polaroid path={l.photo_path} caption={l.photo_caption} width="100%" tilt={4} /></div>}
+          {l.photo_path && <div className="stack" style={{ marginLeft: 'auto', width: '58%', gap: 8 }}><Polaroid path={l.photo_path} caption={l.photo_caption} width="100%" tilt={4} /><PinPhoto path={l.photo_path} caption={l.photo_caption} /></div>}
           {l.question && <QCard label={fromMe ? 'You asked' : `${other.name} asks you`} q={l.question} k={`${l.id}:q`} tilt={-2} />}
           {(l.answers ?? []).length > 0 && (
             <div className="stack" style={{ gap: 10 }}>

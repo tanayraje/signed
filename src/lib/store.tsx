@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { placeName } from './geo';
-import type { CustomStamp, Friend, FriendSettings, Incoming, Letter, Profile } from './types';
+import type { CustomStamp, WallPin, Friend, FriendSettings, Incoming, Letter, Profile } from './types';
 
 interface Store {
   session: Session | null;
@@ -12,6 +12,7 @@ interface Store {
   letters: Letter[];
   incoming: Incoming[];
   stamps: CustomStamp[];
+  pins: WallPin[];
   toast: string | null;
   say: (msg: string) => void;
   refresh: () => Promise<void>;
@@ -35,6 +36,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [letters, setLetters] = useState<Letter[]>([]);
   const [incoming, setIncoming] = useState<Incoming[]>([]);
   const [stamps, setStamps] = useState<CustomStamp[]>([]);
+  const [pins, setPins] = useState<WallPin[]>([]);
   const [toast, setToast] = useState<string | null>(null);
 
   const say = useCallback((msg: string) => {
@@ -52,12 +54,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!uid) return;
-    const [{ data: meRow }, { data: settings }, { data: mail }, { data: inc }, { data: st }] = await Promise.all([
+    const [{ data: meRow }, { data: settings }, { data: mail }, { data: inc }, { data: st }, { data: pn }] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('friend_settings').select('*').or(`owner.eq.${uid},friend.eq.${uid}`),
       supabase.from('letters').select('*').or(`sender.eq.${uid},recipient.eq.${uid}`).order('sent_at', { ascending: false }).limit(500),
       supabase.rpc('incoming_flights'),
-      supabase.from('stamps').select('*').order('created_at', { ascending: false })
+      supabase.from('stamps').select('*').order('created_at', { ascending: false }),
+      supabase.from('wall_pins').select('*').order('created_at', { ascending: false })
     ]);
     if (meRow) setMe(meRow as Profile);
     const mine = (settings ?? []).filter((s: FriendSettings) => s.owner === uid);
@@ -79,6 +82,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setLetters((mail ?? []) as Letter[]);
     setIncoming((inc ?? []) as Incoming[]);
     setStamps((st ?? []) as CustomStamp[]);
+    setPins((pn ?? []) as WallPin[]);
   }, [uid]);
 
   // Location: read it every time the app opens and keep the last one.
@@ -124,9 +128,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [uid, say]);
 
   const value = useMemo<Store>(() => ({
-    session, ready, me, friends, letters, incoming, stamps, toast, say, refresh, saveMe, saveFriendSettings,
+    session, ready, me, friends, letters, incoming, stamps, pins, toast, say, refresh, saveMe, saveFriendSettings,
     friend: (id: string) => friends.find((f) => f.profile.id === id)
-  }), [session, ready, me, friends, letters, incoming, stamps, toast, say, refresh, saveMe, saveFriendSettings]);
+  }), [session, ready, me, friends, letters, incoming, stamps, pins, toast, say, refresh, saveMe, saveFriendSettings]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

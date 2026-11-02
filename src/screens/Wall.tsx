@@ -8,7 +8,7 @@ import { timeLeft } from '../lib/format';
 const TACKS = ['#8E231C', '#2C3A68', '#A9761E', '#2F5D50'];
 
 export default function Wall() {
-  const { letters, friend, session, stamps } = useStore();
+  const { letters, friend, session, stamps, pins } = useStore();
   const uid = session!.user.id;
   const received = letters.filter((l) => l.recipient === uid && l.opened_at);
   const pinned = received.filter((l) => l.place === 'wall');
@@ -19,17 +19,21 @@ export default function Wall() {
       <div className="top"><h1 className="grow">Your wall</h1></div>
       <WallCallouts />
       <div className="wall">
-        {pinned.length === 0 && <p className="muted center" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>Pin a letter from its reading view and it lands here.</p>}
-        {pinned.map((l, i) => {
-          const f = friend(l.sender)?.profile;
+        {pinned.length === 0 && pins.length === 0 && <p className="muted center" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>Pin a letter, or just its Polaroid, from its reading view and it lands here.</p>}
+        {[
+          ...pins.map((p) => ({ key: `p-${p.id}`, at: p.created_at, letter: p.letter_id, photo: p })),
+          ...pinned.map((l) => ({ key: `l-${l.id}`, at: l.opened_at ?? l.sent_at, letter: l.id, photo: null as null | typeof pins[number] }))
+        ].sort((a, b) => b.at.localeCompare(a.at)).map((it, i) => {
+          const l = letters.find((x) => x.id === it.letter);
+          const f = l ? friend(l.sender)?.profile : undefined;
           return (
-            <button key={l.id} className="pinned" style={{ transform: `rotate(${((i % 3) - 1) * 3}deg)` }} onClick={() => go(`read/${l.id}/wall`)}>
+            <button key={it.key} className="pinned" style={{ transform: `rotate(${((i % 3) - 1) * 3}deg)` }} onClick={() => go(`read/${it.letter}/wall`)}>
               <span className="tack" style={{ background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,.5), ${TACKS[i % 4]} 70%)` }} />
-              {l.photo_path ? (
-                <figure className="polaroid" style={{ width: '100%' }}><MediaImg path={l.photo_path} alt={l.photo_caption || 'Polaroid'} /><figcaption>{l.photo_caption}</figcaption></figure>
+              {it.photo ? (
+                <figure className="polaroid" style={{ width: '100%' }}><MediaImg path={it.photo.media_path} alt={it.photo.caption || 'Polaroid'} /><figcaption>{it.photo.caption}</figcaption></figure>
               ) : (
                 <div className="mini" style={{ minHeight: 110 }}>
-                  {(l.body || (l.scraps?.[0]?.text ?? '')).slice(0, 90)}…
+                  {(l?.body || (l?.scraps?.find((s) => s.text)?.text ?? '')).slice(0, 90)}…
                   <div style={{ fontFamily: 'var(--sign)', fontSize: 30, textAlign: 'right', color: '#1F2A44', fontStyle: 'normal' }}>{f?.name}</div>
                 </div>
               )}

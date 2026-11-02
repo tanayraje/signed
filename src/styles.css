@@ -6,6 +6,7 @@
   color-scheme: light;
 }
 * { box-sizing: border-box }
+html { background-color: #F4EFE6; overscroll-behavior-y: none }
 html, body, #root { min-height: 100% }
 body { margin: 0; background: var(--paper) url(/assets/paper.jpg) center/cover fixed; color: var(--ink); font-family: var(--serif); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased }
 body.ench { --paper: #141A2E; --card: #1C2340; --ink: #F1E7CF; --muted: #C9BFA8; --line: #3B4566; --wax: #E2C27A; background: #141A2E url(/assets/night.jpg) center/cover fixed }
@@ -113,8 +114,8 @@ textarea { resize: vertical; line-height: 1.5 }
 @keyframes unfold { from { transform: perspective(900px) rotateX(70deg) translateY(30px); opacity: 0 } to { transform: none; opacity: 1 } }
 
 /* map */
-.map { position: relative; width: 100%; aspect-ratio: 390/560; max-width: 100%; border-radius: 14px; overflow: hidden; background: #E9E4D8 }
-.map-zoom { position: absolute; inset: 0; transform-origin: 0 0; will-change: transform }
+.map { isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black); position: relative; width: 100%; aspect-ratio: 390/560; max-width: 100%; border-radius: 14px; overflow: hidden; background: #E9E4D8 }
+.map-zoom { position: absolute; inset: 0; transform-origin: 0 0 }
 .map-in { position: absolute }
 .map .pin { transform: translate(-50%, calc(-100% - 10px / var(--zs, 1))) scale(calc(1 / var(--zs, 1))); transform-origin: 50% 100% }
 .map-zoom-btns { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 3 }
@@ -239,7 +240,7 @@ body.ench .ench-switch .knob { transform: translateX(40px); background: var(--go
 .cutter .cut-caption:focus { outline: 2px solid rgba(244, 239, 230, .6); outline-offset: 1px }
 
 /* the main bar stays put while the page scrolls */
-.app > .nav { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 440px; z-index: 20; margin: 0;
+.app > .nav { position: fixed; left: 0; right: 0; bottom: 0; width: auto; max-width: 440px; z-index: 20; margin: 0 auto;
   padding: 4px max(12px, env(safe-area-inset-left, 0px)) calc(4px + env(safe-area-inset-bottom, 0px));
   background: rgba(244, 239, 230, .9); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2) }
 .app:has(> .nav) { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) }
@@ -286,3 +287,11 @@ img, svg { -webkit-touch-callout: none; -webkit-user-drag: none }
 .answer-x { width: 28px; height: 28px; border-radius: 50%; border: 0; background: transparent; color: #8A7A62; display: flex; align-items: center; justify-content: center; padding: 0; flex: none; cursor: pointer }
 .answer-x svg { width: 14px; height: 14px }
 body.ench .answer-box { background: rgba(255, 255, 255, .06); color: inherit }
+.answer-box.need { border-left-color: #7A2420; background: rgba(122, 36, 32, .08) }
+.answer-box.need textarea { border-color: #7A2420 }
+.pin-photo { align-self: center; min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px dashed #A8987E; background: rgba(255, 252, 245, .7); color: #4A3F33; font-size: 14px; cursor: pointer }
+.pin-photo.on { border-style: solid; background: #2B2622; color: #FBF6EE; border-color: #2B2622 }
+
+/* iPhone browsers: no white rubber-band past the page ends, and the paper texture scrolls with the page */
+body { overscroll-behavior-y: none; background-attachment: scroll }
+body.ench { background-attachment: scroll }
