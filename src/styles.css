@@ -114,6 +114,7 @@ textarea { resize: vertical; line-height: 1.5 }
 
 /* map */
 .map { position: relative; width: 100%; aspect-ratio: 390/560; max-width: 100%; border-radius: 14px; overflow: hidden; background: #E9E4D8 }
+.map-in { position: absolute }
 .map img.base { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover }
 .map svg { position: absolute; inset: 0; width: 100%; height: 100% }
 .map .flyer { position: absolute; width: 12%; transform: translate(-50%, -50%); transition: left 1s linear, top 1s linear }
@@ -226,3 +227,21 @@ body.ench .ench-switch .knob { transform: translateX(40px); background: var(--go
 .trunk-stamps > * + * { margin-left: -12px }
 @media (prefers-reduced-motion: reduce) { .cut-result, .stamp-sheet { animation: none } .cut-window.pressing::after { animation: none } }
 .cutter .cut-caption:focus { outline: 2px solid rgba(244, 239, 230, .6); outline-offset: 1px }
+
+/* the main bar stays put while the page scrolls */
+.app > .nav { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 440px; z-index: 20; margin: 0;
+  padding: 4px max(12px, env(safe-area-inset-left, 0px)) calc(4px + env(safe-area-inset-bottom, 0px));
+  background: rgba(244, 239, 230, .9); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2) }
+.app:has(> .nav) { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) }
+body:has(.app > .nav) .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)) }
+.map-card { padding: 0; overflow: hidden; border: 1px solid var(--line); text-align: left; color: inherit; width: 100% }
+.map-card:disabled { opacity: 1; cursor: default }
+.map-card .map { border-radius: 0 }
+
+/* press-and-hold gestures (lifting a seal, the 11:11 wish) must not select text or pop up image menus.
+   Only a letter's own words can be selected; fields stay editable. */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent }
+input, textarea, [contenteditable], .selectable { -webkit-user-select: text; user-select: text }
+.selectable { -webkit-touch-callout: default }
+img, svg { -webkit-touch-callout: none; -webkit-user-drag: none }
+.seal img, .cutstamp img, .cutstamp svg, .owl, .flyer, .map img, .wordmark img, .press * { pointer-events: none }

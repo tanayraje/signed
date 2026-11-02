@@ -33,7 +33,7 @@ export default function Reader({ id }: { id: string }) {
           <div className="crease" style={{ top: '33%' }} />
           <div className="crease" style={{ top: '66%' }} />
           {l.video_path && <Video path={l.video_path} />}
-          {l.audio_path ? <TalkingBody letter={l} /> : l.body && <div className="body">{l.body}</div>}
+          {l.audio_path ? <TalkingBody letter={l} /> : l.body && <div className="body selectable">{l.body}</div>}
           {(l.scraps ?? []).map((s, i) =>
             s.type === 'photo' && s.media_path ? <Polaroid key={i} path={s.media_path} caption={s.text} width="55%" tilt={((i % 3) - 1) * 3} />
               : s.type === 'question' ? <div key={i} className="qcard"><small>A question</small>{s.text}</div>
@@ -86,7 +86,7 @@ function TalkingBody({ letter }: { letter: Letter }) {
   return (
     <div className="stack" style={{ gap: 10 }}>
       {url ? <audio ref={audio} src={url} controls style={{ width: '100%' }} onPlay={() => setTime(0)} onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} onEnded={() => setTime(-1)} /> : <p className="small" style={{ opacity: 0.7 }}>Loading the voice…</p>}
-      <div className="body">
+      <div className="body selectable">
         {words
           ? words.map((w, i) => <span key={i} className={`ink-word${shown(i, w.start) ? ' on' : ''}`}>{w.word} </span>)
           : plain.map((w, i) => <span key={i} className={`ink-word${shown(i) ? ' on' : ''}`}>{w} </span>)}

@@ -4,6 +4,7 @@ import { go } from '../lib/router';
 import { DAYS, ago, timeLeft } from '../lib/format';
 import { km } from '../lib/geo';
 import { Icon, Owl, Seal, Stamp } from '../components/bits';
+import FlightMap from '../components/FlightMap';
 import { supabase } from '../lib/supabase';
 
 export default function Friend({ id }: { id: string }) {
@@ -45,11 +46,11 @@ export default function Friend({ id }: { id: string }) {
     );
   } else if (inc.length) {
     hero = (
-      <section className="stone stack center" style={{ alignItems: 'center', padding: '20px 16px', gap: 8 }}>
-        <div style={{ opacity: 0.55 }}><Owl p={p} width={56} /></div>
-        <p>{p.owl_name} is on the way with a letter from {p.name}.</p>
-        <p className="small muted">Lands in {timeLeft(inc[0].arrive_at)}</p>
-      </section>
+      <button className="stone stack center" onClick={() => go(`flight/${inc[0].id}`)} style={{ alignItems: 'center', padding: '20px 16px', gap: 8, border: 0, width: '100%' }}>
+        <Owl p={p} width={56} />
+        <span>{p.owl_name} is on the way with a letter from {p.name}.</span>
+        <span className="small muted">Lands in {timeLeft(inc[0].arrive_at)}. Tap to watch.</span>
+      </button>
     );
   } else if (out.length) {
     hero = (
@@ -68,6 +69,24 @@ export default function Friend({ id }: { id: string }) {
     );
   }
 
+  // the two of you on the map, with the owl if a letter is in the air
+  const flight = inc[0] ? { l: inc[0], out: false } : out[0] ? { l: out[0], out: true } : null;
+  const ft = flight ? Math.max(0, Math.min(1, (now - new Date(flight.l.sent_at).getTime()) / (new Date(flight.l.arrive_at).getTime() - new Date(flight.l.sent_at).getTime() || 1))) : null;
+  const mapEl = me.last_lat != null && p.last_lat != null ? (
+    flight && flight.l.from_lat != null && flight.l.to_lat != null
+      ? <FlightMap zoom from={[flight.l.from_lat, flight.l.from_lon!]} to={[flight.l.to_lat, flight.l.to_lon!]} fromLabel={flight.out ? 'You' : p.name} toLabel={flight.out ? p.name : 'You'} t={ft} flyerAlt={`${flight.out ? me.owl_name : p.owl_name} in flight`} />
+      : <FlightMap zoom from={[me.last_lat, me.last_lon!]} to={[p.last_lat, p.last_lon!]} fromLabel="You" toLabel={p.name} />
+  ) : null;
+  const mapCard = mapEl && (
+    <button className="card stack map-card" onClick={() => flight && go(`flight/${flight.l.id}`)} disabled={!flight} aria-label={flight ? 'Watch the flight' : `Map: ${dist?.toLocaleString()} km between you`}>
+      {mapEl}
+      <span className="row" style={{ padding: '10px 14px 12px' }}>
+        <span className="grow" style={{ fontWeight: 600 }}>{dist != null ? `${dist.toLocaleString()} km between you` : 'Between you'}</span>
+        <span className="small muted">{flight ? 'Tap to watch' : 'as the crow flies'}</span>
+      </span>
+    </button>
+  );
+
   return (
     <main className="app">
       <div className="top">
@@ -79,17 +98,18 @@ export default function Friend({ id }: { id: string }) {
         </div>
       </div>
       {hero}
+      {mapCard}
       <div className="row" style={{ alignItems: 'stretch' }}>
         <button className="card grow stack" style={{ gap: 2, padding: 14, textAlign: 'left' }} onClick={() => go(`pocket/${p.id}`)}>
           <span className="small muted" style={{ fontStyle: 'italic' }}>In your pocket</span>
           <span style={{ fontSize: 20, fontWeight: 600 }}>{scrapCount} scrap{scrapCount === 1 ? '' : 's'}</span>
           <span className="small muted">Leaves {DAYS[f.mine.post_day]} evening</span>
         </button>
-        <div className="card grow stack" style={{ gap: 2, padding: 14 }}>
+        {!mapCard && <div className="card grow stack" style={{ gap: 2, padding: 14 }}>
           <span className="small muted" style={{ fontStyle: 'italic' }}>Between you</span>
           <span style={{ fontSize: 20, fontWeight: 600 }}>{dist != null ? `${dist.toLocaleString()} km` : 'Unknown'}</span>
           <span className="small muted">as the crow flies</span>
-        </div>
+        </div>}
       </div>
       <div className="card" style={{ padding: '2px 16px' }}>
         <label className="toggle">
