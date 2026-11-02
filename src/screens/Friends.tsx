@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { DAYS, timeLeft } from '../lib/format';
-import { Nav, Seal, Wordmark } from '../components/bits';
+import { Icon, Nav, Seal, Wordmark } from '../components/bits';
 
 export default function Friends() {
   const { me, friends, letters, incoming, say, session } = useStore();
@@ -59,8 +59,9 @@ export default function Friends() {
       </ul>
       <button className="btn block" style={{ borderStyle: 'dashed' }} onClick={makeInvite}>Invite a friend</button>
       {invite && (
-        <div className="card stack" style={{ padding: 14 }}>
-          <span className="small muted">Send this link to your friend. It works once.</span>
+        <div className="card stack" style={{ padding: 14, position: 'relative' }}>
+          <button className="scrap-x" style={{ top: 8, right: 8 }} onClick={() => setInvite(null)} aria-label="Close invite">{Icon.close}</button>
+          <span className="small muted" style={{ paddingRight: 36 }}>Send this link to your friend. It works once.</span>
           <input type="text" readOnly value={invite} onFocus={(e) => e.target.select()} aria-label="Invite link" />
           <button className="chip" onClick={async () => {
             try { await navigator.clipboard.writeText(invite); say('Link copied.'); } catch { say('Select the link and copy it.'); }
