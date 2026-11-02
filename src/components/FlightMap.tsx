@@ -82,7 +82,7 @@ export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flye
   const q = flying ? wander(A, B, t!) : null;
   const q2 = flying ? wander(A, B, Math.min(1, t! + 0.01)) : null;
   const ang = q && q2 ? (Math.atan2((q2[1] - q[1]) * 560, (q2[0] - q[0]) * 390) * 180) / Math.PI + 90 : 0;
-  const k = 1 / Math.max(wn, 0.0001); // how much the inner layer is scaled up
+  const k = z.s / Math.max(wn, 0.0001); // how much the map is scaled up; lines, dots and the owl stay the same size
 
   return (
     <div ref={box} className="map" style={{ aspectRatio: String(ratio), touchAction: z.s > 1 ? 'none' : 'pan-y' }}
@@ -99,7 +99,7 @@ export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flye
         </svg>
         <span className="pin" style={{ left: `${A[0] * 100}%`, top: `${A[1] * 100}%` }}>{fromLabel}</span>
         <span className="pin" style={{ left: `${B[0] * 100}%`, top: `${B[1] * 100}%` }}>{toLabel}</span>
-        {q && <img className="flyer" src="/assets/owl-fly.png" alt={flyerAlt} style={{ width: `${12 * wn}%`, left: `${q[0] * 100}%`, top: `${q[1] * 100}%`, transform: `translate(-50%,-50%) rotate(${ang}deg)` }} />}
+        {q && <img className="flyer" src="/assets/owl-fly.png" alt={flyerAlt} style={{ width: `${12 * wn}%`, left: `${q[0] * 100}%`, top: `${q[1] * 100}%`, transform: `translate(-50%,-50%) rotate(${ang}deg) scale(${1 / z.s})` }} />}
       </div>
       </div>
       <div className="map-zoom-btns" onPointerDown={(e) => e.stopPropagation()}>
