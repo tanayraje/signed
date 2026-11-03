@@ -429,3 +429,8 @@ label.rec { cursor: pointer }
 .pol-cap { width: 100%; border: 0 !important; background: transparent !important; padding: 6px 2px 0 !important; min-height: 0 !important; font-family: var(--sign); font-size: 22px; color: #1F2A44; text-align: center }
 .pol-cap::placeholder { color: rgba(31, 42, 68, .35); font-family: var(--serif); font-style: italic; font-size: 14px }
 .pol-cap:focus { outline: none }
+
+/* Wall header: the wordmark, with today's date like the top of a letter */
+.wall-head { align-items: flex-end; gap: 10px }
+.wall-date { font-style: italic; color: var(--muted); font-size: 15px; padding-bottom: 10px; white-space: nowrap }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }

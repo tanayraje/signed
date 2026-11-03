@@ -16,8 +16,12 @@ export default function Wall() {
 
   return (
     <main className="app">
-      <div className="top"><div className="grow"><Wordmark /></div></div>
-      <h1>Your wall</h1>
+      <div className="top wall-head">
+        <h1 className="sr-only">Your wall</h1>
+        <Wordmark size={50} />
+        <span className="grow" />
+        <span className="wall-date">{new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+      </div>
       <SealWeek />
       <WallCallouts />
       <div className="wall">
