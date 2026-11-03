@@ -114,7 +114,7 @@ export default function Compose({ id }: { id: string }) {
     setBusy('Sealing…');
     const answers = asked.map((q) => ({ question: q.question, answer: (draft.answers?.[q.key] ?? '').trim(), letter_id: q.letter_id, key: q.key })).filter((a) => a.answer);
     const { data, error } = await supabase.from('letters').insert({
-      sender: uid, recipient: id, kind: 'letter', body: draft.body.trim(), question: draft.question, stamp: stampOk ? draft.stamp : 'lotus',
+      sender: uid, recipient: id, kind: 'letter', body: draft.body.trim(), question: draft.question?.trim() || null, stamp: stampOk ? draft.stamp : 'lotus',
       photo_path: photo?.path ?? null, photo_caption: draft.caption || null,
       audio_path: audio?.path ?? null, video_path: video?.path ?? null, transcript: audio?.words.length ? audio.words : null,
       enchanted: enchanted || Boolean(audio || video),
@@ -235,7 +235,17 @@ export default function Compose({ id }: { id: string }) {
           </div>
         ))}
         {photo && <PreviewPolaroid url={photo.url} caption={draft.caption} />}
-        {draft.question && <div className="qcard" style={{ transform: 'rotate(-2deg)' }}><small>You ask {p.name}</small>{draft.question}</div>}
+        {draft.question !== null && (
+          <div className="qcard q-edit" style={{ transform: 'rotate(-2deg)' }}>
+            <div className="row" style={{ alignItems: 'center' }}>
+              <small className="grow">You ask {p.name}</small>
+              <button className="answer-x" onClick={() => set({ question: null })} aria-label="Take the question out">{Icon.close}</button>
+            </div>
+            <textarea rows={2} maxLength={200} value={draft.question} onChange={(e) => set({ question: e.target.value })}
+              placeholder={`Ask ${p.name} anything`} aria-label={`Your question for ${p.name}`} />
+            <button className="q-idea" onClick={() => set({ question: randomQuestion() })}>Give me another idea</button>
+          </div>
+        )}
         <div className="row" style={{ justifyContent: 'flex-end', alignItems: 'flex-end' }}>
           <div className="sig">{me.name}</div>
         </div>
@@ -249,7 +259,7 @@ export default function Compose({ id }: { id: string }) {
           try { const blob = await shrinkImage(file); const path = await upload(uid, blob, 'jpg'); setPhoto({ path, url: URL.createObjectURL(blob) }); } catch (err) { say((err as Error).message); }
           setBusy(null); e.target.value = '';
         }} />
-        <button className="chip" onClick={() => set({ question: randomQuestion() })}>{draft.question ? 'Another question' : 'Tuck in a question'}</button>
+        {draft.question === null && <button className="chip" onClick={() => set({ question: randomQuestion() })}>Tuck in a question</button>}
       </div>
       {photo && (<><label htmlFor="capIn" className="small muted" style={{ fontStyle: 'italic' }}>Polaroid caption</label>
         <input id="capIn" type="text" maxLength={28} value={draft.caption} onChange={(e) => set({ caption: e.target.value })} /></>)}

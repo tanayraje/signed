@@ -354,3 +354,8 @@ label.rec { cursor: pointer }
 .nav button { justify-content: flex-start; padding-top: 8px }
 .nav button > svg { width: 24px; height: 24px; margin: 1px 0 }
 .nav-write-dot { margin-top: -14px }
+
+/* the question you tuck in can be rewritten */
+.q-edit textarea { width: 100%; margin-top: 4px; border: 0; border-bottom: 1px dashed #B8964F; border-radius: 0; background: transparent; padding: 4px 0; font-size: 17px; font-family: var(--serif); color: #2B2622; resize: none; min-height: 0 }
+.q-edit textarea:focus { outline: none; border-bottom-style: solid }
+.q-idea { margin-top: 8px; border: 0; background: none; padding: 4px 0; color: #6E4F1A; font-size: 13px; font-style: italic; text-decoration: underline; text-underline-offset: 3px; cursor: pointer }
