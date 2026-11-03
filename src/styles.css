@@ -276,7 +276,7 @@ img, svg { -webkit-touch-callout: none; -webkit-user-drag: none }
 .stamp-tap { border: 0; background: none; padding: 0; transform: rotate(-4deg); cursor: zoom-in }
 
 /* answering a friend's questions */
-.q-answer { display: inline-flex; align-items: center; margin-top: 10px; min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #B8964F; background: rgba(255, 250, 238, .7); color: #5A3F12; font-size: 14px; font-style: normal; cursor: pointer }
+.q-answer { display: flex; width: fit-content; align-items: center; margin-top: 14px; min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #B8964F; background: rgba(255, 250, 238, .7); color: #5A3F12; font-size: 14px; font-style: normal; cursor: pointer }
 .q-answer.on { background: #6E4F1A; border-color: #6E4F1A; color: #FBF6EE }
 .q-done { display: block; margin-top: 8px; font-size: 13px; font-style: italic; color: #6E4F1A }
 .answer, .answer-box { border-left: 3px solid #C9AE76; background: rgba(239, 226, 198, .45); padding: 10px 12px 12px; border-radius: 0 10px 10px 0; display: flex; flex-direction: column; gap: 4px; color: #2B2622 }
