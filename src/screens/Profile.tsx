@@ -1,11 +1,14 @@
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { ago } from '../lib/format';
-import { enablePush, isInstalled } from '../lib/push';
+import { enablePush, isInstalled, pushState } from '../lib/push';
+import { useEffect, useState } from 'react';
 import { Nav, Owl, Seal, signOut } from '../components/bits';
 
 export default function Profile() {
   const { me, friends, saveFriendSettings, session, say } = useStore();
+  const [push, setPush] = useState<'on' | 'off' | 'blocked' | 'unsupported' | null>(null);
+  useEffect(() => { void pushState().then(setPush); }, []);
   if (!me) return null;
 
   return (
@@ -55,9 +58,16 @@ export default function Profile() {
         <div className="row" style={{ minHeight: 60 }}>
           <span className="grow stack" style={{ gap: 0 }}>
             <span>Notifications</span>
-            <span className="small muted">{isInstalled() ? 'Know when an owl lands and when it is 11:11.' : 'Add Signed to your Home Screen first, then turn these on.'}</span>
+            <span className="small muted">{
+              push === 'on' ? 'On for this phone. You’ll hear when an owl lands and at 11:11.'
+                : push === 'blocked' ? 'Blocked in your phone settings. Allow Signed there to turn them on.'
+                  : push === 'unsupported' && !isInstalled() ? 'Add Signed to your Home Screen first, then turn these on.'
+                    : push === 'unsupported' ? 'This phone can’t show notifications from Signed.'
+                      : 'Know when an owl lands and when it is 11:11.'}</span>
           </span>
-          <button className="chip" onClick={async () => say(await enablePush(session!.user.id))}>Turn on</button>
+          {push === 'on'
+            ? <span className="chip on" aria-label="Notifications are on">On</span>
+            : push !== 'blocked' && push !== 'unsupported' && <button className="chip" onClick={async () => { say(await enablePush(session!.user.id)); setPush(await pushState()); }}>Turn on</button>}
         </div>
       </div>
       <button className="item card" onClick={() => go('tour')}>

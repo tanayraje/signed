@@ -36,3 +36,14 @@ export async function enablePush(userId: string): Promise<string> {
   );
   return error ? 'Could not save this device. Try again.' : 'Notifications are on.';
 }
+
+/** Where notifications stand on this device: on, off, blocked in settings, or not possible here. */
+export async function pushState(): Promise<'on' | 'off' | 'blocked' | 'unsupported'> {
+  if (!pushSupported()) return 'unsupported';
+  if (Notification.permission === 'denied') return 'blocked';
+  if (Notification.permission !== 'granted') return 'off';
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    return (await reg.pushManager.getSubscription()) ? 'on' : 'off';
+  } catch { return 'off'; }
+}
