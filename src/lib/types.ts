@@ -20,6 +20,7 @@ export interface Profile {
   last_place: string | null;
   last_seen_at: string | null;
   onboarded: boolean;
+  toured: boolean;
 }
 
 export interface FriendSettings {
@@ -54,6 +55,8 @@ export interface Letter {
   kind: 'letter' | 'bundle';
   body: string;
   question: string | null;
+  questions: string[] | null;
+  photos: { path: string; caption: string | null }[] | null;
   answers: { question: string; answer: string; letter_id: string }[] | null;
   stamp: string;
   photo_path: string | null;

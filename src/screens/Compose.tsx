@@ -9,7 +9,8 @@ import { BUILT_IN_STAMPS, Icon, Seal, Stamp } from '../components/bits';
 import Cutter from './Cutter';
 import { setToAnswer, toAnswer, type ToAnswer } from '../lib/answers';
 
-interface Draft { body: string; caption: string; question: string | null; stamp: string; answers?: Record<string, string> }
+interface Draft { body: string; caption?: string; question?: string | null; questions?: string[]; stamp: string; answers?: Record<string, string> }
+interface Photo { path: string; url: string; caption: string }
 const draftKey = (id: string) => `signed.draft.${id}`;
 
 type SpeechRec = { start: () => void; stop: () => void; continuous: boolean; interimResults: boolean; lang: string;
@@ -19,10 +20,13 @@ export default function Compose({ id }: { id: string }) {
   const { me, friend, session, stamps, say, refresh } = useStore();
   const uid = session!.user.id;
   const [draft, setDraft] = useState<Draft>(() => {
-    try { return JSON.parse(localStorage.getItem(draftKey(id)) || '') as Draft; } catch { return { body: '', caption: '', question: null, stamp: 'lotus' }; }
+    try {
+      const d = JSON.parse(localStorage.getItem(draftKey(id)) || '') as Draft;
+      return { ...d, questions: d.questions ?? (d.question ? [d.question] : []) };
+    } catch { return { body: '', questions: [], stamp: 'signed' }; }
   });
   const [enchanted, setEnchanted] = useState(false);
-  const [photo, setPhoto] = useState<{ path: string; url: string } | null>(null);
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [audio, setAudio] = useState<{ path: string; url: string; words: WordTiming[] } | null>(null);
   const [video, setVideo] = useState<{ path: string; url: string } | null>(null);
   const [recording, setRecording] = useState(false);
@@ -110,19 +114,20 @@ export default function Compose({ id }: { id: string }) {
   async function seal() {
     const unanswered = asked.filter((q) => !draft.answers?.[q.key]?.trim());
     if (unanswered.length) { setNudge(true); say(unanswered.length === 1 ? 'Answer the question first, or tap × to skip it.' : `Answer the ${unanswered.length} questions first, or tap × to skip them.`); return; }
-    if (!draft.body.trim() && !photo && !audio && !video && !asked.length) { say('Write something first, even one line.'); return; }
+    if (!draft.body.trim() && !photos.length && !audio && !video && !asked.length) { say('Write something first, even one line.'); return; }
     setBusy('Sealing…');
+    const qs = (draft.questions ?? []).map((q) => q.trim()).filter(Boolean);
     const answers = asked.map((q) => ({ question: q.question, answer: (draft.answers?.[q.key] ?? '').trim(), letter_id: q.letter_id, key: q.key })).filter((a) => a.answer);
     const { data, error } = await supabase.from('letters').insert({
-      sender: uid, recipient: id, kind: 'letter', body: draft.body.trim(), question: draft.question?.trim() || null, stamp: stampOk ? draft.stamp : 'lotus',
-      photo_path: photo?.path ?? null, photo_caption: draft.caption || null,
+      sender: uid, recipient: id, kind: 'letter', body: draft.body.trim(), question: null, questions: qs.length ? qs : null, stamp: stampOk ? draft.stamp : 'signed',
+      photos: photos.length ? photos.map((x) => ({ path: x.path, caption: x.caption.trim() || null })) : null,
       audio_path: audio?.path ?? null, video_path: video?.path ?? null, transcript: audio?.words.length ? audio.words : null,
       enchanted: enchanted || Boolean(audio || video),
       answers: answers.length ? answers.map(({ key: _k, ...a }) => a) : null
     }).select('id').single();
     setBusy(null);
     if (error || !data) {
-      if (error?.message.includes('stamp')) { set({ stamp: 'lotus' }); await refresh(); say('That stamp has already flown. Pick another.'); return; }
+      if (error?.message.includes('stamp')) { set({ stamp: 'signed' }); await refresh(); say('That stamp has already flown. Pick another.'); return; }
       say('Your letter did not send. Check your connection and try again.'); return;
     }
     try { localStorage.removeItem(draftKey(id)); } catch { /* fine */ }
@@ -234,41 +239,54 @@ export default function Compose({ id }: { id: string }) {
               onChange={(e) => set({ answers: { ...(draft.answers ?? {}), [q.key]: e.target.value } })} />
           </div>
         ))}
-        {photo && <PreviewPolaroid url={photo.url} caption={draft.caption} />}
-        {draft.question !== null && (
-          <div className="qcard q-edit" style={{ transform: 'rotate(-2deg)' }}>
-            <div className="row" style={{ alignItems: 'center' }}>
-              <small className="grow">You ask {p.name}</small>
-              <button className="answer-x" onClick={() => set({ question: null })} aria-label="Take the question out">{Icon.close}</button>
-            </div>
-            <textarea rows={2} maxLength={200} value={draft.question} onChange={(e) => set({ question: e.target.value })}
-              placeholder={`Ask ${p.name} anything`} aria-label={`Your question for ${p.name}`} />
-            <button className="q-idea" onClick={() => set({ question: randomQuestion() })}>Give me another idea</button>
+        {photos.length > 0 && (
+          <div className="polaroids">
+            {photos.map((ph, n) => (
+              <figure key={ph.path} className="polaroid edit" style={{ transform: `rotate(${[3, -2, 2, -3][n % 4]}deg)` }}>
+                <button className="scrap-x" onClick={() => { setPhotos(photos.filter((x) => x.path !== ph.path)); void supabase.storage.from('mail').remove([ph.path]); }} aria-label="Remove this Polaroid">{Icon.close}</button>
+                <img src={ph.url} alt={ph.caption || 'Your Polaroid'} />
+                <input className="pol-cap" type="text" maxLength={28} value={ph.caption} placeholder="Write a little note"
+                  aria-label="Note on the Polaroid" onChange={(e) => setPhotos(photos.map((x) => x.path === ph.path ? { ...x, caption: e.target.value } : x))} />
+              </figure>
+            ))}
           </div>
         )}
+        {(draft.questions ?? []).map((q, n) => (
+          <div key={n} className="qcard q-edit" style={{ transform: `rotate(${n % 2 ? 1.5 : -2}deg)` }}>
+            <div className="row" style={{ alignItems: 'center' }}>
+              <small className="grow">You ask {p.name}</small>
+              <button className="answer-x" onClick={() => set({ questions: (draft.questions ?? []).filter((_, k) => k !== n) })} aria-label="Take this question out">{Icon.close}</button>
+            </div>
+            <textarea rows={2} maxLength={200} value={q} onChange={(e) => set({ questions: (draft.questions ?? []).map((x, k) => k === n ? e.target.value : x) })}
+              placeholder={`Ask ${p.name} anything`} aria-label={`Question ${n + 1} for ${p.name}`} />
+            <button className="q-idea" onClick={() => set({ questions: (draft.questions ?? []).map((x, k) => k === n ? randomQuestion() : x) })}>Give me another idea</button>
+          </div>
+        ))}
         <div className="row" style={{ justifyContent: 'flex-end', alignItems: 'flex-end' }}>
           <div className="sig">{me.name}</div>
         </div>
       </div>
 
       <div className="chips">
-        <label className="chip" htmlFor="photoIn">{photo ? 'Change Polaroid' : 'Add a Polaroid'}</label>
-        <input id="photoIn" type="file" accept="image/*" hidden onChange={async (e) => {
-          const file = e.target.files?.[0]; if (!file) return;
+        {photos.length < 6 && <label className="chip" htmlFor="photoIn">{photos.length ? 'Add another Polaroid' : 'Add a Polaroid'}</label>}
+        <input id="photoIn" type="file" accept="image/*" multiple hidden onChange={async (e) => {
+          const files = [...(e.target.files ?? [])].slice(0, 6 - photos.length); if (!files.length) return;
           setBusy('Developing…');
-          try { const blob = await shrinkImage(file); const path = await upload(uid, blob, 'jpg'); setPhoto({ path, url: URL.createObjectURL(blob) }); } catch (err) { say((err as Error).message); }
+          const added: Photo[] = [];
+          for (const file of files) {
+            try { const blob = await shrinkImage(file); const path = await upload(uid, blob, 'jpg'); added.push({ path, url: URL.createObjectURL(blob), caption: '' }); } catch (err) { say((err as Error).message); }
+          }
+          setPhotos((cur) => [...cur, ...added]);
           setBusy(null); e.target.value = '';
         }} />
-        {draft.question === null && <button className="chip" onClick={() => set({ question: randomQuestion() })}>Tuck in a question</button>}
+        {(draft.questions ?? []).length < 5 && <button className="chip" onClick={() => set({ questions: [...(draft.questions ?? []), randomQuestion()] })}>{(draft.questions ?? []).length ? 'Tuck in another question' : 'Tuck in a question'}</button>}
       </div>
-      {photo && (<><label htmlFor="capIn" className="small muted" style={{ fontStyle: 'italic' }}>Polaroid caption</label>
-        <input id="capIn" type="text" maxLength={28} value={draft.caption} onChange={(e) => set({ caption: e.target.value })} /></>)}
 
       <section className="stack"><h2>Stamp</h2>
         <div className="stamp-row">
           <button className="stamp-cut" onClick={() => setCutting(true)} aria-label="Cut a new stamp">{Icon.camera}<span>Cut one</span></button>
           {stampKeys.map((k) => (
-            <button key={k} className={`stamp-pick${(stampOk ? draft.stamp : 'lotus') === k ? ' on' : ''}`} aria-pressed={draft.stamp === k} onClick={() => set({ stamp: k })}><Stamp id={k} size={48} /></button>
+            <button key={k} className={`stamp-pick${(stampOk ? draft.stamp : 'signed') === k ? ' on' : ''}`} aria-pressed={draft.stamp === k} onClick={() => set({ stamp: k })}><Stamp id={k} size={48} /></button>
           ))}
         </div>
         {draft.stamp.startsWith('custom:') && stampOk && <p className="small muted">This stamp goes to {p.name} for good.</p>}
@@ -284,9 +302,6 @@ export default function Compose({ id }: { id: string }) {
   );
 }
 
-function PreviewPolaroid({ url, caption }: { url: string; caption: string }) {
-  return <figure className="polaroid" style={{ width: '60%', transform: 'rotate(3deg)', marginLeft: 'auto' }}><img src={url} alt="Your Polaroid" /><figcaption>{caption}</figcaption></figure>;
-}
 
 export function Sparks() {
   const [dots] = useState(() => Array.from({ length: 22 }, () => ({ l: Math.random() * 100, t: Math.random() * 100, d: Math.random() * 3 })));

@@ -1,13 +1,13 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { Owl, Seal, Wordmark } from '../components/bits';
 
-export const TOURED = 'signed.toured';
-
 /** A short swipeable welcome: the five things worth knowing. Shown once, and again from Profile. */
 export default function Tour() {
-  const { me } = useStore();
+  const { me, saveMe } = useStore();
+  // seen once is enough: mark it as soon as the tour opens, so it never comes back on its own
+  useEffect(() => { if (me && !me.toured) void saveMe({ toured: true }); }, [me?.toured]); // eslint-disable-line react-hooks/exhaustive-deps
   const track = useRef<HTMLDivElement>(null);
   const [i, setI] = useState(0);
   if (!me) return null;
@@ -41,7 +41,7 @@ export default function Tour() {
   ];
   const last = slides.length - 1;
   const to = (n: number) => track.current?.scrollTo({ left: n * track.current.clientWidth, behavior: 'smooth' });
-  const done = () => { try { localStorage.setItem(TOURED, '1'); } catch { /* fine */ } go('wall'); };
+  const done = () => go('wall');
 
   return (
     <div className="tour">

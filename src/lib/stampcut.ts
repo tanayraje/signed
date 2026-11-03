@@ -101,9 +101,12 @@ export async function bake(photo: HTMLCanvasElement, cutter: Cutter, finish: Fin
   // type: maker's name small at the top corner, caption along the bottom
   const ink = finish === 'engraved' ? '#26345C' : '#3C3024';
   ctx.fillStyle = ink; ctx.textBaseline = 'middle';
+  try { await document.fonts.load(`${Math.round(m * 0.95)}px "Mrs Saint Delafield"`); } catch { /* falls back below */ }
+  ctx.font = `${Math.round(m * 0.95)}px "Mrs Saint Delafield", "Snell Roundhand", cursive`;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Signed', m - 2, m * 0.78);
+  ctx.textBaseline = 'middle';
   ctx.font = `600 ${Math.round(m * 0.34)}px Newsreader, Georgia, serif`;
-  ctx.textAlign = 'left';
-  ctx.fillText('SIGNED', m, m * 0.55);
   ctx.textAlign = 'right';
   ctx.fillText(maker.toUpperCase().slice(0, 18), W - m, m * 0.55);
   if (caption) {

@@ -77,7 +77,15 @@ export default function Reader({ id, from }: { id: string; from?: string }) {
                 : <p key={i} style={{ fontStyle: 'italic', borderBottom: '1px dashed #D9CDB9', paddingBottom: 8 }}>{s.text}</p>
           )}
           {l.photo_path && <div className="stack" style={{ marginLeft: 'auto', width: '58%', gap: 8 }}><Polaroid path={l.photo_path} caption={l.photo_caption} width="100%" tilt={4} /><PinPhoto path={l.photo_path} caption={l.photo_caption} /></div>}
+          {(l.photos ?? []).length > 0 && (
+            <div className="polaroids">
+              {l.photos!.map((ph, n) => (
+                <div key={ph.path} className="stack" style={{ gap: 8 }}><Polaroid path={ph.path} caption={ph.caption} width="100%" tilt={[3, -2, 2, -3][n % 4]} /><PinPhoto path={ph.path} caption={ph.caption} /></div>
+              ))}
+            </div>
+          )}
           {l.question && <QCard label={fromMe ? 'You asked' : `${other.name} asks you`} q={l.question} k={`${l.id}:q`} tilt={-2} />}
+          {(l.questions ?? []).map((q, n) => <QCard key={n} label={fromMe ? 'You asked' : `${other.name} asks you`} q={q} k={`${l.id}:q${n}`} tilt={n % 2 ? 1.5 : -2} />)}
           {(l.answers ?? []).length > 0 && (
             <div className="stack" style={{ gap: 10 }}>
               {l.answers!.map((a, i) => (

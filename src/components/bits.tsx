@@ -32,25 +32,20 @@ export function Owl({ p, width = 76, alt = '' }: { p: Pick<Profile, 'plume' | 'e
   return <img className="owl" src={owlSrc(p)} alt={alt} width={width} height={Math.round(width * 1.25)} />;
 }
 
-const STAMP_ART: Record<string, [string, string]> = {
-  lotus: ['#B9852B', 'M22 38c-6-4-8-10-6-16c4 2 6 6 6 10c0-6 2-11 6-14c2 5 1 11-2 15c3-3 7-4 10-3c-2 5-7 8-14 8z'],
-  peacock: ['#2C5C4E', 'M22 12a9 12 0 1 0 0.01 0M22 18a4.5 6 0 1 0 0.01 0M22 36v10'],
-  monsoon: ['#2C3A68', 'M10 22c0-6 5-9 10-8c2-4 9-5 12 1c4 0 6 3 5 7zM14 28l-2 6M20 28l-2 6M26 28l-2 6M32 28l-2 6'],
-  chai: ['#7A2420', 'M12 22h18v8a7 7 0 0 1-7 7h-4a7 7 0 0 1-7-7zM30 25h3a3 3 0 0 1 0 6h-3M17 18c0-3 2-3 2-6M23 18c0-3 2-3 2-6']
-};
-export const BUILT_IN_STAMPS = Object.keys(STAMP_ART);
+/** Signed's own stamps: always yours, never used up. Older letters used earlier names. */
+export const BUILT_IN_STAMPS = ['signed', 'owlpost', 'route', 'forgetmenot', 'eleven'];
+const LEGACY: Record<string, string> = { lotus: 'signed', peacock: 'owlpost', monsoon: 'route', chai: 'forgetmenot' };
+const STAMP_NAMES: Record<string, string> = { signed: 'Sealed with care', owlpost: 'Night post', route: 'As the owl flies', forgetmenot: 'Forget me not', eleven: 'Make a wish together' };
 
 export function Stamp({ id, size = 44, postmark = true }: { id: string; size?: number; postmark?: boolean }) {
   const { stamps } = useStore();
   const custom = id.startsWith('custom:') ? stamps.find((s) => `custom:${s.id}` === id) : undefined;
   if (id.startsWith('custom:')) return <CutStamp s={custom} size={size} postmark={postmark} />;
-  const art = STAMP_ART[id] ?? STAMP_ART.lotus;
+  const key = BUILT_IN_STAMPS.includes(id) ? id : LEGACY[id] ?? 'signed';
   return (
-    <svg className="stamp" width={size} height={size * 1.23} viewBox="0 0 44 54" role="img" aria-label="Stamp">
-      <rect x="1" y="1" width="42" height="52" fill="#F2E8D4" stroke="#BCA983" strokeDasharray="1.5 2.5" />
-      <path d={art[1]} fill="none" stroke={art[0]} strokeWidth="1" strokeLinecap="round" />
-      <rect x="5" y="5" width="34" height="44" fill="none" stroke={art[0]} strokeWidth=".7" />
-    </svg>
+    <span className="cutstamp" style={{ width: size, height: Math.round(size / 0.78) }} role="img" aria-label={`Stamp: ${STAMP_NAMES[key]}`}>
+      <img src={`/assets/stamp-${key}.png`} alt="" draggable={false} />
+    </span>
   );
 }
 

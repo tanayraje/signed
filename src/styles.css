@@ -421,3 +421,11 @@ label.rec { cursor: pointer }
 .stars i { position: absolute; border-radius: 50%; background: #FFF6DA; opacity: var(--o); box-shadow: 0 0 4px rgba(255, 246, 218, .6); animation: twinkle ease-in-out infinite }
 @keyframes twinkle { 0%, 100% { opacity: calc(var(--o) * .25); transform: scale(.7) } 50% { opacity: var(--o); transform: scale(1) } }
 @media (prefers-reduced-motion: reduce) { .stars i { animation: none } }
+
+/* several Polaroids, each with a little note on its base */
+.polaroids { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 14px; align-items: start }
+.polaroid.edit { position: relative; margin: 0 }
+.polaroid.edit .scrap-x { top: -10px; right: -10px }
+.pol-cap { width: 100%; border: 0 !important; background: transparent !important; padding: 6px 2px 0 !important; min-height: 0 !important; font-family: var(--sign); font-size: 22px; color: #1F2A44; text-align: center }
+.pol-cap::placeholder { color: rgba(31, 42, 68, .35); font-family: var(--serif); font-style: italic; font-size: 14px }
+.pol-cap:focus { outline: none }

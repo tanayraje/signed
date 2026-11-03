@@ -17,7 +17,7 @@ import Wish from './screens/Wish';
 import Invite from './screens/Invite';
 import Stamps from './screens/Stamps';
 import Cutter from './screens/Cutter';
-import Tour, { TOURED } from './screens/Tour';
+import Tour from './screens/Tour';
 import { Owl } from './components/bits';
 
 export default function App() {
@@ -74,9 +74,8 @@ export default function App() {
   if (!me) return <main className="app"><p className="muted">Opening your desk…</p></main>;
   if (!me.onboarded && r0 !== 'setup') { go('setup/seal'); return null; }
 
-  let seen = true;
-  try { seen = Boolean(localStorage.getItem(TOURED)); } catch { /* storage blocked: skip the tour */ }
-  if (!seen && r0 !== 'tour' && r0 !== 'setup' && r0 !== 'invite') { go('tour'); return null; }
+  // The welcome tour shows once, right after someone first sets up; Profile can open it again.
+  if (me.onboarded && me.toured === false && r0 !== 'tour' && r0 !== 'setup' && r0 !== 'invite') { go('tour'); return null; }
 
   let screen;
   switch (r0) {
