@@ -211,7 +211,7 @@ export default function Compose({ id }: { id: string }) {
                 <button className={`rec${dictating ? ' live' : ''}`} onClick={dictating ? stopDictation : startDictation} aria-label={dictating ? 'Stop listening' : 'Start speaking'}>
                   {dictating
                     ? <svg width="26" height="26" viewBox="0 0 24 24" fill="#141A2E" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
-                    : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#141A2E" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><path d="M4 19c3-1 5-3 7-6l4-7 3 2-4 7c-2 3-4 4-7 5" /><path d="M14 6l3 2M4 21h7" /></svg>}
+                    : <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 3.2c-5.6.4-10.2 4-12.4 9.7-.6 1.6-1 3.2-1.2 4.8l1.5-1.2c2-.4 4-1.3 5.7-2.9-1.3.1-2.4 0-3.3-.3 1.7-.2 3.3-.8 4.7-1.9-1 0-1.9-.1-2.7-.4 1.7-.5 3.1-1.4 4.3-2.7.9-1.2 2.1-3 3.4-5.1z" fill="#141A2E" /><path d="M18.4 5.6L5.2 19.4" stroke="#E2C27A" strokeWidth="0.9" strokeLinecap="round" /><path d="M7.4 17.1L3.6 21" stroke="#141A2E" strokeWidth="1.6" strokeLinecap="round" /></svg>}
                 </button>
                 <span className="ench-hint">{dictating ? 'Listening. Your words appear on the page below.' : 'Tap and start talking'}</span>
               </div>
