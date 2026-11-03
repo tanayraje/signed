@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './lib/store';
 import { useRoute, go } from './lib/router';
+import { supabase } from './lib/supabase';
 import SignIn, { restorePlace } from './screens/SignIn';
 import Setup from './screens/Setup';
 import Friends from './screens/Friends';
@@ -21,12 +22,28 @@ import Tour from './screens/Tour';
 import { Owl } from './components/bits';
 
 export default function App() {
-  const { session, ready, me, friends, toast, letters, friend } = useStore();
+  const { session, ready, me, friends, toast, letters, friend, say, refresh } = useStore();
   const [r0, r1, r2] = useRoute();
   const [alarm, setAlarm] = useState(false);
 
-  // After signing in, go back to where the person was headed (an invite link, for example).
+  // After signing in, go back to where the person was headed.
   useEffect(() => { if (session) restorePlace(); }, [session]);
+
+  // A remembered invite is accepted as soon as there is an account, before seal setup.
+  useEffect(() => {
+    if (!session) return;
+    let code: string | null = null;
+    try { code = localStorage.getItem('signed.pendingInvite'); } catch { /* storage blocked */ }
+    if (!code) return;
+    void (async () => {
+      const { data, error } = await supabase.rpc('accept_invite', { invite_code: code });
+      try { localStorage.removeItem('signed.pendingInvite'); } catch { /* fine */ }
+      if (error) { if (!/your own/i.test(error.message)) say(error.message || 'That invite did not work.'); return; }
+      await refresh();
+      const who = (await supabase.from('profiles').select('name').eq('id', data as string).single()).data?.name;
+      say(who ? `You and ${who} are friends now.` : 'You have a new friend.');
+    })();
+  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Coming back after a while away starts on the Wall too (a half-written letter keeps its draft).
   useEffect(() => {

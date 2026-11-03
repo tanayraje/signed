@@ -7,6 +7,10 @@ import './styles.css';
 
 registerSW({ immediate: true });
 
+// An invite link is remembered straight away, so signing in and setting up a seal can't lose it.
+const inviteMatch = window.location.hash.match(/^#\/?invite\/([A-Za-z0-9]+)/);
+if (inviteMatch) { try { localStorage.setItem('signed.pendingInvite', inviteMatch[1]); } catch { /* storage blocked */ } }
+
 // Opening the app always starts on the Wall. Links that bring you somewhere on purpose
 // (an invite, a landed letter from a notification, the 11:11 alarm) are kept.
 const KEEP = ['invite', 'friend', 'wish', 'open', 'read', 'setup'];

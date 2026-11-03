@@ -8,6 +8,7 @@ export default function Invite({ code }: { code: string }) {
   const [msg, setMsg] = useState('Opening your invite…');
   useEffect(() => {
     void (async () => {
+      try { localStorage.removeItem('signed.pendingInvite'); } catch { /* fine */ }
       const { data, error } = await supabase.rpc('accept_invite', { invite_code: code });
       if (error) { setMsg(error.message || 'That invite did not work.'); return; }
       await refresh();
