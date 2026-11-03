@@ -325,3 +325,14 @@ label.rec { cursor: pointer }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 4px 10px rgba(74, 20, 16, .35) }
 .nav .nav-write-dot svg { width: 20px; height: 20px }
 .me-seal { border: 0; background: none; padding: 0; border-radius: 50%; cursor: pointer; flex: none }
+
+/* trunk, one bundle per friend */
+.trunk-group { border: 1px solid var(--line); border-radius: 14px; background: var(--card) url(/assets/card.jpg) center/cover; overflow: hidden }
+.trunk-group summary { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; list-style: none }
+.trunk-group summary::-webkit-details-marker { display: none }
+.trunk-chev { font-size: 24px; color: var(--muted); transition: transform .2s; line-height: 1 }
+.trunk-group[open] .trunk-chev { transform: rotate(90deg) }
+.trunk-letters { list-style: none; margin: 0; padding: 0 0 6px; border-top: 1px solid var(--line) }
+.trunk-letters button { display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 11px 14px 11px 64px; border: 0; background: none; text-align: left; color: inherit; font: inherit; cursor: pointer }
+.trunk-letters li + li button { border-top: 1px dashed var(--line) }
+.trunk-snip { font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0 }

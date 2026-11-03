@@ -57,20 +57,35 @@ export default function Wall() {
           );
         })()}
         {trunk.length === 0 ? <p className="small muted">Letters you fold away live here.</p> : (
-          <ul className="list">
-            {trunk.map((l) => {
-              const f = friend(l.sender)?.profile;
-              return (
-                <li key={l.id}>
-                  <button className="item" onClick={() => go(`read/${l.id}/wall`)}>
-                    {f && <Seal p={f} size={36} />}
-                    <span className="grow">{f?.name ?? 'A friend'}{l.kind === 'bundle' ? ', a bundle of scraps' : ''}</span>
-                    <span className="small muted">{longDate(l.sent_at)}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="stack" style={{ gap: 10 }}>
+            {[...trunk.reduce((m, l) => m.set(l.sender, [...(m.get(l.sender) ?? []), l]), new Map<string, typeof trunk>()).entries()]
+              .sort((a, b) => b[1][0].sent_at.localeCompare(a[1][0].sent_at))
+              .map(([sender, list]) => {
+                const f = friend(sender)?.profile;
+                return (
+                  <details key={sender} className="trunk-group">
+                    <summary>
+                      {f && <Seal p={f} size={38} />}
+                      <span className="grow stack" style={{ gap: 0 }}>
+                        <span style={{ fontWeight: 600 }}>{f?.name ?? 'A friend'}</span>
+                        <span className="small muted">{list.length} {list.length === 1 ? 'letter' : 'letters'}, latest {longDate(list[0].sent_at)}</span>
+                      </span>
+                      <span className="trunk-chev" aria-hidden="true">›</span>
+                    </summary>
+                    <ul className="trunk-letters">
+                      {list.map((l) => (
+                        <li key={l.id}>
+                          <button onClick={() => go(`read/${l.id}/wall`)}>
+                            <span className="grow trunk-snip">{l.kind === 'bundle' ? 'A bundle of scraps' : (l.body || (l.audio_path ? 'A howler' : l.video_path ? 'A moving picture' : 'A letter')).slice(0, 60)}</span>
+                            <span className="small muted">{longDate(l.sent_at)}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                );
+              })}
+          </div>
         )}
       </section>
       <Nav on="wall" />
