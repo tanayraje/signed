@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { DAYS, timeLeft } from '../lib/format';
-import { Icon, Nav, Seal, Wordmark } from '../components/bits';
+import { Icon, Nav, Seal } from '../components/bits';
 import InTheAir, { useFlights } from '../components/InTheAir';
 
 export default function Friends() {
@@ -30,14 +30,14 @@ export default function Friends() {
 
   return (
     <main className="app">
-      <div className="top"><div className="grow"><Wordmark /></div></div>
+      <div className="top"><h1 className="grow">Friends</h1></div>
       {flights.length > 0 && (
         <section className="stack" style={{ gap: 10 }}>
           <h2>In the air</h2>
           <InTheAir flights={flights} />
         </section>
       )}
-      <h1>{flights.length > 0 ? 'Everyone else' : 'Your friends'}</h1>
+      {flights.length > 0 && <h2>Everyone else</h2>}
       {friends.length === 0 && (
         <div className="stone stack center" style={{ padding: 24, alignItems: 'center' }}>
           <p>No one to write to yet.</p>

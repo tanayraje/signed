@@ -1,7 +1,7 @@
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { longDate } from '../lib/format';
-import { CutStamp, MediaImg, Nav, Owl, Seal } from '../components/bits';
+import { CutStamp, MediaImg, Nav, Owl, Seal, Wordmark } from '../components/bits';
 import { useFlights } from '../components/InTheAir';
 import { timeLeft } from '../lib/format';
 
@@ -16,9 +16,8 @@ export default function Wall() {
 
   return (
     <main className="app">
-      <div className="top">
-        <h1 className="grow">Your wall</h1>
-      </div>
+      <div className="top"><div className="grow"><Wordmark /></div></div>
+      <h1>Your wall</h1>
       <SealWeek />
       <WallCallouts />
       <div className="wall">
