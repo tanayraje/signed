@@ -8,7 +8,7 @@ import Friends from './screens/Friends';
 import Friend from './screens/Friend';
 import Pocket from './screens/Pocket';
 import Compose from './screens/Compose';
-import Flight from './screens/Flight';
+import Flight, { PairMap } from './screens/Flight';
 import Opening from './screens/Opening';
 import Reader from './screens/Reader';
 import Wall from './screens/Wall';
@@ -106,6 +106,7 @@ export default function App() {
     case 'read': screen = <Reader id={r1} from={r2} />; break;
     case 'seals': screen = <Seals />; break;
     case 'stamps': screen = <Stamps />; break;
+    case 'map': screen = <PairMap friendId={r1} />; break;
     case 'tour': screen = <Tour />; break;
     case 'cutter': screen = <Cutter />; break;
     case 'profile': screen = <Profile />; break;

@@ -78,14 +78,14 @@ export default function Friend({ id }: { id: string }) {
     ...inc.map((l) => ({ t: prog(l), back: true, plume: p.plume, alt: `${p.owl_name} flying a letter to you` }))
   ];
   const mapEl = me.last_lat != null && p.last_lat != null
-    ? <FlightMap zoom from={[me.last_lat, me.last_lon!]} to={[p.last_lat, p.last_lon!]} fromLabel="You" toLabel={p.name} owls={owls} />
+    ? <FlightMap from={[me.last_lat, me.last_lon!]} to={[p.last_lat, p.last_lon!]} fromLabel="You" toLabel={p.name} owls={owls} onOpen={() => go(`map/${p.id}`)} />
     : null;
   const mapCard = mapEl && (
     <div className="card stack map-card">
       {mapEl}
-      <button className="row map-cap" onClick={() => flight && go(`flight/${flight.l.id}`)} disabled={!flight}>
+      <button className="row map-cap" onClick={() => go(`map/${p.id}`)}>
         <span className="grow" style={{ fontWeight: 600 }}>{dist != null ? `${dist.toLocaleString()} km between you` : 'Between you'}</span>
-        <span className="small muted">{flight ? 'Watch the flight' : 'as the crow flies'}</span>
+        <span className="small muted">{flight ? 'Watch the flight ›' : 'Open the map ›'}</span>
       </button>
     </div>
   );

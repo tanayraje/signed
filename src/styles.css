@@ -445,3 +445,25 @@ label.rec { cursor: pointer }
 .seal.wax-ink .mono, .seal.wax-soot .mono, .seal.wax-forest .mono, .seal.wax-plum .mono {
   color: rgba(255, 255, 255, .13); text-shadow: 0 -1px 1px rgba(0, 0, 0, .7), 0 1px 0 rgba(255, 255, 255, .3) }
 .seal.wax-mustard .mono { color: rgba(60, 35, 0, .42); text-shadow: 0 1px 0 rgba(255, 245, 210, .4), 0 -1px 1px rgba(60, 35, 0, .35) }
+
+/* maps: a still preview on friend pages, a full smooth map on its own screen */
+.zmap { position: relative; width: 100%; overflow: hidden; background: #C9D6DC; isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black); cursor: pointer }
+.zmap.live { height: 100%; cursor: grab; touch-action: none }
+.zmap-layer { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; --zs: 1 }
+.zmap-base { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; -webkit-user-select: none; user-select: none }
+.zmap-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none }
+.zmap-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; border: 2.5px solid #FBF6EE; box-shadow: 0 1px 3px rgba(43, 38, 34, .35); transform: scale(calc(1 / var(--zs))); pointer-events: none }
+.zmap-dot.from { background: #7A2420 } .zmap-dot.to { background: #2F5D50 }
+.zmap-pin { position: absolute; padding: 3px 9px; border-radius: 12px; background: rgba(251, 246, 238, .95); font-size: 13px; color: #2B2622; box-shadow: 0 2px 6px rgba(43, 38, 34, .18); white-space: nowrap;
+  transform: translate(-50%, -100%) scale(calc(1 / var(--zs))) translateY(-10px); transform-origin: 50% 100%; pointer-events: none }
+.zmap-owl { position: absolute; width: 46px; max-width: none; transform: translate(-50%, -50%) rotate(var(--a)) scale(calc(1 / var(--zs))); filter: drop-shadow(0 3px 3px rgba(43, 38, 34, .3)); pointer-events: none; transition: left 1s linear, top 1s linear }
+.zmap-touch { position: absolute; inset: 0; z-index: 2 }
+.zmap-btns { position: absolute; right: 12px; bottom: 12px; z-index: 3; display: flex; flex-direction: column; gap: 8px }
+.zmap-btns button { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(43, 38, 34, .14); background: rgba(251, 246, 238, .95); color: #2B2622; font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(43, 38, 34, .18); cursor: pointer; padding: 0 }
+.map-card .zmap { border-radius: 0 }
+.mapview { position: fixed; inset: 0; z-index: 25; display: flex; flex-direction: column; background: var(--paper) url(/assets/paper.jpg) center/cover }
+.mapview-top { display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 10px; max-width: 760px; width: 100%; margin: 0 auto }
+.mapview-map { flex: 1; min-height: 0; position: relative; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line) }
+.mapview-list { padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 10px; max-height: 32vh; overflow: auto; max-width: 760px; width: 100%; margin: 0 auto }
+.mapview-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--card) url(/assets/card.jpg) center/cover; border: 1px solid var(--line) }
+.mapview-row.on { border-color: var(--wax) }

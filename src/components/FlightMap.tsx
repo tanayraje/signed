@@ -1,43 +1,94 @@
-import { useRef, useState, type PointerEvent as RPE, type WheelEvent as RWE } from 'react';
-import { INDIA as INDIA_, pickMap, project, wander } from '../lib/geo';
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as RPE, type WheelEvent as RWE } from 'react';
+import { INDIA, pickMap, project, wander, type MapDef } from '../lib/geo';
 
 type LatLon = [number, number];
+export interface MapOwl { t: number; back?: boolean; alt?: string; plume?: string }
 
 /**
- * The India map with two people on it and, while a letter is flying, the owl on its wandering path.
- * `zoom` crops the map to the two of them; otherwise the whole map shows.
+ * The map with two people on it and every owl flying between them, live.
+ * Interactive maps pan and pinch smoothly over the whole map (India up close, or the whole world);
+ * pins, dots and owls keep their size while the map zooms. Previews are still, and open on tap.
  */
-export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flyerAlt = 'Owl in flight', zoom = false, owls }: {
-  from: LatLon; to: LatLon; fromLabel: string; toLabel: string; t?: number | null; flyerAlt?: string; zoom?: boolean;
-  /** Every owl in the air between these two, with how far along it is; `back` flies from `to` towards `from`. */
-  owls?: { t: number; back?: boolean; alt?: string; plume?: string }[];
+export default function FlightMap({ from, to, fromLabel, toLabel, owls = [], interactive = false, ratio, onOpen }: {
+  from: LatLon; to: LatLon; fromLabel: string; toLabel: string; owls?: MapOwl[];
+  interactive?: boolean; ratio?: number; onOpen?: () => void;
 }) {
+  const M = pickMap(from, to);
   const box = useRef<HTMLDivElement>(null);
-  const [z, setZ] = useState({ s: 1, x: 0, y: 0 });
-  const touches = useRef(new Map<number, { x: number; y: number }>());
-  const last = useRef<{ d: number; mx: number; my: number; x: number; y: number } | null>(null);
-  const tapAt = useRef(0);
+  const layer = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  useLayoutEffect(() => {
+    const el = box.current; if (!el) return;
+    const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight }));
+    ro.observe(el); setSize({ w: el.clientWidth, h: el.clientHeight });
+    return () => ro.disconnect();
+  }, []);
 
-  // keep the zoomed map covering its frame
-  const clamp = (s: number, x: number, y: number) => {
-    const r = box.current?.getBoundingClientRect(); if (!r) return { s, x, y };
-    s = Math.min(5, Math.max(1, s));
-    return { s, x: Math.min(0, Math.max(r.width - r.width * s, x)), y: Math.min(0, Math.max(r.height - r.height * s, y)) };
+  if (!M) return null;
+  const aspect = ratio ?? 4 / 3;
+  return (
+    <div ref={box} className={`zmap${interactive ? ' live' : ''}`} style={{ aspectRatio: interactive ? undefined : String(aspect) }}
+      onClick={!interactive ? onOpen : undefined} role={!interactive && onOpen ? 'button' : undefined}
+      aria-label={!interactive && onOpen ? 'Open the map' : undefined}>
+      {size.w > 0 && <Layer key={`${M.img}-${size.w}x${size.h}`} M={M} from={from} to={to} fromLabel={fromLabel} toLabel={toLabel}
+        owls={owls} W={size.w} H={size.h} interactive={interactive} layer={layer} box={box} />}
+    </div>
+  );
+}
+
+function Layer({ M, from, to, fromLabel, toLabel, owls, W, H, interactive, layer, box }: {
+  M: MapDef; from: LatLon; to: LatLon; fromLabel: string; toLabel: string; owls: MapOwl[]; W: number; H: number; interactive: boolean;
+  layer: React.RefObject<HTMLDivElement>; box: React.RefObject<HTMLDivElement>;
+}) {
+  const A = project(from[0], from[1], M), B = project(to[0], to[1], M);
+  const VW = M.vw, VH = M.vh;
+
+  // the layer is the whole map, as wide as the frame at scale 1; the first view frames the two of you
+  const cw = W, ch = W * (VH / VW);
+  // full maps can zoom out until the whole map shows; previews always stay covered
+  const minS = () => (interactive ? Math.min(W / cw, H / ch, 1) : Math.max(W / cw, H / ch));
+  const clampT = (t: { s: number; x: number; y: number }) => {
+    const s = Math.min(12, Math.max(minS(), t.s));
+    const fit = (view: number, len: number, v: number) => (len <= view ? (view - len) / 2 : Math.min(0, Math.max(view - len, v)));
+    return { s, x: fit(W, cw * s, t.x), y: fit(H, ch * s, t.y) };
   };
-  // zoom by factor f around a point (px, relative to the frame)
-  const zoomAt = (f: number, px: number, py: number) => setZ((o) => {
-    const s = Math.min(5, Math.max(1, o.s * f)), k = s / o.s;
-    return clamp(s, px - (px - o.x) * k, py - (py - o.y) * k);
-  });
-  const local = (e: { clientX: number; clientY: number }) => { const r = box.current!.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  const pad = M === INDIA ? 0.28 : 0.1;
+  const bw = Math.abs(A[0] - B[0]) + pad, bh = Math.abs(A[1] - B[1]) + pad * (VW / VH) * 0.6;
+  const fitS = Math.min(W / (bw * cw), H / (bh * ch), M === INDIA ? 5 : 6);
+  const homeS = Math.max(minS(), fitS);
+  const home = clampT({ s: homeS, x: W / 2 - ((A[0] + B[0]) / 2) * cw * homeS, y: H / 2 - ((A[1] + B[1]) / 2) * ch * homeS });
 
+  // the live transform lives outside React, so dragging stays smooth
+  const T = useRef(home);
+  const raf = useRef(0);
+  const [zs, setZs] = useState(home.s);
+  const apply = (animate = false) => {
+    const el = layer.current; if (!el) return;
+    el.style.transition = animate ? 'transform .28s cubic-bezier(.2,.8,.2,1)' : 'none';
+    el.style.transform = `translate3d(${T.current.x}px, ${T.current.y}px, 0) scale(${T.current.s})`;
+    el.style.setProperty('--zs', String(T.current.s));
+  };
+  const schedule = () => { cancelAnimationFrame(raf.current); raf.current = requestAnimationFrame(() => apply()); };
+  useEffect(() => { apply(); return () => cancelAnimationFrame(raf.current); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const settle = () => setZs(T.current.s);
+
+  const zoomAt = (f: number, px: number, py: number, animate = true) => {
+    const o = T.current, s = Math.min(12, Math.max(minS(), o.s * f)), k = s / o.s;
+    T.current = clampT({ s, x: px - (px - o.x) * k, y: py - (py - o.y) * k });
+    apply(animate); settle();
+  };
+
+  // gestures: one finger pans, two fingers pinch, double tap zooms in (or back home)
+  const touches = useRef(new Map<number, { x: number; y: number }>());
+  const last = useRef<{ d: number; mx: number; my: number } | null>(null);
+  const tapAt = useRef(0);
+  const local = (e: { clientX: number; clientY: number }) => { const r = box.current!.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
   function down(e: RPE) {
-    touches.current.set(e.pointerId, local(e));
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    last.current = null;
+    touches.current.set(e.pointerId, local(e)); last.current = null;
     if (touches.current.size === 1) {
-      const now = Date.now();
-      if (now - tapAt.current < 300) { const p = local(e); if (z.s > 1.05) setZ({ s: 1, x: 0, y: 0 }); else zoomAt(2.5, p.x, p.y); tapAt.current = 0; }
+      const now = Date.now(), p = local(e);
+      if (now - tapAt.current < 280) { tapAt.current = 0; if (T.current.s > home.s * 1.6) { T.current = home; apply(true); settle(); } else zoomAt(2.2, p.x, p.y); }
       else tapAt.current = now;
     }
   }
@@ -45,80 +96,59 @@ export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flye
     if (!touches.current.has(e.pointerId)) return;
     touches.current.set(e.pointerId, local(e));
     const p = [...touches.current.values()];
-    if (p.length >= 2) {
-      const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y), mx = (p[0].x + p[1].x) / 2, my = (p[0].y + p[1].y) / 2;
-      const l = last.current;
-      if (l) setZ((o) => {
-        const s = Math.min(5, Math.max(1, o.s * (d / l.d))), k = s / o.s;
-        return clamp(s, mx - (l.mx - o.x) * k, my - (l.my - o.y) * k);
-      });
-      last.current = { d, mx, my, x: 0, y: 0 };
-    } else if (z.s > 1) {
-      const l = last.current;
-      if (l) setZ((o) => clamp(o.s, o.x + p[0].x - l.mx, o.y + p[0].y - l.my));
-      last.current = { d: 0, mx: p[0].x, my: p[0].y, x: 0, y: 0 };
+    const mx = p.length > 1 ? (p[0].x + p[1].x) / 2 : p[0].x, my = p.length > 1 ? (p[0].y + p[1].y) / 2 : p[0].y;
+    const d = p.length > 1 ? Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) : 0;
+    const l = last.current;
+    if (l && (p.length > 1) === (l.d > 0)) {
+      const o = T.current;
+      const s = p.length > 1 ? Math.min(12, Math.max(minS(), o.s * (d / l.d))) : o.s, k = s / o.s;
+      T.current = clampT({ s, x: mx - (l.mx - o.x) * k, y: my - (l.my - o.y) * k });
+      schedule();
     }
+    last.current = { d, mx, my };
   }
-  function up(e: RPE) { touches.current.delete(e.pointerId); last.current = null; }
-  function wheel(e: RWE) { if (!e.ctrlKey && z.s === 1 && e.deltaY > 0) return; const p = local(e); zoomAt(Math.exp(-e.deltaY / 300), p.x, p.y); }
+  function up(e: RPE) { touches.current.delete(e.pointerId); last.current = null; if (!touches.current.size) settle(); }
+  function wheel(e: RWE) { const p = local(e); zoomAt(Math.exp(-e.deltaY / 400), p.x, p.y, false); }
 
-  const M = pickMap(from, to);
-  if (!M) return null;
-  const VW = M.vw, VH = M.vh, u = VW / 390; // drawing units, and line weights to match
-  const crop = zoom || M !== INDIA_; // the world is too wide to show whole; frame the two of you
-  const A = project(from[0], from[1], M), B = project(to[0], to[1], M);
-
-  // visible window, in 0..1 map units
-  let x0 = 0, y0 = 0, wn = 1, hn = 1;
-  const ratio = crop ? 4 / 3 : VW / VH; // container width / height
-  if (crop) {
-    const bw = Math.abs(A[0] - B[0]), bh = Math.abs(A[1] - B[1]);
-    const toH = (w: number) => (w * VW) / (VH * ratio);
-    wn = M === INDIA_
-      ? Math.min(1, Math.max(0.42, bw + 0.3, ((bh + 0.22) * VH * ratio) / VW))
-      : Math.min(1, Math.max(0.14, bw * 1.5 + 0.06, ((bh * 1.5 + 0.08) * VH * ratio) / VW));
-    hn = Math.min(1, toH(wn));
-    if (hn >= 1) { hn = 1; wn = Math.min(1, (VH * ratio) / VW); }
-    const cx = (A[0] + B[0]) / 2, cy = (A[1] + B[1]) / 2;
-    x0 = Math.min(1 - wn, Math.max(0, cx - wn / 2));
-    y0 = Math.min(1 - hn, Math.max(0, cy - hn / 2));
-  }
-
-  const pts = (n: number) => Array.from({ length: n + 1 }, (_, i) => wander(A, B, i / 60)).map((q) => `${(q[0] * VW).toFixed(1)},${(q[1] * VH).toFixed(1)}`).join(' ');
-  // where each owl is now, live, and which way it faces
-  const flights = (owls ?? (t != null ? [{ t, alt: flyerAlt }] : [])).filter((o) => o.t < 1).map((o) => {
+  // where each owl is now, and which way it faces
+  const flights = owls.filter((o) => o.t < 1).map((o) => {
     const at = o.back ? 1 - o.t : o.t, ahead = o.back ? Math.max(0, at - 0.01) : Math.min(1, at + 0.01);
     const q = wander(A, B, at), q2 = wander(A, B, ahead);
     return { ...o, q, ang: (Math.atan2((q2[1] - q[1]) * VH, (q2[0] - q[0]) * VW) * 180) / Math.PI + 90 };
   });
   const lead = flights[0];
-  const k = z.s / Math.max(wn, 0.0001); // how much the map is scaled up; lines, dots and the owl stay the same size
+  const pts = (n: number) => Array.from({ length: n + 1 }, (_, i) => wander(A, B, i / 60)).map((q) => `${(q[0] * VW).toFixed(1)},${(q[1] * VH).toFixed(1)}`).join(' ');
+  const px = (n: number) => (n * VW) / (cw * zs); // screen pixels in map units, whatever the zoom
+  const dash = (a: number, b: number) => `${px(a)} ${px(b)}`;
 
   return (
-    <div ref={box} className="map" style={{ aspectRatio: String(ratio), touchAction: z.s > 1 ? 'none' : 'pan-y' }}
-      onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onWheel={wheel}>
-      <div className="map-zoom" style={{ transform: `translate(${z.x}px, ${z.y}px) scale(${z.s})`, ['--zs' as string]: z.s }}>
-      <div className="map-in" style={{ width: `${100 / wn}%`, height: `${100 / hn}%`, left: `${(-x0 / wn) * 100}%`, top: `${(-y0 / hn) * 100}%` }}>
-        <img className="base" src={M.img} alt={M === INDIA_ ? 'Map of India' : 'Map of the world'} />
+    <>
+      <div ref={layer} className="zmap-layer" style={{ width: cw, height: ch }}>
+        <img className="zmap-base" src={M.img} alt={M === INDIA ? 'Map of India' : 'Map of the world'} draggable={false} />
         <svg viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" aria-hidden="true">
-          <line x1={A[0] * VW} y1={A[1] * VH} x2={B[0] * VW} y2={B[1] * VH} stroke="#2B2622" strokeOpacity=".25" strokeDasharray={`${2 * u / k} ${5 * u / k}`} strokeWidth={u / k} />
-          {lead && <polyline points={pts(60)} fill="none" stroke="#2B2622" strokeOpacity=".45" strokeWidth={1.4 * u / k} strokeDasharray={`${u / k} ${6 * u / k}`} strokeLinecap="round" />}
-          {lead && !lead.back && <polyline points={pts(Math.round(Math.min(1, lead.t) * 60))} fill="none" stroke="#7A2420" strokeWidth={1.8 * u / k} strokeLinecap="round" />}
-          <circle cx={A[0] * VW} cy={A[1] * VH} r={5 * u / k} fill="#7A2420" stroke="#FBF6EE" strokeWidth={2 * u / k} />
-          <circle cx={B[0] * VW} cy={B[1] * VH} r={5 * u / k} fill="#2F5D50" stroke="#FBF6EE" strokeWidth={2 * u / k} />
+          <line x1={A[0] * VW} y1={A[1] * VH} x2={B[0] * VW} y2={B[1] * VH} stroke="#2B2622" strokeOpacity=".25" strokeDasharray={dash(2, 5)} strokeWidth={px(1)} />
+          {lead && <polyline points={pts(60)} fill="none" stroke="#2B2622" strokeOpacity=".45" strokeWidth={px(1.6)} strokeDasharray={dash(1.5, 6)} strokeLinecap="round" />}
+          {lead && !lead.back && <polyline points={pts(Math.round(Math.min(1, lead.t) * 60))} fill="none" stroke="#7A2420" strokeWidth={px(2.2)} strokeLinecap="round" />}
         </svg>
-        <span className="pin" style={{ left: `${A[0] * 100}%`, top: `${A[1] * 100}%` }}>{fromLabel}</span>
-        <span className="pin" style={{ left: `${B[0] * 100}%`, top: `${B[1] * 100}%` }}>{toLabel}</span>
+        <span className="zmap-dot from" style={{ left: `${A[0] * 100}%`, top: `${A[1] * 100}%` }} />
+        <span className="zmap-dot to" style={{ left: `${B[0] * 100}%`, top: `${B[1] * 100}%` }} />
+        <span className="zmap-pin" style={{ left: `${A[0] * 100}%`, top: `${A[1] * 100}%` }}>{fromLabel}</span>
+        <span className="zmap-pin" style={{ left: `${B[0] * 100}%`, top: `${B[1] * 100}%` }}>{toLabel}</span>
         {flights.map((o, n) => (
-          <img key={n} className="flyer" src={o.plume ? `/assets/owl-fly-${o.plume}.png` : '/assets/owl-fly.png'} alt={o.alt ?? flyerAlt}
-            style={{ width: `max(40px, ${12 * wn}%)`, left: `${o.q[0] * 100}%`, top: `${o.q[1] * 100}%`, transform: `translate(-50%,-50%) rotate(${o.ang}deg) scale(${1 / z.s})` }} />
+          <img key={n} className="zmap-owl" src={o.plume ? `/assets/owl-fly-${o.plume}.png` : '/assets/owl-fly.png'} alt={o.alt ?? 'Owl in flight'} draggable={false}
+            style={{ left: `${o.q[0] * 100}%`, top: `${o.q[1] * 100}%`, ['--a' as string]: `${o.ang}deg` }} />
         ))}
       </div>
-      </div>
-      <div className="map-zoom-btns" onPointerDown={(e) => e.stopPropagation()}>
-        <button type="button" onClick={(e) => { e.stopPropagation(); const r = box.current!.getBoundingClientRect(); zoomAt(1.6, r.width / 2, r.height / 2); }} aria-label="Zoom in">+</button>
-        <button type="button" onClick={(e) => { e.stopPropagation(); if (z.s / 1.6 <= 1.05) setZ({ s: 1, x: 0, y: 0 }); else { const r = box.current!.getBoundingClientRect(); zoomAt(1 / 1.6, r.width / 2, r.height / 2); } }} aria-label="Zoom out" disabled={z.s <= 1}>−</button>
-      </div>
-    </div>
+      {interactive && <div className="zmap-touch" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onWheel={wheel} />}
+      {interactive && (
+        <div className="zmap-btns">
+          <button type="button" onClick={() => zoomAt(1.7, W / 2, H / 2)} aria-label="Zoom in">+</button>
+          <button type="button" onClick={() => zoomAt(1 / 1.7, W / 2, H / 2)} aria-label="Zoom out">−</button>
+          <button type="button" onClick={() => { T.current = home; apply(true); settle(); }} aria-label="Back to the two of you">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6" /><path d="M12 2v4M12 18v4M2 12h4M18 12h4" /></svg>
+          </button>
+        </div>
+      )}
+    </>
   );
 }
