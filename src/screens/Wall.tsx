@@ -8,7 +8,7 @@ import { timeLeft } from '../lib/format';
 const TACKS = ['#8E231C', '#2C3A68', '#A9761E', '#2F5D50'];
 
 export default function Wall() {
-  const { me, letters, friend, session, stamps, pins } = useStore();
+  const { letters, friend, session, stamps, pins } = useStore();
   const uid = session!.user.id;
   const received = letters.filter((l) => l.recipient === uid && l.opened_at);
   const pinned = received.filter((l) => l.place === 'wall');
@@ -18,8 +18,8 @@ export default function Wall() {
     <main className="app">
       <div className="top">
         <h1 className="grow">Your wall</h1>
-        {me && <button className="me-seal" onClick={() => go('profile')} aria-label="Your profile"><Seal p={me} size={42} /></button>}
       </div>
+      <SealWeek />
       <WallCallouts />
       <div className="wall">
         {pinned.length === 0 && pins.length === 0 && <p className="muted center" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>Pin a letter, or just its Polaroid, from its reading view and it lands here.</p>}
@@ -127,5 +127,33 @@ function WallCallouts() {
         </button>
       )}
     </div>
+  );
+}
+
+/** The last seven days as seals; tap for the whole calendar. */
+function SealWeek() {
+  const { me, letters, friend, session } = useStore();
+  if (!me) return null;
+  const uid = session!.user.id;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const days = Array.from({ length: 7 }, (_, i) => new Date(today.getTime() - (6 - i) * 86400000));
+  const when = (l: typeof letters[number]) => l.sender === uid ? new Date(l.sent_at).getTime() : l.opened_at ? new Date(l.opened_at).getTime() : -1;
+  const month = letters.filter((l) => { const t = when(l); return t >= new Date(today.getFullYear(), today.getMonth(), 1).getTime(); }).length;
+  return (
+    <button className="sealweek" onClick={() => go('seals')} aria-label="Open your seal calendar">
+      <span className="sealweek-days">
+        {days.map((d) => {
+          const a = d.getTime(), l = letters.find((x) => { const t = when(x); return t >= a && t < a + 86400000; });
+          const who = l ? (l.sender === uid ? me : friend(l.sender)?.profile) : undefined;
+          return (
+            <span key={a} className="sealweek-day">
+              <small>{'SMTWTFS'[d.getDay()]}</small>
+              {who ? <Seal p={who} size={26} /> : <i />}
+            </span>
+          );
+        })}
+      </span>
+      <span className="sealweek-more"><b>{month}</b><small>{month === 1 ? 'letter' : 'letters'} this month</small></span>
+    </button>
   );
 }

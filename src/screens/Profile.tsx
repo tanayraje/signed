@@ -4,7 +4,7 @@ import { go } from '../lib/router';
 import { ago } from '../lib/format';
 import { enablePush, isInstalled } from '../lib/push';
 import type { Profile as P } from '../lib/types';
-import { Icon, Nav, Owl, Seal, signOut } from '../components/bits';
+import { Nav, Owl, Seal, signOut } from '../components/bits';
 
 export default function Profile() {
   const { me, friends, saveMe, saveFriendSettings, session, say } = useStore();
@@ -22,7 +22,6 @@ export default function Profile() {
   return (
     <main className="app">
       <div className="top">
-        <button className="icon" onClick={() => go('wall')} aria-label="Back">{Icon.back}</button>
         <h1 className="grow">{me.name || 'You'}</h1>
       </div>
 
@@ -80,7 +79,7 @@ export default function Profile() {
         <button className="chip" onClick={() => go('wish')}>Preview the 11:11 alarm</button>
         <button className="chip" onClick={() => void signOut()}>Sign out</button>
       </div>
-      <Nav />
+      <Nav on="profile" />
     </main>
   );
 }

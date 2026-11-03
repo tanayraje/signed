@@ -36,7 +36,10 @@ export default function Seals() {
 
   return (
     <main className="app">
-      <div className="top"><h1 className="grow">Seals</h1></div>
+      <div className="top">
+        <button className="icon" onClick={() => go('wall')} aria-label="Back to your wall">{Icon.back}</button>
+        <h1 className="grow">Seal calendar</h1>
+      </div>
       <div className="row">
         <button className="icon" onClick={() => shift(-1)} aria-label="Previous month">{Icon.back}</button>
         <span className="grow center" style={{ fontWeight: 600 }}>{label}</span>
@@ -49,7 +52,7 @@ export default function Seals() {
         </div>
       </div>
       <p className="small muted">Each seal marks a day a letter was shared. Tap one to read it again.</p>
-      <Nav on="seals" />
+      <Nav />
     </main>
   );
 }

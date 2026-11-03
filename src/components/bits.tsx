@@ -137,8 +137,8 @@ const QUILL = (
 );
 
 /** The bottom bar. Write sits in the middle: straight into a letter with one friend, a quick pick with more. */
-export function Nav({ on }: { on?: 'friends' | 'wall' | 'stamps' | 'seals' }) {
-  const { friends, say } = useStore();
+export function Nav({ on }: { on?: 'friends' | 'wall' | 'stamps' | 'profile' }) {
+  const { friends, say, me } = useStore();
   const [picking, setPicking] = useState(false);
   function write() {
     if (friends.length === 0) { say('Invite a friend first, then you can write.'); go('friends'); return; }
@@ -155,7 +155,7 @@ export function Nav({ on }: { on?: 'friends' | 'wall' | 'stamps' | 'seals' }) {
         {tab('friends', 'Friends', Icon.mail)}
         <button className="nav-write" onClick={write} aria-label="Write a letter"><span className="nav-write-dot">{QUILL}</span>Write</button>
         {tab('stamps', 'Stamps', Icon.stamp)}
-        {tab('seals', 'Seals', Icon.cal)}
+        {tab('profile', me?.name || 'You', me ? <span className="nav-seal"><Seal p={me} size={26} /></span> : Icon.me)}
       </nav>
       {picking && (
         <div className="sheet-back" onClick={() => setPicking(false)}>

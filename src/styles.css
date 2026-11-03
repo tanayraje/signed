@@ -336,3 +336,16 @@ label.rec { cursor: pointer }
 .trunk-letters button { display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 11px 14px 11px 64px; border: 0; background: none; text-align: left; color: inherit; font: inherit; cursor: pointer }
 .trunk-letters li + li button { border-top: 1px dashed var(--line) }
 .trunk-snip { font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0 }
+
+/* profile tab shows your seal */
+.nav-seal { display: flex; width: 26px; height: 26px; margin-bottom: -1px }
+.nav button.on .nav-seal { filter: drop-shadow(0 0 0 #2B2622) }
+/* this week, in seals, on the Wall */
+.sealweek { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--card) url(/assets/card.jpg) center/cover; color: inherit; cursor: pointer; text-align: left }
+.sealweek-days { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px }
+.sealweek-day { display: flex; flex-direction: column; align-items: center; gap: 4px }
+.sealweek-day small { font-size: 11px; color: var(--muted) }
+.sealweek-day i { width: 26px; height: 26px; border-radius: 50%; border: 1px dashed #CFC5B6 }
+.sealweek-more { display: flex; flex-direction: column; align-items: center; padding-left: 10px; border-left: 1px solid var(--line); min-width: 62px; line-height: 1.1 }
+.sealweek-more b { font-size: 22px }
+.sealweek-more small { font-size: 11px; color: var(--muted); text-align: center }
