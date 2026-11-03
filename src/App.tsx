@@ -17,6 +17,7 @@ import Wish from './screens/Wish';
 import Invite from './screens/Invite';
 import Stamps from './screens/Stamps';
 import Cutter from './screens/Cutter';
+import Tour, { TOURED } from './screens/Tour';
 import { Owl } from './components/bits';
 
 export default function App() {
@@ -33,7 +34,7 @@ export default function App() {
     const on = () => {
       if (document.hidden) { hiddenAt = Date.now(); return; }
       const route = window.location.hash.replace(/^#\/?/, '').split('/')[0];
-      if (hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000 && !['wall', 'write', 'setup', 'open', 'read', 'wish', 'invite'].includes(route)) go('wall');
+      if (hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000 && !['wall', 'write', 'setup', 'open', 'read', 'wish', 'invite', 'tour'].includes(route)) go('wall');
     };
     document.addEventListener('visibilitychange', on);
     return () => document.removeEventListener('visibilitychange', on);
@@ -73,6 +74,10 @@ export default function App() {
   if (!me) return <main className="app"><p className="muted">Opening your desk…</p></main>;
   if (!me.onboarded && r0 !== 'setup') { go('setup/seal'); return null; }
 
+  let seen = true;
+  try { seen = Boolean(localStorage.getItem(TOURED)); } catch { /* storage blocked: skip the tour */ }
+  if (!seen && r0 !== 'tour' && r0 !== 'setup' && r0 !== 'invite') { go('tour'); return null; }
+
   let screen;
   switch (r0) {
     case 'setup': screen = <Setup step={r1 === 'owl' ? 'owl' : 'seal'} />; break;
@@ -85,6 +90,7 @@ export default function App() {
     case 'read': screen = <Reader id={r1} from={r2} />; break;
     case 'seals': screen = <Seals />; break;
     case 'stamps': screen = <Stamps />; break;
+    case 'tour': screen = <Tour />; break;
     case 'cutter': screen = <Cutter />; break;
     case 'profile': screen = <Profile />; break;
     case 'wish': screen = <Wish />; break;

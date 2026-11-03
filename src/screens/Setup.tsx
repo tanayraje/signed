@@ -113,7 +113,7 @@ export default function Setup({ step }: { step: 'seal' | 'owl' }) {
       <div className="foot">
         <button className="btn wax" onClick={async () => {
           await saveMe({ plume: draft.plume, eye: draft.eye, owl_name: draft.owl_name.trim() || 'Wren', onboarded: true });
-          go(me.onboarded ? 'profile' : 'wall');
+          go(me.onboarded ? 'profile' : 'tour');
         }}>{me.onboarded ? 'Save my owl' : 'Start writing'}</button>
       </div>
     </main>

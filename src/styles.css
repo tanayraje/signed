@@ -386,3 +386,38 @@ label.rec { cursor: pointer }
   display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0, 0, 0, .4); cursor: pointer; transition: transform .3s cubic-bezier(.2, .9, .3, 1.2) }
 .write-menu:not(.in) .wm-close { transform: rotate(-90deg) }
 @media (prefers-reduced-motion: reduce) { .wm-opt, .write-menu, .wm-close, .write-menu-title { transition: none } }
+
+/* the welcome tour */
+.tour { position: fixed; inset: 0; z-index: 40; background: var(--paper) url(/assets/paper.jpg) center/cover; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px) }
+.tour-skip { align-self: flex-end; margin: 10px 14px 0; min-height: 40px; min-width: 60px; border: 0; background: none; color: var(--muted); font-size: 16px; font-style: italic; cursor: pointer }
+.tour-track { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain }
+.tour-track::-webkit-scrollbar { display: none }
+.tour-slide { flex: 0 0 100%; scroll-snap-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 32px; gap: 12px; max-width: 100% }
+.tour-slide h1 { font-size: 28px; margin-top: 14px }
+.tour-slide p { margin: 0; max-width: 320px; color: var(--muted); font-size: 17px; line-height: 1.5 }
+.tour-art { position: relative; width: 230px; height: 190px; display: flex; align-items: center; justify-content: center }
+.tour-map { background: url(/assets/map-india.jpg) center 62%/240% auto; border-radius: 18px; box-shadow: inset 0 0 0 1px var(--line), 0 6px 18px rgba(43, 38, 34, .12); overflow: hidden }
+.tour-map svg { position: absolute; inset: 0; width: 100%; height: 100% }
+.tour-fly { position: absolute; width: 58px; left: 46%; top: 30%; transform: rotate(35deg); animation: tourfly 3s ease-in-out infinite alternate }
+@keyframes tourfly { from { transform: translate(-30px, 18px) rotate(35deg) } to { transform: translate(30px, -18px) rotate(35deg) } }
+.tour-dot { position: absolute; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #FBF6EE }
+.tour-dot.a { left: 26px; bottom: 18px; background: #7A2420 } .tour-dot.b { right: 25px; top: 28px; background: #2F5D50 }
+.tour-env { width: 200px; height: 130px; background: #FBF7F0 url(/assets/envelope.jpg) center/cover; box-shadow: 0 8px 20px rgba(43, 38, 34, .2); display: flex; align-items: center; justify-content: center; transform: rotate(-3deg); margin-top: 30px }
+.tour-owl { position: absolute; left: 16px; top: -6px }
+.tour-scrap { position: absolute; width: 74px; height: 84px; left: 40px; top: 40px; transform: rotate(-8deg) }
+.tour-scrap.two { left: 100px; top: 26px; transform: rotate(6deg) }
+.tour-mini { position: absolute !important; right: 18px; bottom: 26px; width: 80px !important; height: 54px !important; transform: rotate(-6deg) }
+.tour-mini i { width: 18px !important; height: 18px !important; margin: -9px !important }
+.tour-stamp { position: absolute; width: 100px; left: 30px; top: 20px; transform: rotate(-7deg); filter: drop-shadow(0 6px 10px rgba(43, 38, 34, .25)) }
+.tour-stamp.two { left: 110px; top: 34px; transform: rotate(6deg) }
+.tour-foot { padding: 12px 24px calc(22px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 16px; max-width: 440px; width: 100%; margin: 0 auto }
+.tour-dots { display: flex; justify-content: center; gap: 8px }
+.tour-dots i { width: 7px; height: 7px; border-radius: 50%; background: #CFC5B6; transition: width .25s, background .25s }
+.tour-dots i.on { width: 22px; border-radius: 4px; background: #7A2420 }
+@media (prefers-reduced-motion: reduce) { .tour-fly { animation: none } }
+
+/* 11:11: a subtle twinkling sky */
+.stars { position: absolute; inset: 0; pointer-events: none; z-index: 0 }
+.stars i { position: absolute; border-radius: 50%; background: #FFF6DA; opacity: var(--o); box-shadow: 0 0 4px rgba(255, 246, 218, .6); animation: twinkle ease-in-out infinite }
+@keyframes twinkle { 0%, 100% { opacity: calc(var(--o) * .25); transform: scale(.7) } 50% { opacity: var(--o); transform: scale(1) } }
+@media (prefers-reduced-motion: reduce) { .stars i { animation: none } }

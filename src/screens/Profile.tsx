@@ -75,6 +75,10 @@ export default function Profile() {
           <input type="checkbox" checked={draft.quick_flights} onChange={(e) => set({ quick_flights: e.target.checked })} />
         </label>
       </div>
+      <button className="item card" onClick={() => go('tour')}>
+        <span className="grow stack" style={{ gap: 0 }}><span>How Signed works</span><span className="small muted">The short tour, again</span></span>
+        <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--muted)' }}>›</span>
+      </button>
       <div className="chips">
         <button className="chip" onClick={() => go('wish')}>Preview the 11:11 alarm</button>
         <button className="chip" onClick={() => void signOut()}>Sign out</button>

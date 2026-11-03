@@ -33,6 +33,7 @@ export default function Wish({ onClose }: { onClose?: () => void }) {
 
   return (
     <div className="wish" role="dialog" aria-modal="true" aria-label="11:11 wish">
+      <StarField />
       <div className="comet" aria-hidden="true" />
       <main className="app">
         <span className="small" style={{ color: '#C9BFA8' }}>Wish alarm</span>
@@ -72,6 +73,19 @@ export default function Wish({ onClose }: { onClose?: () => void }) {
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+/** A quiet sky: small stars twinkling at their own pace behind the comet. */
+function StarField() {
+  const [stars] = useState(() => Array.from({ length: 70 }, () => ({
+    l: Math.random() * 100, t: Math.random() * 100, s: Math.random() < 0.15 ? 2.4 : Math.random() < 0.5 ? 1.6 : 1.1,
+    d: 2.5 + Math.random() * 4, delay: -Math.random() * 6, o: 0.25 + Math.random() * 0.45
+  })));
+  return (
+    <div className="stars" aria-hidden="true">
+      {stars.map((x, i) => <i key={i} style={{ left: `${x.l}%`, top: `${x.t}%`, width: x.s, height: x.s, animationDuration: `${x.d}s`, animationDelay: `${x.delay}s`, ['--o' as string]: x.o }} />)}
     </div>
   );
 }
