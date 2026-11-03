@@ -316,13 +316,12 @@ body.ench { background-attachment: scroll }
 .ench-chip { align-self: center; color: #F1E7CF; border-color: #59627F }
 label.rec { cursor: pointer }
 
-/* the one shortcut on home: write a letter */
-.write-fab { position: fixed; z-index: 21; right: max(16px, calc(50% - 220px + 16px)); bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-  display: inline-flex; align-items: center; gap: 8px; min-height: 50px; padding: 0 20px 0 16px; border-radius: 25px; border: 0;
-  background: #7A2420; color: #FBF6EE; font-size: 17px; font-weight: 600; font-family: var(--serif);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 6px 16px rgba(74, 20, 16, .35); cursor: pointer }
-.write-fab:active { transform: scale(.97) }
-.app:has(.write-fab) { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)) }
 .write-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 14px 8px; padding-bottom: 6px }
 .write-pick button { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 15px; color: var(--ink); cursor: pointer; padding: 4px }
-body:has(.write-fab) .toast { bottom: calc(140px + env(safe-area-inset-bottom, 0px)) }
+
+/* Write, in the middle of the bar */
+.nav .nav-write { color: #7A2420; font-weight: 600 }
+.nav-write-dot { width: 40px; height: 40px; margin-top: -14px; border-radius: 50%; background: #7A2420; color: #FBF6EE; display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 4px 10px rgba(74, 20, 16, .35) }
+.nav .nav-write-dot svg { width: 20px; height: 20px }
+.me-seal { border: 0; background: none; padding: 0; border-radius: 50%; cursor: pointer; flex: none }

@@ -3,13 +3,12 @@ import { go } from '../lib/router';
 import { longDate } from '../lib/format';
 import { CutStamp, MediaImg, Nav, Owl, Seal } from '../components/bits';
 import { useFlights } from '../components/InTheAir';
-import WriteButton from '../components/WriteButton';
 import { timeLeft } from '../lib/format';
 
 const TACKS = ['#8E231C', '#2C3A68', '#A9761E', '#2F5D50'];
 
 export default function Wall() {
-  const { letters, friend, session, stamps, pins } = useStore();
+  const { me, letters, friend, session, stamps, pins } = useStore();
   const uid = session!.user.id;
   const received = letters.filter((l) => l.recipient === uid && l.opened_at);
   const pinned = received.filter((l) => l.place === 'wall');
@@ -17,7 +16,10 @@ export default function Wall() {
 
   return (
     <main className="app">
-      <div className="top"><h1 className="grow">Your wall</h1></div>
+      <div className="top">
+        <h1 className="grow">Your wall</h1>
+        {me && <button className="me-seal" onClick={() => go('profile')} aria-label="Your profile"><Seal p={me} size={42} /></button>}
+      </div>
       <WallCallouts />
       <div className="wall">
         {pinned.length === 0 && pins.length === 0 && <p className="muted center" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>Pin a letter, or just its Polaroid, from its reading view and it lands here.</p>}
@@ -71,7 +73,6 @@ export default function Wall() {
           </ul>
         )}
       </section>
-      <WriteButton />
       <Nav on="wall" />
     </main>
   );

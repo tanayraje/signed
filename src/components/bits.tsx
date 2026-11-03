@@ -129,24 +129,61 @@ export function Top({ title, back, children }: { title: ReactNode; back?: string
   );
 }
 
-export function Nav({ on }: { on: 'friends' | 'wall' | 'stamps' | 'seals' | 'profile' }) {
-  const items: [typeof on, string, ReactNode][] = [['wall', 'Wall', Icon.wall], ['friends', 'Friends', Icon.mail], ['stamps', 'Stamps', Icon.stamp], ['seals', 'Seals', Icon.cal], ['profile', 'Profile', Icon.me]];
+const QUILL = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20.6 3.2c-5.6.4-10.2 4-12.4 9.7-.6 1.6-1 3.2-1.2 4.8l1.5-1.2c2-.4 4-1.3 5.7-2.9-1.3.1-2.4 0-3.3-.3 1.7-.2 3.3-.8 4.7-1.9-1 0-1.9-.1-2.7-.4 1.7-.5 3.1-1.4 4.3-2.7.9-1.2 2.1-3 3.4-5.1z" fill="currentColor" />
+    <path d="M7.4 17.1L3.6 21" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+  </svg>
+);
+
+/** The bottom bar. Write sits in the middle: straight into a letter with one friend, a quick pick with more. */
+export function Nav({ on }: { on?: 'friends' | 'wall' | 'stamps' | 'seals' }) {
+  const { friends, say } = useStore();
+  const [picking, setPicking] = useState(false);
+  function write() {
+    if (friends.length === 0) { say('Invite a friend first, then you can write.'); go('friends'); return; }
+    if (friends.length === 1) { go(`write/${friends[0].profile.id}`); return; }
+    setPicking(true);
+  }
+  const tab = (k: NonNullable<typeof on>, label: string, icon: ReactNode) => (
+    <button key={k} className={on === k ? 'on' : ''} aria-current={on === k ? 'page' : undefined} onClick={() => go(k)}>{icon}{label}</button>
+  );
   return (
-    <nav className="nav" aria-label="Main">
-      {items.map(([k, label, icon]) => (
-        <button key={k} className={on === k ? 'on' : ''} aria-current={on === k ? 'page' : undefined} onClick={() => go(k)}>{icon}{label}</button>
-      ))}
-    </nav>
+    <>
+      <nav className="nav" aria-label="Main">
+        {tab('wall', 'Wall', Icon.wall)}
+        {tab('friends', 'Friends', Icon.mail)}
+        <button className="nav-write" onClick={write} aria-label="Write a letter"><span className="nav-write-dot">{QUILL}</span>Write</button>
+        {tab('stamps', 'Stamps', Icon.stamp)}
+        {tab('seals', 'Seals', Icon.cal)}
+      </nav>
+      {picking && (
+        <div className="sheet-back" onClick={() => setPicking(false)}>
+          <div className="stamp-sheet stack" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Write to">
+            <h2 style={{ fontSize: 18 }}>Write to</h2>
+            <div className="write-pick">
+              {friends.map(({ profile: p }) => (
+                <button key={p.id} onClick={() => go(`write/${p.id}`)}><Seal p={p} size={54} /><span>{p.name}</span></button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
 /** The Signed wordmark: the name, closed with the Signed seal. */
+/** The Signed wordmark, closed with your own seal (the house seal before you have one). */
 export function Wordmark({ size = 46 }: { size?: number }) {
-  const s = Math.round(size * 0.46);
+  const { me } = useStore();
+  const s = Math.round(size * 0.5);
   return (
     <div className="wordmark">
       <span style={{ fontSize: size }}>Signed</span>
-      <img src="/assets/logo-seal.png" alt="" width={s} height={s} style={{ marginBottom: Math.round(size * 0.15) }} />
+      {me?.onboarded
+        ? <span style={{ marginBottom: Math.round(size * 0.13), display: 'inline-flex' }}><Seal p={me} size={s} /></span>
+        : <img src="/assets/logo-seal.png" alt="" width={s} height={s} style={{ marginBottom: Math.round(size * 0.15) }} />}
     </div>
   );
 }
