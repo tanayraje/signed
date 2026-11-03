@@ -34,7 +34,7 @@ export default function Tour() {
       text: 'Drop little things into a friend’s pocket through the week: a line, a photo, a question. They leave together on post day.'
     },
     {
-      art: <div className="tour-art"><img src="/assets/tour-stamp-1.png" alt="" className="tour-stamp" /><img src="/assets/tour-stamp-2.png" alt="" className="tour-stamp two" /></div>,
+      art: <div className="tour-art"><img src="/assets/stamp-owlpost.png" alt="" className="tour-stamp" /><img src="/assets/stamp-forgetmenot.png" alt="" className="tour-stamp two" /></div>,
       title: 'Stamps that are yours',
       text: 'Cut stamps from anything with your camera. Each one flies off on a letter and becomes your friend’s, postmarked, for keeps.'
     }

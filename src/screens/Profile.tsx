@@ -1,23 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { ago } from '../lib/format';
 import { enablePush, isInstalled } from '../lib/push';
-import type { Profile as P } from '../lib/types';
 import { Nav, Owl, Seal, signOut } from '../components/bits';
 
 export default function Profile() {
-  const { me, friends, saveMe, saveFriendSettings, session, say } = useStore();
-  const [draft, setDraft] = useState<P | null>(me);
-  const timer = useRef(0);
-  useEffect(() => { if (me && !draft) setDraft(me); }, [me, draft]);
-  if (!me || !draft) return null;
-
-  const set = (patch: Partial<P>) => {
-    setDraft({ ...draft, ...patch });
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => void saveMe(patch), 400);
-  };
+  const { me, friends, saveFriendSettings, session, say } = useStore();
+  if (!me) return null;
 
   return (
     <main className="app">
@@ -70,10 +59,6 @@ export default function Profile() {
           </span>
           <button className="chip" onClick={async () => say(await enablePush(session!.user.id))}>Turn on</button>
         </div>
-        <label className="toggle" style={{ borderTop: '1px solid var(--line)' }}>
-          <span className="grow stack" style={{ gap: 0 }}><span>Quick flights</span><span className="small muted">For testing: your letters land in one minute</span></span>
-          <input type="checkbox" checked={draft.quick_flights} onChange={(e) => set({ quick_flights: e.target.checked })} />
-        </label>
       </div>
       <button className="item card" onClick={() => go('tour')}>
         <span className="grow stack" style={{ gap: 0 }}><span>How Signed works</span><span className="small muted">The short tour, again</span></span>
