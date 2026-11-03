@@ -10,7 +10,7 @@ type LatLon = [number, number];
 export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flyerAlt = 'Owl in flight', zoom = false, owls }: {
   from: LatLon; to: LatLon; fromLabel: string; toLabel: string; t?: number | null; flyerAlt?: string; zoom?: boolean;
   /** Every owl in the air between these two, with how far along it is; `back` flies from `to` towards `from`. */
-  owls?: { t: number; back?: boolean; alt?: string }[];
+  owls?: { t: number; back?: boolean; alt?: string; plume?: string }[];
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [z, setZ] = useState({ s: 1, x: 0, y: 0 });
@@ -110,7 +110,7 @@ export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flye
         <span className="pin" style={{ left: `${A[0] * 100}%`, top: `${A[1] * 100}%` }}>{fromLabel}</span>
         <span className="pin" style={{ left: `${B[0] * 100}%`, top: `${B[1] * 100}%` }}>{toLabel}</span>
         {flights.map((o, n) => (
-          <img key={n} className="flyer" src="/assets/owl-fly.png" alt={o.alt ?? flyerAlt}
+          <img key={n} className="flyer" src={o.plume ? `/assets/owl-fly-${o.plume}.png` : '/assets/owl-fly.png'} alt={o.alt ?? flyerAlt}
             style={{ width: `max(40px, ${12 * wn}%)`, left: `${o.q[0] * 100}%`, top: `${o.q[1] * 100}%`, transform: `translate(-50%,-50%) rotate(${o.ang}deg) scale(${1 / z.s})` }} />
         ))}
       </div>

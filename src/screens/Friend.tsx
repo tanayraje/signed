@@ -74,8 +74,8 @@ export default function Friend({ id }: { id: string }) {
   const prog = (l: { sent_at: string; arrive_at: string }) => Math.max(0, Math.min(1, (now - new Date(l.sent_at).getTime()) / (new Date(l.arrive_at).getTime() - new Date(l.sent_at).getTime() || 1)));
   const flight = inc[0] ? { l: inc[0], out: false } : out[0] ? { l: out[0], out: true } : null;
   const owls = [
-    ...out.map((l) => ({ t: prog(l), alt: `${me.owl_name} flying your letter to ${p.name}` })),
-    ...inc.map((l) => ({ t: prog(l), back: true, alt: `${p.owl_name} flying a letter to you` }))
+    ...out.map((l) => ({ t: prog(l), plume: me.plume, alt: `${me.owl_name} flying your letter to ${p.name}` })),
+    ...inc.map((l) => ({ t: prog(l), back: true, plume: p.plume, alt: `${p.owl_name} flying a letter to you` }))
   ];
   const mapEl = me.last_lat != null && p.last_lat != null
     ? <FlightMap zoom from={[me.last_lat, me.last_lon!]} to={[p.last_lat, p.last_lon!]} fromLabel="You" toLabel={p.name} owls={owls} />

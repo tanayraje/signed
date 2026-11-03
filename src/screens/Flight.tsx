@@ -32,8 +32,8 @@ export default function Flight({ id }: { id: string }) {
   const mineOut = letters.filter((x) => x.sender === uid && x.recipient === otherId && new Date(x.arrive_at).getTime() > nowMs).map((x) => ({ id: x.id, t: progOf(x), dirOut: true }));
   const theirsIn = incoming.filter((x) => x.sender === otherId && new Date(x.arrive_at).getTime() > nowMs).map((x) => ({ id: x.id, t: progOf(x), dirOut: false }));
   const pairOwls = [...mineOut, ...theirsIn].sort((a, b) => (a.id === id ? -1 : b.id === id ? 1 : 0))
-    .map((o) => ({ t: o.t, back: o.dirOut !== outgoing, alt: o.dirOut ? `${me.owl_name} carrying your letter` : `${other?.owl_name ?? 'Their owl'} carrying a letter to you` }));
-  if (!pairOwls.length) pairOwls.push({ t, back: false, alt: `${owl} in flight` });
+    .map((o) => ({ t: o.t, back: o.dirOut !== outgoing, plume: o.dirOut ? me.plume : other?.plume, alt: o.dirOut ? `${me.owl_name} carrying your letter` : `${other?.owl_name ?? 'Their owl'} carrying a letter to you` }));
+  if (!pairOwls.length) pairOwls.push({ t, back: false, plume: outgoing ? me.plume : other?.plume, alt: `${owl} in flight` });
   const dist = has ? Math.round(km(fromAt!, toAt!)) : null;
   const map = has ? (
     <FlightMap from={fromAt!} to={toAt!} fromLabel={outgoing ? 'You' : name} toLabel={outgoing ? name : 'You'} owls={pairOwls} />
