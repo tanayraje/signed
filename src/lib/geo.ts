@@ -31,18 +31,28 @@ export function placeName(lat: number, lon: number): string {
   return bd < 60 ? best[0] : `${best[0]} region`;
 }
 
-// The India map image covers these bounds in Web Mercator.
-const LON0 = 71.0753, LON1 = 91.3247, LAT0 = 6.5, LAT1 = 33.5;
+// Two hand-drawn maps in Web Mercator: India up close, and the world for friends further away.
+export interface MapDef { img: string; lon0: number; lon1: number; lat0: number; lat1: number; vw: number; vh: number }
+export const INDIA: MapDef = { img: '/assets/map-india.jpg', lon0: 71.0753, lon1: 91.3247, lat0: 6.5, lat1: 33.5, vw: 390, vh: 560 };
+export const WORLD: MapDef = { img: '/assets/map-world.jpg', lon0: -180, lon1: 180, lat0: -58, lat1: 78, vw: 1000, vh: 557.5 };
 const Y = (la: number) => Math.log(Math.tan(Math.PI / 4 + (la * Math.PI) / 360));
 
-export function onIndiaMap(lat: number, lon: number): boolean {
-  return lat >= LAT0 && lat <= LAT1 && lon >= LON0 && lon <= LON1;
+export function onMap(m: MapDef, lat: number, lon: number): boolean {
+  return lat >= m.lat0 && lat <= m.lat1 && lon >= m.lon0 && lon <= m.lon1;
+}
+export const onIndiaMap = (lat: number, lon: number) => onMap(INDIA, lat, lon);
+
+/** India when both people are in it, otherwise the world. */
+export function pickMap(a: [number, number], b: [number, number]): MapDef | null {
+  if (onMap(INDIA, a[0], a[1]) && onMap(INDIA, b[0], b[1])) return INDIA;
+  if (onMap(WORLD, a[0], a[1]) && onMap(WORLD, b[0], b[1])) return WORLD;
+  return null;
 }
 
-/** Returns 0..1 position on the India map image. */
-export function project(lat: number, lon: number): [number, number] {
-  const x = (lon - LON0) / (LON1 - LON0);
-  const y = (Y(LAT1) - Y(lat)) / (Y(LAT1) - Y(LAT0));
+/** Returns 0..1 position on a map image. */
+export function project(lat: number, lon: number, m: MapDef = INDIA): [number, number] {
+  const x = (lon - m.lon0) / (m.lon1 - m.lon0);
+  const y = (Y(m.lat1) - Y(lat)) / (Y(m.lat1) - Y(m.lat0));
   return [Math.min(0.97, Math.max(0.03, x)), Math.min(0.97, Math.max(0.03, y))];
 }
 

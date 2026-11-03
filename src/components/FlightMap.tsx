@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as RPE, type WheelEvent as RWE } from 'react';
-import { onIndiaMap, project, wander } from '../lib/geo';
+import { INDIA as INDIA_, pickMap, project, wander } from '../lib/geo';
 
 type LatLon = [number, number];
 
@@ -60,28 +60,33 @@ export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flye
   function up(e: RPE) { touches.current.delete(e.pointerId); last.current = null; }
   function wheel(e: RWE) { if (!e.ctrlKey && z.s === 1 && e.deltaY > 0) return; const p = local(e); zoomAt(Math.exp(-e.deltaY / 300), p.x, p.y); }
 
-  if (!onIndiaMap(from[0], from[1]) || !onIndiaMap(to[0], to[1])) return null;
-  const A = project(from[0], from[1]), B = project(to[0], to[1]);
+  const M = pickMap(from, to);
+  if (!M) return null;
+  const VW = M.vw, VH = M.vh, u = VW / 390; // drawing units, and line weights to match
+  const crop = zoom || M !== INDIA_; // the world is too wide to show whole; frame the two of you
+  const A = project(from[0], from[1], M), B = project(to[0], to[1], M);
 
   // visible window, in 0..1 map units
   let x0 = 0, y0 = 0, wn = 1, hn = 1;
-  const ratio = zoom ? 4 / 3 : 390 / 560; // container width / height
-  if (zoom) {
+  const ratio = crop ? 4 / 3 : VW / VH; // container width / height
+  if (crop) {
     const bw = Math.abs(A[0] - B[0]), bh = Math.abs(A[1] - B[1]);
-    const toH = (w: number) => (w * 390) / (560 * ratio);
-    wn = Math.min(1, Math.max(0.42, bw + 0.3, ((bh + 0.22) * 560 * ratio) / 390));
+    const toH = (w: number) => (w * VW) / (VH * ratio);
+    wn = M === INDIA_
+      ? Math.min(1, Math.max(0.42, bw + 0.3, ((bh + 0.22) * VH * ratio) / VW))
+      : Math.min(1, Math.max(0.14, bw * 1.5 + 0.06, ((bh * 1.5 + 0.08) * VH * ratio) / VW));
     hn = Math.min(1, toH(wn));
-    if (hn >= 1) { hn = 1; wn = Math.min(1, (560 * ratio) / 390); }
+    if (hn >= 1) { hn = 1; wn = Math.min(1, (VH * ratio) / VW); }
     const cx = (A[0] + B[0]) / 2, cy = (A[1] + B[1]) / 2;
     x0 = Math.min(1 - wn, Math.max(0, cx - wn / 2));
     y0 = Math.min(1 - hn, Math.max(0, cy - hn / 2));
   }
 
-  const pts = (n: number) => Array.from({ length: n + 1 }, (_, i) => wander(A, B, i / 60)).map((q) => `${(q[0] * 390).toFixed(1)},${(q[1] * 560).toFixed(1)}`).join(' ');
+  const pts = (n: number) => Array.from({ length: n + 1 }, (_, i) => wander(A, B, i / 60)).map((q) => `${(q[0] * VW).toFixed(1)},${(q[1] * VH).toFixed(1)}`).join(' ');
   const flying = t != null && t < 1;
   const q = flying ? wander(A, B, t!) : null;
   const q2 = flying ? wander(A, B, Math.min(1, t! + 0.01)) : null;
-  const ang = q && q2 ? (Math.atan2((q2[1] - q[1]) * 560, (q2[0] - q[0]) * 390) * 180) / Math.PI + 90 : 0;
+  const ang = q && q2 ? (Math.atan2((q2[1] - q[1]) * VH, (q2[0] - q[0]) * VW) * 180) / Math.PI + 90 : 0;
   const k = z.s / Math.max(wn, 0.0001); // how much the map is scaled up; lines, dots and the owl stay the same size
 
   return (
@@ -89,13 +94,13 @@ export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flye
       onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onWheel={wheel}>
       <div className="map-zoom" style={{ transform: `translate(${z.x}px, ${z.y}px) scale(${z.s})`, ['--zs' as string]: z.s }}>
       <div className="map-in" style={{ width: `${100 / wn}%`, height: `${100 / hn}%`, left: `${(-x0 / wn) * 100}%`, top: `${(-y0 / hn) * 100}%` }}>
-        <img className="base" src="/assets/map-india.jpg" alt="Map of India" />
-        <svg viewBox="0 0 390 560" preserveAspectRatio="none" aria-hidden="true">
-          <line x1={A[0] * 390} y1={A[1] * 560} x2={B[0] * 390} y2={B[1] * 560} stroke="#2B2622" strokeOpacity=".25" strokeDasharray={`${2 / k} ${5 / k}`} strokeWidth={1 / k} />
-          {t != null && <polyline points={pts(60)} fill="none" stroke="#2B2622" strokeOpacity=".45" strokeWidth={1.4 / k} strokeDasharray={`${1 / k} ${6 / k}`} strokeLinecap="round" />}
-          {t != null && <polyline points={pts(Math.round(Math.min(1, t) * 60))} fill="none" stroke="#7A2420" strokeWidth={1.8 / k} strokeLinecap="round" />}
-          <circle cx={A[0] * 390} cy={A[1] * 560} r={5 / k} fill="#7A2420" stroke="#FBF6EE" strokeWidth={2 / k} />
-          <circle cx={B[0] * 390} cy={B[1] * 560} r={5 / k} fill="#2F5D50" stroke="#FBF6EE" strokeWidth={2 / k} />
+        <img className="base" src={M.img} alt={M === INDIA_ ? 'Map of India' : 'Map of the world'} />
+        <svg viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" aria-hidden="true">
+          <line x1={A[0] * VW} y1={A[1] * VH} x2={B[0] * VW} y2={B[1] * VH} stroke="#2B2622" strokeOpacity=".25" strokeDasharray={`${2 * u / k} ${5 * u / k}`} strokeWidth={u / k} />
+          {t != null && <polyline points={pts(60)} fill="none" stroke="#2B2622" strokeOpacity=".45" strokeWidth={1.4 * u / k} strokeDasharray={`${u / k} ${6 * u / k}`} strokeLinecap="round" />}
+          {t != null && <polyline points={pts(Math.round(Math.min(1, t) * 60))} fill="none" stroke="#7A2420" strokeWidth={1.8 * u / k} strokeLinecap="round" />}
+          <circle cx={A[0] * VW} cy={A[1] * VH} r={5 * u / k} fill="#7A2420" stroke="#FBF6EE" strokeWidth={2 * u / k} />
+          <circle cx={B[0] * VW} cy={B[1] * VH} r={5 * u / k} fill="#2F5D50" stroke="#FBF6EE" strokeWidth={2 * u / k} />
         </svg>
         <span className="pin" style={{ left: `${A[0] * 100}%`, top: `${A[1] * 100}%` }}>{fromLabel}</span>
         <span className="pin" style={{ left: `${B[0] * 100}%`, top: `${B[1] * 100}%` }}>{toLabel}</span>
