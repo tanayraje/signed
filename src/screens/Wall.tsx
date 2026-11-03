@@ -3,6 +3,7 @@ import { go } from '../lib/router';
 import { longDate } from '../lib/format';
 import { CutStamp, MediaImg, Nav, Owl, Seal } from '../components/bits';
 import { useFlights } from '../components/InTheAir';
+import WriteButton from '../components/WriteButton';
 import { timeLeft } from '../lib/format';
 
 const TACKS = ['#8E231C', '#2C3A68', '#A9761E', '#2F5D50'];
@@ -70,6 +71,7 @@ export default function Wall() {
           </ul>
         )}
       </section>
+      <WriteButton />
       <Nav on="wall" />
     </main>
   );
