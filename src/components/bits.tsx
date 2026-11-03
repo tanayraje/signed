@@ -136,14 +136,23 @@ const QUILL = (
   </svg>
 );
 
-/** The bottom bar. Write sits in the middle: straight into a letter with one friend, a quick pick with more. */
+/** The bottom bar. Write sits in the middle and opens into a letter or a scrap. */
 export function Nav({ on }: { on?: 'friends' | 'wall' | 'stamps' | 'profile' }) {
   const { friends, say, me } = useStore();
-  const [picking, setPicking] = useState(false);
-  function write() {
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const [shown, setShown] = useState(false);
+  const [picking, setPicking] = useState<'write' | 'pocket' | null>(null);
+  useEffect(() => { if (!menu) { setShown(false); return; } const r = requestAnimationFrame(() => setShown(true)); return () => cancelAnimationFrame(r); }, [menu]);
+  function open(e: React.MouseEvent<HTMLButtonElement>) {
+    const dot = e.currentTarget.querySelector('.nav-write-dot')!.getBoundingClientRect();
+    setMenu({ x: dot.left + dot.width / 2, y: dot.top + dot.height / 2 });
+  }
+  function close() { setShown(false); window.setTimeout(() => setMenu(null), 220); }
+  function choose(kind: 'write' | 'pocket') {
+    setMenu(null);
     if (friends.length === 0) { say('Invite a friend first, then you can write.'); go('friends'); return; }
-    if (friends.length === 1) { go(`write/${friends[0].profile.id}`); return; }
-    setPicking(true);
+    if (friends.length === 1) { go(`${kind}/${friends[0].profile.id}`); return; }
+    setPicking(kind);
   }
   const tab = (k: NonNullable<typeof on>, label: string, icon: ReactNode) => (
     <button key={k} className={on === k ? 'on' : ''} aria-current={on === k ? 'page' : undefined} onClick={() => go(k)}>{icon}{label}</button>
@@ -153,17 +162,33 @@ export function Nav({ on }: { on?: 'friends' | 'wall' | 'stamps' | 'profile' }) 
       <nav className="nav" aria-label="Main">
         {tab('wall', 'Wall', Icon.wall)}
         {tab('friends', 'Friends', Icon.mail)}
-        <button className="nav-write" onClick={write} aria-label="Write a letter"><span className="nav-write-dot">{QUILL}</span>Write</button>
+        <button className="nav-write" onClick={open} aria-label="Write" aria-expanded={Boolean(menu)}><span className="nav-write-dot">{QUILL}</span>Write</button>
         {tab('stamps', 'Stamps', Icon.stamp)}
         {tab('profile', me?.name || 'You', me ? <span className="nav-seal"><Seal p={me} size={26} /></span> : Icon.me)}
       </nav>
+      {menu && (
+        <div className={`write-menu${shown ? ' in' : ''}`} onClick={close} style={{ ['--cx' as string]: `${menu.x}px`, ['--cy' as string]: `${menu.y}px` }}>
+          <p className="write-menu-title">Write to someone</p>
+          <button className="wm-opt wm-letter" onClick={(e) => { e.stopPropagation(); choose('write'); }}>
+            <span className="wm-env" aria-hidden="true"><i /></span>
+            <b>A letter</b><small>sealed, sent by owl</small>
+          </button>
+          <button className="wm-opt wm-scrap" onClick={(e) => { e.stopPropagation(); choose('pocket'); }}>
+            <span className="wm-paper" aria-hidden="true" />
+            <b>A scrap</b><small>for their pocket</small>
+          </button>
+          <button className="wm-close" onClick={(e) => { e.stopPropagation(); close(); }} aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+      )}
       {picking && (
-        <div className="sheet-back" onClick={() => setPicking(false)}>
-          <div className="stamp-sheet stack" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Write to">
-            <h2 style={{ fontSize: 18 }}>Write to</h2>
+        <div className="sheet-back" onClick={() => setPicking(null)}>
+          <div className="stamp-sheet stack" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={picking === 'write' ? 'Write to' : 'Drop a scrap for'}>
+            <h2 style={{ fontSize: 18 }}>{picking === 'write' ? 'Write to' : 'Drop a scrap for'}</h2>
             <div className="write-pick">
               {friends.map(({ profile: p }) => (
-                <button key={p.id} onClick={() => go(`write/${p.id}`)}><Seal p={p} size={54} /><span>{p.name}</span></button>
+                <button key={p.id} onClick={() => go(`${picking}/${p.id}`)}><Seal p={p} size={54} /><span>{p.name}</span></button>
               ))}
             </div>
           </div>
