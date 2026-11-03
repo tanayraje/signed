@@ -61,3 +61,18 @@ export async function pushState(): Promise<'on' | 'off' | 'blocked' | 'unsupport
     return (await reg.pushManager.getSubscription()) ? 'on' : 'off';
   } catch { return 'off'; }
 }
+
+/** Stops notifications on this phone: forgets the subscription here and on the server. */
+export async function disablePush(): Promise<string> {
+  try {
+    const reg = await withTimeout(navigator.serviceWorker.ready, 5000);
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+      await sub.unsubscribe();
+    }
+    return 'Notifications are off for this phone.';
+  } catch {
+    return 'Could not turn them off. Try again.';
+  }
+}

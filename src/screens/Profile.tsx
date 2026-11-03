@@ -1,7 +1,7 @@
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { ago } from '../lib/format';
-import { enablePush, isInstalled, preparePush, pushState } from '../lib/push';
+import { disablePush, enablePush, isInstalled, preparePush, pushState } from '../lib/push';
 import { useEffect, useState } from 'react';
 import { Nav, Owl, Seal, signOut } from '../components/bits';
 
@@ -67,7 +67,7 @@ export default function Profile() {
                       : 'Know when an owl lands and when it is 11:11.'}</span>
           </span>
           {push === 'on'
-            ? <span className="chip on" aria-label="Notifications are on">On</span>
+            ? <button className="chip on" onClick={async () => { const m = await disablePush(); setPushMsg(''); say(m); setPush(await pushState()); }} aria-label="Notifications are on. Turn them off">On · Turn off</button>
             : push !== 'blocked' && push !== 'unsupported' && <button className="chip" onClick={async () => { setPushMsg('Asking your phone…'); const m = await enablePush(session!.user.id); setPushMsg(m); say(m); setPush(await pushState()); }}>Turn on</button>}
         </div>
         {pushMsg && push !== 'on' && <p className="small" role="status" style={{ margin: 0, padding: '0 0 12px', color: '#7A2420' }}>{pushMsg}</p>}

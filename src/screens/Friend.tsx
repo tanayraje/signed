@@ -70,13 +70,16 @@ export default function Friend({ id }: { id: string }) {
   }
 
   // the two of you on the map, with the owl if a letter is in the air
+  // the two of you on the map, with every owl in the air between you, live
+  const prog = (l: { sent_at: string; arrive_at: string }) => Math.max(0, Math.min(1, (now - new Date(l.sent_at).getTime()) / (new Date(l.arrive_at).getTime() - new Date(l.sent_at).getTime() || 1)));
   const flight = inc[0] ? { l: inc[0], out: false } : out[0] ? { l: out[0], out: true } : null;
-  const ft = flight ? Math.max(0, Math.min(1, (now - new Date(flight.l.sent_at).getTime()) / (new Date(flight.l.arrive_at).getTime() - new Date(flight.l.sent_at).getTime() || 1))) : null;
-  const mapEl = me.last_lat != null && p.last_lat != null ? (
-    flight && flight.l.from_lat != null && flight.l.to_lat != null
-      ? <FlightMap zoom from={[flight.l.from_lat, flight.l.from_lon!]} to={[flight.l.to_lat, flight.l.to_lon!]} fromLabel={flight.out ? 'You' : p.name} toLabel={flight.out ? p.name : 'You'} t={ft} flyerAlt={`${flight.out ? me.owl_name : p.owl_name} in flight`} />
-      : <FlightMap zoom from={[me.last_lat, me.last_lon!]} to={[p.last_lat, p.last_lon!]} fromLabel="You" toLabel={p.name} />
-  ) : null;
+  const owls = [
+    ...out.map((l) => ({ t: prog(l), alt: `${me.owl_name} flying your letter to ${p.name}` })),
+    ...inc.map((l) => ({ t: prog(l), back: true, alt: `${p.owl_name} flying a letter to you` }))
+  ];
+  const mapEl = me.last_lat != null && p.last_lat != null
+    ? <FlightMap zoom from={[me.last_lat, me.last_lon!]} to={[p.last_lat, p.last_lon!]} fromLabel="You" toLabel={p.name} owls={owls} />
+    : null;
   const mapCard = mapEl && (
     <div className="card stack map-card">
       {mapEl}

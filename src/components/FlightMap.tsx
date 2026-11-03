@@ -7,8 +7,10 @@ type LatLon = [number, number];
  * The India map with two people on it and, while a letter is flying, the owl on its wandering path.
  * `zoom` crops the map to the two of them; otherwise the whole map shows.
  */
-export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flyerAlt = 'Owl in flight', zoom = false }: {
+export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flyerAlt = 'Owl in flight', zoom = false, owls }: {
   from: LatLon; to: LatLon; fromLabel: string; toLabel: string; t?: number | null; flyerAlt?: string; zoom?: boolean;
+  /** Every owl in the air between these two, with how far along it is; `back` flies from `to` towards `from`. */
+  owls?: { t: number; back?: boolean; alt?: string }[];
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [z, setZ] = useState({ s: 1, x: 0, y: 0 });
@@ -83,10 +85,13 @@ export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flye
   }
 
   const pts = (n: number) => Array.from({ length: n + 1 }, (_, i) => wander(A, B, i / 60)).map((q) => `${(q[0] * VW).toFixed(1)},${(q[1] * VH).toFixed(1)}`).join(' ');
-  const flying = t != null && t < 1;
-  const q = flying ? wander(A, B, t!) : null;
-  const q2 = flying ? wander(A, B, Math.min(1, t! + 0.01)) : null;
-  const ang = q && q2 ? (Math.atan2((q2[1] - q[1]) * VH, (q2[0] - q[0]) * VW) * 180) / Math.PI + 90 : 0;
+  // where each owl is now, live, and which way it faces
+  const flights = (owls ?? (t != null ? [{ t, alt: flyerAlt }] : [])).filter((o) => o.t < 1).map((o) => {
+    const at = o.back ? 1 - o.t : o.t, ahead = o.back ? Math.max(0, at - 0.01) : Math.min(1, at + 0.01);
+    const q = wander(A, B, at), q2 = wander(A, B, ahead);
+    return { ...o, q, ang: (Math.atan2((q2[1] - q[1]) * VH, (q2[0] - q[0]) * VW) * 180) / Math.PI + 90 };
+  });
+  const lead = flights[0];
   const k = z.s / Math.max(wn, 0.0001); // how much the map is scaled up; lines, dots and the owl stay the same size
 
   return (
@@ -97,14 +102,17 @@ export default function FlightMap({ from, to, fromLabel, toLabel, t = null, flye
         <img className="base" src={M.img} alt={M === INDIA_ ? 'Map of India' : 'Map of the world'} />
         <svg viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" aria-hidden="true">
           <line x1={A[0] * VW} y1={A[1] * VH} x2={B[0] * VW} y2={B[1] * VH} stroke="#2B2622" strokeOpacity=".25" strokeDasharray={`${2 * u / k} ${5 * u / k}`} strokeWidth={u / k} />
-          {t != null && <polyline points={pts(60)} fill="none" stroke="#2B2622" strokeOpacity=".45" strokeWidth={1.4 * u / k} strokeDasharray={`${u / k} ${6 * u / k}`} strokeLinecap="round" />}
-          {t != null && <polyline points={pts(Math.round(Math.min(1, t) * 60))} fill="none" stroke="#7A2420" strokeWidth={1.8 * u / k} strokeLinecap="round" />}
+          {lead && <polyline points={pts(60)} fill="none" stroke="#2B2622" strokeOpacity=".45" strokeWidth={1.4 * u / k} strokeDasharray={`${u / k} ${6 * u / k}`} strokeLinecap="round" />}
+          {lead && !lead.back && <polyline points={pts(Math.round(Math.min(1, lead.t) * 60))} fill="none" stroke="#7A2420" strokeWidth={1.8 * u / k} strokeLinecap="round" />}
           <circle cx={A[0] * VW} cy={A[1] * VH} r={5 * u / k} fill="#7A2420" stroke="#FBF6EE" strokeWidth={2 * u / k} />
           <circle cx={B[0] * VW} cy={B[1] * VH} r={5 * u / k} fill="#2F5D50" stroke="#FBF6EE" strokeWidth={2 * u / k} />
         </svg>
         <span className="pin" style={{ left: `${A[0] * 100}%`, top: `${A[1] * 100}%` }}>{fromLabel}</span>
         <span className="pin" style={{ left: `${B[0] * 100}%`, top: `${B[1] * 100}%` }}>{toLabel}</span>
-        {q && <img className="flyer" src="/assets/owl-fly.png" alt={flyerAlt} style={{ width: `${12 * wn}%`, left: `${q[0] * 100}%`, top: `${q[1] * 100}%`, transform: `translate(-50%,-50%) rotate(${ang}deg) scale(${1 / z.s})` }} />}
+        {flights.map((o, n) => (
+          <img key={n} className="flyer" src="/assets/owl-fly.png" alt={o.alt ?? flyerAlt}
+            style={{ width: `max(40px, ${12 * wn}%)`, left: `${o.q[0] * 100}%`, top: `${o.q[1] * 100}%`, transform: `translate(-50%,-50%) rotate(${o.ang}deg) scale(${1 / z.s})` }} />
+        ))}
       </div>
       </div>
       <div className="map-zoom-btns" onPointerDown={(e) => e.stopPropagation()}>

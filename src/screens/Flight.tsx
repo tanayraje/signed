@@ -20,10 +20,15 @@ export default function Flight({ id }: { id: string }) {
   const name = other?.name ?? 'your friend';
   const owl = outgoing ? me.owl_name : other?.owl_name ?? 'Their owl';
   const t = Math.max(0, Math.min(1, (Date.now() - new Date(l.sent_at).getTime()) / (new Date(l.arrive_at).getTime() - new Date(l.sent_at).getTime() || 1)));
-  const has = l.from_lat != null && l.to_lat != null;
-  const dist = has ? Math.round(km([l.from_lat!, l.from_lon!], [l.to_lat!, l.to_lon!])) : null;
+  // letters sent before someone shared a location borrow where the two of you are now
+  const meAt: [number, number] | null = me.last_lat != null ? [me.last_lat, me.last_lon!] : null;
+  const themAt: [number, number] | null = other?.last_lat != null ? [other.last_lat, other.last_lon!] : null;
+  const fromAt: [number, number] | null = l.from_lat != null ? [l.from_lat, l.from_lon!] : outgoing ? meAt : themAt;
+  const toAt: [number, number] | null = l.to_lat != null ? [l.to_lat, l.to_lon!] : outgoing ? themAt : meAt;
+  const has = fromAt != null && toAt != null;
+  const dist = has ? Math.round(km(fromAt!, toAt!)) : null;
   const map = has ? (
-    <FlightMap from={[l.from_lat!, l.from_lon!]} to={[l.to_lat!, l.to_lon!]} fromLabel={outgoing ? 'You' : name} toLabel={outgoing ? name : 'You'} t={t} flyerAlt={`${owl} in flight`} />
+    <FlightMap from={fromAt!} to={toAt!} fromLabel={outgoing ? 'You' : name} toLabel={outgoing ? name : 'You'} t={t} flyerAlt={`${owl} in flight`} />
   ) : null;
 
   return (
