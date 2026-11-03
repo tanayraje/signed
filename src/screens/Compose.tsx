@@ -245,8 +245,8 @@ export default function Compose({ id }: { id: string }) {
               <figure key={ph.path} className="polaroid edit" style={{ transform: `rotate(${[3, -2, 2, -3][n % 4]}deg)` }}>
                 <button className="scrap-x" onClick={() => { setPhotos(photos.filter((x) => x.path !== ph.path)); void supabase.storage.from('mail').remove([ph.path]); }} aria-label="Remove this Polaroid">{Icon.close}</button>
                 <img src={ph.url} alt={ph.caption || 'Your Polaroid'} />
-                <input className="pol-cap" type="text" maxLength={28} value={ph.caption} placeholder="Write a little note"
-                  aria-label="Note on the Polaroid" onChange={(e) => setPhotos(photos.map((x) => x.path === ph.path ? { ...x, caption: e.target.value } : x))} />
+                <textarea className="pol-cap" rows={1} maxLength={90} value={ph.caption} placeholder="Write a little note"
+                  aria-label="Note on the Polaroid" onInput={(e) => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = `${t.scrollHeight}px`; }} onChange={(e) => setPhotos(photos.map((x) => x.path === ph.path ? { ...x, caption: e.target.value } : x))} />
               </figure>
             ))}
           </div>
