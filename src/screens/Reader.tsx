@@ -141,7 +141,7 @@ function TalkingBody({ letter }: { letter: Letter }) {
   useEffect(() => { setTime(-1); }, [url]);
   return (
     <div className="stack" style={{ gap: 10 }}>
-      <span className="small" style={{ fontStyle: 'italic', opacity: 0.75 }}>A voice note</span>
+      <span className="small" style={{ fontStyle: 'italic', opacity: 0.75 }}>A howler</span>
       {url ? <audio src={url} controls playsInline style={{ width: '100%' }} onPlay={() => setTime(0)} onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} onEnded={() => setTime(-1)} /> : <p className="small" style={{ opacity: 0.7 }}>Loading the voice…</p>}
       {words && (
         <div className="body selectable">

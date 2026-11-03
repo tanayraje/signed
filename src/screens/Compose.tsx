@@ -151,9 +151,9 @@ export default function Compose({ id }: { id: string }) {
         const locked = audio ? 'voice' : video ? 'video' : null;
         const mmss = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`;
         const MODES: [typeof mode, string, string][] = [
-          ['voice', 'Voice note', `${p.name} hears it in your own voice, tucked inside the letter.`],
+          ['voice', 'Howler', `Say it out loud. ${p.name} hears it in your own voice, tucked inside the letter.`],
           ['video', 'Moving picture', `A short video of you that plays inside the letter.`],
-          ['dictate', 'Speak to write', 'Talk, and your words appear on the page as ink. Only the words are sent.']
+          ['dictate', 'Talking ink', 'Talk, and your words appear on the page as ink. Only the words are sent.']
         ];
         return (
           <section className="ench-panel stack">
@@ -169,11 +169,11 @@ export default function Compose({ id }: { id: string }) {
               audio ? (
                 <div className="stack" style={{ gap: 10 }}>
                   <audio src={audio.url} controls playsInline style={{ width: '100%' }} />
-                  <button className="chip ench-chip" onClick={() => setAudio(null)}>Remove voice note</button>
+                  <button className="chip ench-chip" onClick={() => setAudio(null)}>Remove howler</button>
                 </div>
               ) : (
                 <div className="stack" style={{ alignItems: 'center', gap: 8 }}>
-                  <button className={`rec${recording ? ' live' : ''}`} onClick={recording ? stopRecording : startRecording} aria-label={recording ? 'Stop recording' : 'Record a voice note'}>
+                  <button className={`rec${recording ? ' live' : ''}`} onClick={recording ? stopRecording : startRecording} aria-label={recording ? 'Stop recording' : 'Record a howler'}>
                     {recording
                       ? <svg width="26" height="26" viewBox="0 0 24 24" fill="#141A2E" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
                       : <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#141A2E" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>}
@@ -216,7 +216,7 @@ export default function Compose({ id }: { id: string }) {
                 <span className="ench-hint">{dictating ? 'Listening. Your words appear on the page below.' : 'Tap and start talking'}</span>
               </div>
             )}
-            {locked && locked !== mode && <p className="ench-hint">Remove your {locked === 'voice' ? 'voice note' : 'moving picture'} to choose something else.</p>}
+            {locked && locked !== mode && <p className="ench-hint">Remove your {locked === 'voice' ? 'howler' : 'moving picture'} to choose something else.</p>}
           </section>
         );
       })()}
