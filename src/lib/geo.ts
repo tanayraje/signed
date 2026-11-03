@@ -32,9 +32,9 @@ export function placeName(lat: number, lon: number): string {
 }
 
 // Two hand-drawn maps in Web Mercator: India up close, and the world for friends further away.
-export interface MapDef { img: string; lon0: number; lon1: number; lat0: number; lat1: number; vw: number; vh: number }
-export const INDIA: MapDef = { img: '/assets/map-india.jpg', lon0: 71.0753, lon1: 91.3247, lat0: 6.5, lat1: 33.5, vw: 390, vh: 560 };
-export const WORLD: MapDef = { img: '/assets/map-world.jpg', lon0: -180, lon1: 180, lat0: -58, lat1: 78, vw: 1000, vh: 557.5 };
+export interface MapDef { img: string; lon0: number; lon1: number; lat0: number; lat1: number; vw: number; vh: number; px: number }
+export const INDIA: MapDef = { img: '/assets/map-india.jpg', lon0: 71.0753, lon1: 91.3247, lat0: 6.5, lat1: 33.5, vw: 390, vh: 560, px: 2340 };
+export const WORLD: MapDef = { img: '/assets/map-world.jpg', lon0: -180, lon1: 180, lat0: -58, lat1: 78, vw: 1000, vh: 557.5, px: 5600 };
 const Y = (la: number) => Math.log(Math.tan(Math.PI / 4 + (la * Math.PI) / 360));
 
 export function onMap(m: MapDef, lat: number, lon: number): boolean {

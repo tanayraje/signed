@@ -449,14 +449,14 @@ label.rec { cursor: pointer }
 /* maps: a still preview on friend pages, a full smooth map on its own screen */
 .zmap { position: relative; width: 100%; overflow: hidden; background: #C9D6DC; isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black); cursor: pointer }
 .zmap.live { height: 100%; cursor: grab; touch-action: none }
-.zmap-layer { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; --zs: 1 }
-.zmap-base { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; -webkit-user-select: none; user-select: none }
+.zmap-layer { position: absolute; left: 0; top: 0; transform-origin: 0 0 }
+.zmap-base { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; image-rendering: auto; -webkit-user-select: none; user-select: none }
 .zmap-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none }
-.zmap-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; border: 2.5px solid #FBF6EE; box-shadow: 0 1px 3px rgba(43, 38, 34, .35); transform: scale(calc(1 / var(--zs))); pointer-events: none }
+.zmap-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; border: 2.5px solid #FBF6EE; box-shadow: 0 1px 3px rgba(43, 38, 34, .35); pointer-events: none }
 .zmap-dot.from { background: #7A2420 } .zmap-dot.to { background: #2F5D50 }
 .zmap-pin { position: absolute; padding: 3px 9px; border-radius: 12px; background: rgba(251, 246, 238, .95); font-size: 13px; color: #2B2622; box-shadow: 0 2px 6px rgba(43, 38, 34, .18); white-space: nowrap;
-  transform: translate(-50%, -100%) scale(calc(1 / var(--zs))) translateY(-10px); transform-origin: 50% 100%; pointer-events: none }
-.zmap-owl { position: absolute; width: 46px; max-width: none; transform: translate(-50%, -50%) rotate(var(--a)) scale(calc(1 / var(--zs))); filter: drop-shadow(0 3px 3px rgba(43, 38, 34, .3)); pointer-events: none; transition: left 1s linear, top 1s linear }
+  transform: translate(-50%, -100%) translateY(-10px); pointer-events: none }
+.zmap-owl { position: absolute; width: 46px; max-width: none; transform: translate(-50%, -50%) rotate(var(--a)); filter: drop-shadow(0 3px 3px rgba(43, 38, 34, .3)); pointer-events: none; transition: left 1s linear, top 1s linear }
 .zmap-touch { position: absolute; inset: 0; z-index: 2 }
 .zmap-btns { position: absolute; right: 12px; bottom: 12px; z-index: 3; display: flex; flex-direction: column; gap: 8px }
 .zmap-btns button { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(43, 38, 34, .14); background: rgba(251, 246, 238, .95); color: #2B2622; font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(43, 38, 34, .18); cursor: pointer; padding: 0 }

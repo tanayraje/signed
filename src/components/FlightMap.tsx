@@ -46,15 +46,17 @@ function Layer({ M, from, to, fromLabel, toLabel, owls, W, H, interactive, layer
   // the layer is the whole map, as wide as the frame at scale 1; the first view frames the two of you
   const cw = W, ch = W * (VH / VW);
   // full maps can zoom out until the whole map shows; previews always stay covered
+  // never zoom past what the map image can draw sharply
+  const maxS = Math.max(2, (M.px * 1.5) / (cw * (window.devicePixelRatio || 2)));
   const minS = () => (interactive ? Math.min(W / cw, H / ch, 1) : Math.max(W / cw, H / ch));
   const clampT = (t: { s: number; x: number; y: number }) => {
-    const s = Math.min(12, Math.max(minS(), t.s));
+    const s = Math.min(maxS, Math.max(minS(), t.s));
     const fit = (view: number, len: number, v: number) => (len <= view ? (view - len) / 2 : Math.min(0, Math.max(view - len, v)));
     return { s, x: fit(W, cw * s, t.x), y: fit(H, ch * s, t.y) };
   };
   const pad = M === INDIA ? 0.28 : 0.1;
   const bw = Math.abs(A[0] - B[0]) + pad, bh = Math.abs(A[1] - B[1]) + pad * (VW / VH) * 0.6;
-  const fitS = Math.min(W / (bw * cw), H / (bh * ch), M === INDIA ? 5 : 6);
+  const fitS = Math.min(W / (bw * cw), H / (bh * ch), maxS * 0.6);
   const homeS = Math.max(minS(), fitS);
   const home = clampT({ s: homeS, x: W / 2 - ((A[0] + B[0]) / 2) * cw * homeS, y: H / 2 - ((A[1] + B[1]) / 2) * ch * homeS });
 
@@ -64,16 +66,18 @@ function Layer({ M, from, to, fromLabel, toLabel, owls, W, H, interactive, layer
   const [zs, setZs] = useState(home.s);
   const apply = (animate = false) => {
     const el = layer.current; if (!el) return;
-    el.style.transition = animate ? 'transform .28s cubic-bezier(.2,.8,.2,1)' : 'none';
-    el.style.transform = `translate3d(${T.current.x}px, ${T.current.y}px, 0) scale(${T.current.s})`;
-    el.style.setProperty('--zs', String(T.current.s));
+    // the layer is resized, not stretched, so the map and owls are drawn sharp at every zoom
+    el.style.transition = animate ? 'transform .28s cubic-bezier(.2,.8,.2,1), width .28s cubic-bezier(.2,.8,.2,1), height .28s cubic-bezier(.2,.8,.2,1)' : 'none';
+    el.style.width = `${cw * T.current.s}px`;
+    el.style.height = `${ch * T.current.s}px`;
+    el.style.transform = `translate3d(${T.current.x}px, ${T.current.y}px, 0)`;
   };
   const schedule = () => { cancelAnimationFrame(raf.current); raf.current = requestAnimationFrame(() => apply()); };
   useEffect(() => { apply(); return () => cancelAnimationFrame(raf.current); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const settle = () => setZs(T.current.s);
 
   const zoomAt = (f: number, px: number, py: number, animate = true) => {
-    const o = T.current, s = Math.min(12, Math.max(minS(), o.s * f)), k = s / o.s;
+    const o = T.current, s = Math.min(maxS, Math.max(minS(), o.s * f)), k = s / o.s;
     T.current = clampT({ s, x: px - (px - o.x) * k, y: py - (py - o.y) * k });
     apply(animate); settle();
   };
@@ -101,7 +105,7 @@ function Layer({ M, from, to, fromLabel, toLabel, owls, W, H, interactive, layer
     const l = last.current;
     if (l && (p.length > 1) === (l.d > 0)) {
       const o = T.current;
-      const s = p.length > 1 ? Math.min(12, Math.max(minS(), o.s * (d / l.d))) : o.s, k = s / o.s;
+      const s = p.length > 1 ? Math.min(maxS, Math.max(minS(), o.s * (d / l.d))) : o.s, k = s / o.s;
       T.current = clampT({ s, x: mx - (l.mx - o.x) * k, y: my - (l.my - o.y) * k });
       schedule();
     }
@@ -123,12 +127,12 @@ function Layer({ M, from, to, fromLabel, toLabel, owls, W, H, interactive, layer
 
   return (
     <>
-      <div ref={layer} className="zmap-layer" style={{ width: cw, height: ch }}>
+      <div ref={layer} className="zmap-layer">
         <img className="zmap-base" src={M.img} alt={M === INDIA ? 'Map of India' : 'Map of the world'} draggable={false} />
         <svg viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" aria-hidden="true">
-          <line x1={A[0] * VW} y1={A[1] * VH} x2={B[0] * VW} y2={B[1] * VH} stroke="#2B2622" strokeOpacity=".25" strokeDasharray={dash(2, 5)} strokeWidth={px(1)} />
-          {lead && <polyline points={pts(60)} fill="none" stroke="#2B2622" strokeOpacity=".45" strokeWidth={px(1.6)} strokeDasharray={dash(1.5, 6)} strokeLinecap="round" />}
-          {lead && !lead.back && <polyline points={pts(Math.round(Math.min(1, lead.t) * 60))} fill="none" stroke="#7A2420" strokeWidth={px(2.2)} strokeLinecap="round" />}
+          <line x1={A[0] * VW} y1={A[1] * VH} x2={B[0] * VW} y2={B[1] * VH} stroke="#2B2622" strokeOpacity=".25" strokeDasharray={dash(2, 5)} strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          {lead && <polyline points={pts(60)} fill="none" stroke="#2B2622" strokeOpacity=".45" strokeWidth="1.6" vectorEffect="non-scaling-stroke" strokeDasharray={dash(1.5, 6)} strokeLinecap="round" />}
+          {lead && !lead.back && <polyline points={pts(Math.round(Math.min(1, lead.t) * 60))} fill="none" stroke="#7A2420" strokeWidth="2.2" vectorEffect="non-scaling-stroke" strokeLinecap="round" />}
         </svg>
         <span className="zmap-dot from" style={{ left: `${A[0] * 100}%`, top: `${A[1] * 100}%` }} />
         <span className="zmap-dot to" style={{ left: `${B[0] * 100}%`, top: `${B[1] * 100}%` }} />
