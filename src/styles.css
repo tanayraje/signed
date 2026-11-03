@@ -440,3 +440,8 @@ label.rec { cursor: pointer }
 .owl-name input { flex: 1; min-width: 0 }
 .owl-dice { width: 40px; height: 40px; flex: none; border-radius: 10px; border: 1px solid #CFC5B6; background: rgba(251, 248, 242, .85); color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0 }
 .owl-dice:active { transform: rotate(-20deg) scale(.95) }
+
+/* pressed letters on dark wax: lift them with light on the lower rim and a soft lighter fill */
+.seal.wax-ink .mono, .seal.wax-soot .mono, .seal.wax-forest .mono, .seal.wax-plum .mono {
+  color: rgba(255, 255, 255, .13); text-shadow: 0 -1px 1px rgba(0, 0, 0, .7), 0 1px 0 rgba(255, 255, 255, .3) }
+.seal.wax-mustard .mono { color: rgba(60, 35, 0, .42); text-shadow: 0 1px 0 rgba(255, 245, 210, .4), 0 -1px 1px rgba(60, 35, 0, .35) }

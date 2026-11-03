@@ -16,7 +16,7 @@ export function Seal({ p, size = 56, label }: { p: Pick<Profile, 'wax' | 'monogr
   const mono = (p.monogram || p.name.slice(0, 1) || '·').toUpperCase();
   const mix = p.mixins ?? [];
   return (
-    <span className="seal" role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}
+    <span className={`seal wax-${p.wax}`} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}
       style={{ width: size, height: size, fontSize: size * (mono.length > 1 ? 0.24 : 0.32) }}>
       {mix.includes('ribbon') && <img className="ribbon" src={`/assets/mix-ribbon-${p.wax}.png`} alt="" />}
       <img src={`/assets/wax-${p.wax}${p.edge === 'clean' ? '-clean' : ''}.png`} alt="" width={size} height={size} />
