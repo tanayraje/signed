@@ -338,7 +338,7 @@ label.rec { cursor: pointer }
 .trunk-snip { font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0 }
 
 /* profile tab shows your seal */
-.nav-seal { display: flex; width: 26px; height: 26px; margin-bottom: -1px }
+.nav-seal { display: flex; width: 26px; height: 26px }
 .nav button.on .nav-seal { filter: drop-shadow(0 0 0 #2B2622) }
 /* this week, in seals, on the Wall */
 .sealweek { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--card) url(/assets/card.jpg) center/cover; color: inherit; cursor: pointer; text-align: left }
@@ -349,3 +349,8 @@ label.rec { cursor: pointer }
 .sealweek-more { display: flex; flex-direction: column; align-items: center; padding-left: 10px; border-left: 1px solid var(--line); min-width: 62px; line-height: 1.1 }
 .sealweek-more b { font-size: 22px }
 .sealweek-more small { font-size: 11px; color: var(--muted); text-align: center }
+
+/* every tab: a 26px icon slot, then the label, so the labels share one baseline */
+.nav button { justify-content: flex-start; padding-top: 8px }
+.nav button > svg { width: 24px; height: 24px; margin: 1px 0 }
+.nav-write-dot { margin-top: -14px }
