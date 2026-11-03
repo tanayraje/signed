@@ -56,14 +56,23 @@ export function SealDesigner({ draft, set }: { draft: Profile; set: (p: Partial<
   );
 }
 
+const OWL_NAMES = ['Wren', 'Postscript', 'Detour', 'Quill', 'Inkwell', 'Vellum', 'Sepia', 'Moth', 'Dusk', 'Comet', 'Nimbus', 'Ember', 'Vesper',
+  'Hazel', 'Juniper', 'Bramble', 'Clementine', 'Tara', 'Megh', 'Kesar', 'Chandu', 'Archibald', 'Bartholomew', 'Sir Reginald', 'The Professor', 'Courier', 'Wanderer', 'Pip', 'Biscuit', 'Mango'];
+export const randomOwlName = (not?: string) => { let n = not; while (n === not) n = OWL_NAMES[Math.floor(Math.random() * OWL_NAMES.length)]; return n!; };
+
 export function OwlEditor({ draft, set }: { draft: Profile; set: (p: Partial<Profile>) => void }) {
   return (
     <>
       <div className="stone row" style={{ justifyContent: 'center', gap: 20, padding: '18px 16px 14px', alignItems: 'flex-end' }}>
         <Owl p={draft} width={120} alt="Your owl" />
         <div className="stack" style={{ paddingBottom: 14, width: 150 }}>
-          <label htmlFor="owlName" className="small muted" style={{ fontStyle: 'italic' }}>Name</label>
-          <input id="owlName" type="text" value={draft.owl_name} maxLength={20} onChange={(e) => set({ owl_name: e.target.value })} />
+          <label htmlFor="owlName" className="small muted" style={{ fontStyle: 'italic' }}>Name it anything</label>
+          <div className="owl-name">
+            <input id="owlName" type="text" value={draft.owl_name} maxLength={20} placeholder="Your owl's name" onChange={(e) => set({ owl_name: e.target.value })} />
+            <button type="button" className="owl-dice" onClick={() => set({ owl_name: randomOwlName(draft.owl_name) })} aria-label="Suggest a name">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5" /><circle cx="9" cy="9" r="1.2" fill="currentColor" /><circle cx="15" cy="15" r="1.2" fill="currentColor" /><circle cx="15" cy="9" r="1.2" fill="currentColor" /><circle cx="9" cy="15" r="1.2" fill="currentColor" /></svg>
+            </button>
+          </div>
         </div>
       </div>
       <section className="stack"><h2>Plumage</h2>

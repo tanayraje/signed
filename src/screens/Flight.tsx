@@ -26,9 +26,17 @@ export default function Flight({ id }: { id: string }) {
   const fromAt: [number, number] | null = l.from_lat != null ? [l.from_lat, l.from_lon!] : outgoing ? meAt : themAt;
   const toAt: [number, number] | null = l.to_lat != null ? [l.to_lat, l.to_lon!] : outgoing ? themAt : meAt;
   const has = fromAt != null && toAt != null;
+  // every owl in the air between the two of you, this one first; ones flying the other way face back
+  const nowMs = Date.now();
+  const progOf = (x: { sent_at: string; arrive_at: string }) => Math.max(0, Math.min(1, (nowMs - new Date(x.sent_at).getTime()) / (new Date(x.arrive_at).getTime() - new Date(x.sent_at).getTime() || 1)));
+  const mineOut = letters.filter((x) => x.sender === uid && x.recipient === otherId && new Date(x.arrive_at).getTime() > nowMs).map((x) => ({ id: x.id, t: progOf(x), dirOut: true }));
+  const theirsIn = incoming.filter((x) => x.sender === otherId && new Date(x.arrive_at).getTime() > nowMs).map((x) => ({ id: x.id, t: progOf(x), dirOut: false }));
+  const pairOwls = [...mineOut, ...theirsIn].sort((a, b) => (a.id === id ? -1 : b.id === id ? 1 : 0))
+    .map((o) => ({ t: o.t, back: o.dirOut !== outgoing, alt: o.dirOut ? `${me.owl_name} carrying your letter` : `${other?.owl_name ?? 'Their owl'} carrying a letter to you` }));
+  if (!pairOwls.length) pairOwls.push({ t, back: false, alt: `${owl} in flight` });
   const dist = has ? Math.round(km(fromAt!, toAt!)) : null;
   const map = has ? (
-    <FlightMap from={fromAt!} to={toAt!} fromLabel={outgoing ? 'You' : name} toLabel={outgoing ? name : 'You'} t={t} flyerAlt={`${owl} in flight`} />
+    <FlightMap from={fromAt!} to={toAt!} fromLabel={outgoing ? 'You' : name} toLabel={outgoing ? name : 'You'} owls={pairOwls} />
   ) : null;
 
   return (

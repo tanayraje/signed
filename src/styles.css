@@ -434,3 +434,9 @@ label.rec { cursor: pointer }
 .wall-head { align-items: flex-end; gap: 10px }
 .wall-date { font-style: italic; color: var(--muted); font-size: 15px; padding-bottom: 10px; white-space: nowrap }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap }
+
+/* owl name, with a dice for ideas */
+.owl-name { display: flex; gap: 6px; align-items: center }
+.owl-name input { flex: 1; min-width: 0 }
+.owl-dice { width: 40px; height: 40px; flex: none; border-radius: 10px; border: 1px solid #CFC5B6; background: rgba(251, 248, 242, .85); color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0 }
+.owl-dice:active { transform: rotate(-20deg) scale(.95) }
