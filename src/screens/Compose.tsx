@@ -26,7 +26,9 @@ export default function Compose({ id }: { id: string }) {
   const [audio, setAudio] = useState<{ path: string; url: string; words: WordTiming[] } | null>(null);
   const [video, setVideo] = useState<{ path: string; url: string } | null>(null);
   const [recording, setRecording] = useState(false);
-  const [live, setLive] = useState('');
+  const [mode, setMode] = useState<'voice' | 'video' | 'dictate'>('voice');
+  const [dictating, setDictating] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [cutting, setCutting] = useState(false);
   const [asked, setAsked] = useState<ToAnswer[]>(() => toAnswer(id));
@@ -35,6 +37,12 @@ export default function Compose({ id }: { id: string }) {
   const speech = useRef<SpeechRec | null>(null);
 
   useEffect(() => { try { localStorage.setItem(draftKey(id), JSON.stringify(draft)); } catch { /* storage full */ } }, [draft, id]);
+  useEffect(() => {
+    if (!recording) return;
+    const t = window.setInterval(() => setElapsed((n) => n + 1), 1000);
+    return () => window.clearInterval(t);
+  }, [recording]);
+  useEffect(() => () => { try { speech.current?.stop(); } catch { /* fine */ } }, []);
   useEffect(() => {
     document.body.classList.toggle('ench', enchanted);
     return () => document.body.classList.remove('ench');
@@ -45,23 +53,25 @@ export default function Compose({ id }: { id: string }) {
   const p = f.profile;
   const set = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch });
 
+  // Enchanted letters carry one of three things: a voice note, a moving picture, or words you speak onto the page.
   async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-      const r = new MediaRecorder(stream, { mimeType: mime });
+      // iPhones play mp4 audio, not webm, so ask for mp4 first
+      const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find((t) => MediaRecorder.isTypeSupported?.(t)) ?? '';
+      const r = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
       const chunks: Blob[] = [];
-      r.ondataavailable = (e) => chunks.push(e.data);
+      r.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
       r.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunks, { type: mime });
+        const type = (r.mimeType || mime || 'audio/mp4').split(';')[0];
+        const blob = new Blob(chunks, { type });
         setBusy('Saving your voice…');
         try {
-          const path = await upload(uid, blob, extFor(mime));
+          const path = await upload(uid, blob, extFor(type));
           let words: WordTiming[] = [];
-          const { data } = await supabase.functions.invoke('transcribe', { body: { path } });
-          if (data?.words?.length) { words = data.words as WordTiming[]; set({ body: (data.text as string).trim() }); }
-          else if (live.trim()) set({ body: live.trim() });
+          const { data } = await supabase.functions.invoke('transcribe', { body: { path } }).catch(() => ({ data: null }));
+          if (data?.words?.length) words = data.words as WordTiming[];
           setAudio({ path, url: URL.createObjectURL(blob), words });
         } catch (err) { say((err as Error).message); }
         setBusy(null);
@@ -69,23 +79,32 @@ export default function Compose({ id }: { id: string }) {
       rec.current = r;
       r.start();
       setRecording(true);
-      setLive('');
-      const SR = (window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec }).SpeechRecognition
-        ?? (window as unknown as { webkitSpeechRecognition?: new () => SpeechRec }).webkitSpeechRecognition;
-      if (SR) {
-        const s = new SR();
-        s.continuous = true; s.interimResults = true; s.lang = navigator.language || 'en-IN';
-        s.onresult = (e) => setLive(Array.from(e.results).map((r) => r[0].transcript).join(' '));
-        try { s.start(); speech.current = s; } catch { /* live words are a bonus */ }
-      }
+      setElapsed(0);
     } catch {
       say('Signed needs your microphone to record. Allow it in your browser settings.');
     }
   }
   function stopRecording() {
     rec.current?.stop();
-    try { speech.current?.stop(); } catch { /* already stopped */ }
     setRecording(false);
+  }
+
+  function startDictation() {
+    const SR = (window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec }).SpeechRecognition
+      ?? (window as unknown as { webkitSpeechRecognition?: new () => SpeechRec }).webkitSpeechRecognition;
+    if (!SR) { say('This browser cannot turn speech into words. Use the mic on your keyboard instead.'); return; }
+    const base = draft.body.trim();
+    const s = new SR();
+    s.continuous = true; s.interimResults = true; s.lang = navigator.language || 'en-IN';
+    s.onresult = (e) => {
+      const said = Array.from(e.results).map((r) => r[0].transcript).join(' ').trim();
+      setDraft((d) => ({ ...d, body: [base, said].filter(Boolean).join(base.endsWith('.') ? ' ' : base ? ' ' : '') }));
+    };
+    try { s.start(); speech.current = s; setDictating(true); } catch { say('Could not start listening. Try again.'); }
+  }
+  function stopDictation() {
+    try { speech.current?.stop(); } catch { /* already stopped */ }
+    setDictating(false);
   }
 
   async function seal() {
@@ -128,32 +147,83 @@ export default function Compose({ id }: { id: string }) {
         </button>
       </div>
 
-      {enchanted && (
-        <section className="card stack center" style={{ padding: '16px 14px', alignItems: 'center' }}>
-          <p className="small muted">Speak and your words write themselves in ink. When {p.name} opens it, the letter reads itself in your voice.</p>
-          <button className={`rec${recording ? ' live' : ''}`} onClick={recording ? stopRecording : startRecording} aria-label={recording ? 'Stop recording' : 'Record a talking letter'}>
-            {recording
-              ? <svg width="26" height="26" viewBox="0 0 24 24" fill="#141A2E" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
-              : <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#141A2E" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>}
-          </button>
-          {audio && <audio src={audio.url} controls style={{ width: '100%' }} />}
-          <div className="chips" style={{ justifyContent: 'center' }}>
-            <label className="chip" htmlFor="videoIn">{video ? 'Moving picture added' : 'Record a moving picture'}</label>
-            <input id="videoIn" type="file" accept="video/*" capture="user" hidden onChange={async (e) => {
-              const file = e.target.files?.[0]; if (!file) return;
-              if (file.size > 60e6) { say('That video is too long. Keep it under a minute.'); return; }
-              setBusy('Saving your moving picture…');
-              try { const path = await upload(uid, file, extFor(file.type)); setVideo({ path, url: URL.createObjectURL(file) }); } catch (err) { say((err as Error).message); }
-              setBusy(null);
-            }} />
-          </div>
-          {video && <video src={video.url} controls playsInline style={{ width: '100%', border: '6px solid #FDFCF8' }} />}
-        </section>
-      )}
+      {enchanted && (() => {
+        const locked = audio ? 'voice' : video ? 'video' : null;
+        const mmss = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`;
+        const MODES: [typeof mode, string, string][] = [
+          ['voice', 'Voice note', `${p.name} hears it in your own voice, tucked inside the letter.`],
+          ['video', 'Moving picture', `A short video of you that plays inside the letter.`],
+          ['dictate', 'Speak to write', 'Talk, and your words appear on the page as ink. Only the words are sent.']
+        ];
+        return (
+          <section className="ench-panel stack">
+            <div className="ench-seg" role="radiogroup" aria-label="What to send">
+              {MODES.map(([k, label]) => (
+                <button key={k} role="radio" aria-checked={mode === k} className={mode === k ? 'on' : ''}
+                  disabled={(locked !== null && locked !== k) || recording || dictating} onClick={() => setMode(k)}>{label}</button>
+              ))}
+            </div>
+            <p className="ench-hint">{locked && locked !== mode ? '' : MODES.find((m) => m[0] === mode)![2]}</p>
+
+            {mode === 'voice' && (
+              audio ? (
+                <div className="stack" style={{ gap: 10 }}>
+                  <audio src={audio.url} controls playsInline style={{ width: '100%' }} />
+                  <button className="chip ench-chip" onClick={() => setAudio(null)}>Remove voice note</button>
+                </div>
+              ) : (
+                <div className="stack" style={{ alignItems: 'center', gap: 8 }}>
+                  <button className={`rec${recording ? ' live' : ''}`} onClick={recording ? stopRecording : startRecording} aria-label={recording ? 'Stop recording' : 'Record a voice note'}>
+                    {recording
+                      ? <svg width="26" height="26" viewBox="0 0 24 24" fill="#141A2E" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+                      : <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#141A2E" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>}
+                  </button>
+                  <span className="ench-hint">{recording ? `Recording ${mmss}. Tap to stop.` : 'Tap to record'}</span>
+                </div>
+              )
+            )}
+
+            {mode === 'video' && (
+              video ? (
+                <div className="stack" style={{ gap: 10 }}>
+                  <video src={video.url} controls playsInline style={{ width: '100%', border: '6px solid #FDFCF8' }} />
+                  <button className="chip ench-chip" onClick={() => setVideo(null)}>Remove moving picture</button>
+                </div>
+              ) : (
+                <div className="stack" style={{ alignItems: 'center', gap: 8 }}>
+                  <label className="rec" htmlFor="videoIn" aria-label="Record a moving picture">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#141A2E" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2" /><path d="M16 10.5l5-3v9l-5-3z" /></svg>
+                  </label>
+                  <span className="ench-hint">Tap to film, up to a minute</span>
+                  <input id="videoIn" type="file" accept="video/*" capture="user" hidden onChange={async (e) => {
+                    const file = e.target.files?.[0]; if (!file) return;
+                    if (file.size > 60e6) { say('That video is too long. Keep it under a minute.'); return; }
+                    setBusy('Saving your moving picture…');
+                    try { const path = await upload(uid, file, extFor(file.type)); setVideo({ path, url: URL.createObjectURL(file) }); } catch (err) { say((err as Error).message); }
+                    setBusy(null); e.target.value = '';
+                  }} />
+                </div>
+              )
+            )}
+
+            {mode === 'dictate' && (
+              <div className="stack" style={{ alignItems: 'center', gap: 8 }}>
+                <button className={`rec${dictating ? ' live' : ''}`} onClick={dictating ? stopDictation : startDictation} aria-label={dictating ? 'Stop listening' : 'Start speaking'}>
+                  {dictating
+                    ? <svg width="26" height="26" viewBox="0 0 24 24" fill="#141A2E" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+                    : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#141A2E" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true"><path d="M4 19c3-1 5-3 7-6l4-7 3 2-4 7c-2 3-4 4-7 5" /><path d="M14 6l3 2M4 21h7" /></svg>}
+                </button>
+                <span className="ench-hint">{dictating ? 'Listening. Your words appear on the page below.' : 'Tap and start talking'}</span>
+              </div>
+            )}
+            {locked && locked !== mode && <p className="ench-hint">Remove your {locked === 'voice' ? 'voice note' : 'moving picture'} to choose something else.</p>}
+          </section>
+        );
+      })()}
 
       <div className={`sheet stack${enchanted ? ' parch' : ''}`} style={{ gap: 14 }}>
-        <label htmlFor="bodyIn" className="small" style={{ fontStyle: 'italic', opacity: 0.7 }}>{enchanted ? 'The words your letter will say' : 'Your letter'}</label>
-        <textarea id="bodyIn" rows={9} value={recording && live ? live : draft.body} onChange={(e) => set({ body: e.target.value })} placeholder={`Dear ${p.name},`} />
+        <label htmlFor="bodyIn" className="small" style={{ fontStyle: 'italic', opacity: 0.7 }}>{!enchanted ? 'Your letter' : mode === 'dictate' ? 'Your words, as you speak them' : 'Write a few lines too (optional)'}</label>
+        <textarea id="bodyIn" rows={9} value={draft.body} onChange={(e) => set({ body: e.target.value })} placeholder={`Dear ${p.name},`} />
         {asked.map((q) => (
           <div key={q.key} className={`answer-box${nudge && !draft.answers?.[q.key]?.trim() ? ' need' : ''}`}>
             <div className="row" style={{ alignItems: 'flex-start', gap: 8 }}>

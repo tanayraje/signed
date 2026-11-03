@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
@@ -133,27 +133,22 @@ function Video({ path }: { path: string }) {
 }
 
 /** The letter reads itself: each word appears in ink as the voice says it. */
+/** A voice note. When we have word timings, the spoken words write themselves in ink as it plays. */
 function TalkingBody({ letter }: { letter: Letter }) {
   const url = useSigned(letter.audio_path);
-  const audio = useRef<HTMLAudioElement>(null);
   const [time, setTime] = useState(-1);
   const words = letter.transcript?.length ? letter.transcript : null;
-  const plain = letter.body.split(/\s+/).filter(Boolean);
   useEffect(() => { setTime(-1); }, [url]);
-  const shown = (i: number, start?: number) => {
-    if (time < 0) return true; // before playing, the page shows the whole letter
-    if (start != null) return start <= time;
-    const dur = audio.current?.duration || 1;
-    return i / Math.max(1, plain.length) <= time / dur;
-  };
   return (
     <div className="stack" style={{ gap: 10 }}>
-      {url ? <audio ref={audio} src={url} controls style={{ width: '100%' }} onPlay={() => setTime(0)} onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} onEnded={() => setTime(-1)} /> : <p className="small" style={{ opacity: 0.7 }}>Loading the voice…</p>}
-      <div className="body selectable">
-        {words
-          ? words.map((w, i) => <span key={i} className={`ink-word${shown(i, w.start) ? ' on' : ''}`}>{w.word} </span>)
-          : plain.map((w, i) => <span key={i} className={`ink-word${shown(i) ? ' on' : ''}`}>{w} </span>)}
-      </div>
+      <span className="small" style={{ fontStyle: 'italic', opacity: 0.75 }}>A voice note</span>
+      {url ? <audio src={url} controls playsInline style={{ width: '100%' }} onPlay={() => setTime(0)} onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)} onEnded={() => setTime(-1)} /> : <p className="small" style={{ opacity: 0.7 }}>Loading the voice…</p>}
+      {words && (
+        <div className="body selectable">
+          {words.map((w, i) => <span key={i} className={`ink-word${time < 0 || w.start <= time ? ' on' : ''}`}>{w.word} </span>)}
+        </div>
+      )}
+      {letter.body && <div className="body selectable">{letter.body}</div>}
     </div>
   );
 }
