@@ -10,7 +10,13 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       registerType: 'autoUpdate',
-      injectManifest: { globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}'], maximumFileSizeToCacheInBytes: 4_000_000 },
+      // Precache only the app shell. Images load normally (and stay fresh when redrawn).
+      // Only Vite's hashed bundles skip revision checks; listing a file twice crashes the worker.
+      includeManifestIcons: false,
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html}'],
+        dontCacheBustURLsMatching: /-[A-Za-z0-9_-]{8}\.(js|css)$/
+      },
       manifest: {
         name: 'Signed',
         short_name: 'Signed',
