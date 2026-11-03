@@ -1,14 +1,14 @@
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { ago } from '../lib/format';
-import { enablePush, isInstalled, pushState } from '../lib/push';
+import { enablePush, isInstalled, preparePush, pushState } from '../lib/push';
 import { useEffect, useState } from 'react';
 import { Nav, Owl, Seal, signOut } from '../components/bits';
 
 export default function Profile() {
   const { me, friends, saveFriendSettings, session, say } = useStore();
   const [push, setPush] = useState<'on' | 'off' | 'blocked' | 'unsupported' | null>(null);
-  useEffect(() => { void pushState().then(setPush); }, []);
+  useEffect(() => { void pushState().then(setPush); void preparePush(); }, []);
   if (!me) return null;
 
   return (
