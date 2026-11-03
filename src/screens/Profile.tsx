@@ -8,6 +8,7 @@ import { Nav, Owl, Seal, signOut } from '../components/bits';
 export default function Profile() {
   const { me, friends, saveFriendSettings, session, say } = useStore();
   const [push, setPush] = useState<'on' | 'off' | 'blocked' | 'unsupported' | null>(null);
+  const [pushMsg, setPushMsg] = useState('');
   useEffect(() => { void pushState().then(setPush); void preparePush(); }, []);
   if (!me) return null;
 
@@ -67,8 +68,9 @@ export default function Profile() {
           </span>
           {push === 'on'
             ? <span className="chip on" aria-label="Notifications are on">On</span>
-            : push !== 'blocked' && push !== 'unsupported' && <button className="chip" onClick={async () => { say(await enablePush(session!.user.id)); setPush(await pushState()); }}>Turn on</button>}
+            : push !== 'blocked' && push !== 'unsupported' && <button className="chip" onClick={async () => { setPushMsg('Asking your phone…'); const m = await enablePush(session!.user.id); setPushMsg(m); say(m); setPush(await pushState()); }}>Turn on</button>}
         </div>
+        {pushMsg && push !== 'on' && <p className="small" role="status" style={{ margin: 0, padding: '0 0 12px', color: '#7A2420' }}>{pushMsg}</p>}
       </div>
       <button className="item card" onClick={() => go('tour')}>
         <span className="grow stack" style={{ gap: 0 }}><span>How Signed works</span><span className="small muted">The short tour, again</span></span>
