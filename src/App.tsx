@@ -23,7 +23,7 @@ import { Owl } from './components/bits';
 
 export default function App() {
   const { session, ready, me, friends, toast, letters, friend, say, refresh } = useStore();
-  const [r0, r1, r2] = useRoute();
+  const [r0, r1, r2, r3] = useRoute();
   const [alarm, setAlarm] = useState(false);
 
   // After signing in, go back to where the person was headed.
@@ -103,7 +103,7 @@ export default function App() {
     case 'write': screen = <Compose id={r1} />; break;
     case 'flight': screen = <Flight id={r1} />; break;
     case 'open': screen = <Opening id={r1} />; break;
-    case 'read': screen = <Reader id={r1} from={r2} />; break;
+    case 'read': screen = <Reader id={r1} from={r2} day={r3} />; break;
     case 'seals': screen = <Seals />; break;
     case 'stamps': screen = <Stamps />; break;
     case 'map': screen = <PairMap friendId={r1} />; break;

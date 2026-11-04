@@ -4,6 +4,8 @@ import { longDate } from '../lib/format';
 import { CutStamp, MediaImg, Nav, Owl, Seal, Wordmark } from '../components/bits';
 import { useFlights } from '../components/InTheAir';
 import { timeLeft } from '../lib/format';
+import { dayKey, lettersOn } from '../lib/days';
+import { SealPair } from './Seals';
 
 const TACKS = ['#8E231C', '#2C3A68', '#A9761E', '#2F5D50'];
 
@@ -146,12 +148,12 @@ function SealWeek() {
     <button className="sealweek" onClick={() => go('seals')} aria-label="Open your seal calendar">
       <span className="sealweek-days">
         {days.map((d) => {
-          const a = d.getTime(), l = letters.find((x) => { const t = when(x); return t >= a && t < a + 86400000; });
-          const who = l ? (l.sender === uid ? me : friend(l.sender)?.profile) : undefined;
+          const a = d.getTime(), list = lettersOn(letters, uid, dayKey(d));
+          const people = list.map((x) => (x.sender === uid ? me : friend(x.sender)?.profile)).filter(Boolean);
           return (
             <span key={a} className="sealweek-day">
               <small>{'SMTWTFS'[d.getDay()]}</small>
-              {who ? <Seal p={who} size={26} /> : <i />}
+              {people.length > 1 ? <SealPair a={people[0]!} b={people[1]!} size={28} /> : people.length ? <Seal p={people[0]!} size={26} /> : <i />}
             </span>
           );
         })}

@@ -467,3 +467,14 @@ label.rec { cursor: pointer }
 .mapview-list { padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 10px; max-height: 32vh; overflow: auto; max-width: 760px; width: 100%; margin: 0 auto }
 .mapview-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--card) url(/assets/card.jpg) center/cover; border: 1px solid var(--line) }
 .mapview-row.on { border-color: var(--wax) }
+
+/* busy days: two seals, one tucked behind the other */
+.day-btn { border: 0; background: none; padding: 0; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; cursor: pointer }
+.seal-pair { position: relative; display: inline-block; flex: none }
+.seal-pair .back { position: absolute; right: 0; top: 0; transform: rotate(10deg); filter: brightness(.92) }
+.seal-pair .front { position: absolute; left: 0; bottom: 0; transform: rotate(-6deg) }
+.seal-pair .back, .seal-pair .front { width: 78%; height: 78% }
+.cal .day .seal-pair .seal { position: relative; inset: auto; width: 100% !important; height: 100% !important }
+.day-nav { display: flex; align-items: center; gap: 8px; color: #F4EFE6 }
+.day-nav .icon { color: #F4EFE6 }
+.day-nav .icon:disabled { opacity: .3 }

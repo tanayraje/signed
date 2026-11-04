@@ -6,12 +6,14 @@ import { longDate } from '../lib/format';
 import { Icon, Polaroid, Stamp, useSigned } from '../components/bits';
 import type { Letter } from '../lib/types';
 import { toAnswer, toggleAnswer } from '../lib/answers';
+import { lettersOn } from '../lib/days';
 
 /** `from` is the page the letter was opened from (wall, seals); closing goes back there. */
-export default function Reader({ id, from }: { id: string; from?: string }) {
+export default function Reader({ id, from, day }: { id: string; from?: string; day?: string }) {
   const { me, letters, friend, session, refresh, say, stamps, pins } = useStore();
   const [peek, setPeek] = useState(false);
   const [, bump] = useState(0);
+  const [swipe, setSwipe] = useState<number | null>(null);
   const l = letters.find((x) => x.id === id);
   if (!me || !l) return null;
   const uid = session!.user.id;
@@ -20,6 +22,10 @@ export default function Reader({ id, from }: { id: string; from?: string }) {
   if (!other) return null;
   const author = fromMe ? me : other;
 
+  // letters from the same day, opened from the seal calendar: step through them
+  const dayList = day ? lettersOn(letters, uid, day) : [];
+  const at = dayList.findIndex((x) => x.id === l.id);
+  const step = (n: number) => { const next = dayList[at + n]; if (next) go(`read/${next.id}/${from ?? 'seals'}/${day}`); };
   const picked = new Set(toAnswer(other.id).map((x) => x.key));
   const answeredHere = new Set(letters.filter((x) => x.sender === uid && x.recipient === other.id).flatMap((x) => (x.answers ?? []).map((a) => `${a.letter_id}:${a.question}`)));
   function QCard({ label, q, k, tilt = 0 }: { label: string; q: string; k: string; tilt?: number }) {
@@ -66,7 +72,17 @@ export default function Reader({ id, from }: { id: string; from?: string }) {
           <button className="icon" onClick={() => go(from === 'wall' || from === 'seals' ? from : `friend/${other.id}`)} aria-label="Close letter">{Icon.close}</button>
           <span className="grow muted">{fromMe ? `To ${other.name}` : `From ${other.name}`}, {longDate(l.sent_at)}</span>
         </div>
-        <article className={`sheet unfold stack${l.enchanted ? ' parch' : ''}`} style={{ gap: 16, minHeight: '60vh' }}>
+        {dayList.length > 1 && (
+          <div className="day-nav">
+            <button className="icon" onClick={() => step(-1)} disabled={at <= 0} aria-label="Earlier letter that day">{Icon.back}</button>
+            <span className="grow center small">{at + 1} of {dayList.length} that day</span>
+            <button className="icon" onClick={() => step(1)} disabled={at >= dayList.length - 1} aria-label="Next letter that day" style={{ transform: 'scaleX(-1)' }}>{Icon.back}</button>
+          </div>
+        )}
+        <article key={l.id} className={`sheet unfold stack${l.enchanted ? ' parch' : ''}`} style={{ gap: 16, minHeight: '60vh' }}
+          onPointerDown={(e) => { if (dayList.length > 1) setSwipe(e.clientX); }}
+          onPointerUp={(e) => { if (swipe != null) { const dx = e.clientX - swipe; if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1); } setSwipe(null); }}
+          onPointerCancel={() => setSwipe(null)}>
           <div className="crease" style={{ top: '33%' }} />
           <div className="crease" style={{ top: '66%' }} />
           {l.video_path && <Video path={l.video_path} />}

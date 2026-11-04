@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { Icon, Nav, Seal } from '../components/bits';
+import { dayKey, lettersOn } from '../lib/days';
 
 export default function Seals() {
   const { me, letters, friend, session } = useStore();
@@ -18,16 +19,14 @@ export default function Seals() {
   const cells = [];
   for (let i = 0; i < first; i++) cells.push(<div key={`b${i}`} />);
   for (let d = 1; d <= days; d++) {
-    const a = new Date(year, month, d).getTime(), b = a + 86400000;
-    // Your seals on days you sent; a friend's seal on days you opened theirs.
-    const l = letters.find((x) => (x.sender === uid ? new Date(x.sent_at).getTime() : x.opened_at ? new Date(x.opened_at).getTime() : -1) >= a
-      && (x.sender === uid ? new Date(x.sent_at).getTime() : x.opened_at ? new Date(x.opened_at).getTime() : Infinity) < b);
-    const who = l ? (l.sender === uid ? me : friend(l.sender)?.profile) : undefined;
+    const key = dayKey(new Date(year, month, d));
+    const list = lettersOn(letters, uid, key);
+    const people = list.map((l) => (l.sender === uid ? me : friend(l.sender)?.profile)).filter(Boolean);
     cells.push(
       <div key={d} className="day">
-        {who ? (
-          <button onClick={() => go(`read/${l!.id}/seals`)} aria-label={`${who.name}, ${d}`} style={{ border: 0, background: 'none', padding: 0, position: 'absolute', inset: 0 }}>
-            <Seal p={who} size={40} />
+        {people.length ? (
+          <button onClick={() => go(`read/${list[0].id}/seals/${key}`)} aria-label={list.length > 1 ? `${list.length} letters on the ${d}th` : `${people[0]!.name}, ${d}`} className="day-btn">
+            {list.length > 1 ? <SealPair a={people[0]!} b={people[1] ?? people[0]!} size={40} /> : <Seal p={people[0]!} size={40} />}
           </button>
         ) : d}
       </div>
@@ -54,5 +53,15 @@ export default function Seals() {
       <p className="small muted">Each seal marks a day a letter was shared. Tap one to read it again.</p>
       <Nav />
     </main>
+  );
+}
+
+/** Two seals, one tucked behind the other: more than one letter that day. */
+export function SealPair({ a, b, size }: { a: Parameters<typeof Seal>[0]['p']; b: Parameters<typeof Seal>[0]['p']; size: number }) {
+  return (
+    <span className="seal-pair" style={{ width: size, height: size }}>
+      <span className="back"><Seal p={b} size={size * 0.78} /></span>
+      <span className="front"><Seal p={a} size={size * 0.78} /></span>
+    </span>
   );
 }
