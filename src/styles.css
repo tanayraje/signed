@@ -96,7 +96,7 @@ textarea { resize: vertical; line-height: 1.5 }
 .qcard small { display: block; font-style: italic; color: #6E4F1A; font-size: 13px }
 .mini { background: #FBF7F0 url(/assets/envelope.jpg) center/cover; padding: 12px; box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 2px 8px 14px rgba(40, 24, 10, .25); font-style: italic; font-size: 15px; color: #2B2622; overflow: hidden }
 
-.slate { position: fixed; inset: 0; background: #262B32 url(/assets/slate.jpg) center/cover; z-index: 5; overflow: auto; color: #F4EFE6 }
+.slate { position: fixed; inset: 0; background: #262B32 url(/assets/slate.jpg) center/cover; z-index: 5; overflow-x: hidden; overflow-y: auto; overscroll-behavior: none; color: #F4EFE6 }
 .slate .muted { color: #CBBFAE }
 
 /* envelope opening: lift the seal, fold back the flap, the letter rises */
@@ -478,3 +478,10 @@ label.rec { cursor: pointer }
 .day-nav { display: flex; align-items: center; gap: 8px; color: #F4EFE6 }
 .day-nav .icon { color: #F4EFE6 }
 .day-nav .icon:disabled { opacity: .3 }
+
+/* stepping through a day's letters */
+.slide-right { animation: slidein-r .3s cubic-bezier(.2, .8, .2, 1) }
+.slide-left { animation: slidein-l .3s cubic-bezier(.2, .8, .2, 1) }
+@keyframes slidein-r { from { transform: translateX(60%) rotate(4deg); opacity: 0 } }
+@keyframes slidein-l { from { transform: translateX(-60%) rotate(-4deg); opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .slide-right, .slide-left { animation: none } }

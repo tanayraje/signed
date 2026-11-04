@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
@@ -9,11 +9,16 @@ import { toAnswer, toggleAnswer } from '../lib/answers';
 import { lettersOn } from '../lib/days';
 
 /** `from` is the page the letter was opened from (wall, seals); closing goes back there. */
+/** Which side the next letter of the day slides in from. */
+let slideFrom: 'left' | 'right' | null = null;
+
 export default function Reader({ id, from, day }: { id: string; from?: string; day?: string }) {
   const { me, letters, friend, session, refresh, say, stamps, pins } = useStore();
   const [peek, setPeek] = useState(false);
   const [, bump] = useState(0);
-  const [swipe, setSwipe] = useState<number | null>(null);
+  useEffect(() => { slideFrom = null; }, [id]);
+  const drag = useRef<{ x: number; y: number; dx: number; on: boolean } | null>(null);
+  const sheet = useRef<HTMLElement>(null);
   const l = letters.find((x) => x.id === id);
   if (!me || !l) return null;
   const uid = session!.user.id;
@@ -25,7 +30,28 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
   // letters from the same day, opened from the seal calendar: step through them
   const dayList = day ? lettersOn(letters, uid, day) : [];
   const at = dayList.findIndex((x) => x.id === l.id);
-  const step = (n: number) => { const next = dayList[at + n]; if (next) go(`read/${next.id}/${from ?? 'seals'}/${day}`); };
+  const step = (n: number) => { const next = dayList[at + n]; if (next) { slideFrom = n > 0 ? 'right' : 'left'; go(`read/${next.id}/${from ?? 'seals'}/${day}`); } };
+  // a horizontal drag moves only the letter; let go past a third of the way and the next one slides in
+  const paging = dayList.length > 1;
+  const enter = slideFrom;
+  const onDown = (e: React.PointerEvent) => { if (paging) drag.current = { x: e.clientX, y: e.clientY, dx: 0, on: false }; };
+  const onMove = (e: React.PointerEvent) => {
+    const d = drag.current; if (!d || !sheet.current) return;
+    const dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.on) { if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) { d.on = true; (e.currentTarget as Element).setPointerCapture?.(e.pointerId); } else if (Math.abs(dy) > 10) { drag.current = null; return; } else return; }
+    const edge = (dx > 0 && at <= 0) || (dx < 0 && at >= dayList.length - 1);
+    d.dx = edge ? dx / 4 : dx;
+    sheet.current.style.transition = 'none';
+    sheet.current.style.transform = `translateX(${d.dx}px) rotate(${d.dx / 60}deg)`;
+  };
+  const onUp = () => {
+    const d = drag.current; drag.current = null; if (!d || !sheet.current) return;
+    const w = sheet.current.offsetWidth, go1 = d.on && Math.abs(d.dx) > w * 0.28;
+    const can = go1 && ((d.dx < 0 && at < dayList.length - 1) || (d.dx > 0 && at > 0));
+    sheet.current.style.transition = 'transform .22s ease-out';
+    if (can) { sheet.current.style.transform = `translateX(${d.dx < 0 ? -w * 1.2 : w * 1.2}px) rotate(${d.dx < 0 ? -6 : 6}deg)`; window.setTimeout(() => step(d.dx < 0 ? 1 : -1), 180); }
+    else sheet.current.style.transform = '';
+  };
   const picked = new Set(toAnswer(other.id).map((x) => x.key));
   const answeredHere = new Set(letters.filter((x) => x.sender === uid && x.recipient === other.id).flatMap((x) => (x.answers ?? []).map((a) => `${a.letter_id}:${a.question}`)));
   function QCard({ label, q, k, tilt = 0 }: { label: string; q: string; k: string; tilt?: number }) {
@@ -79,10 +105,9 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
             <button className="icon" onClick={() => step(1)} disabled={at >= dayList.length - 1} aria-label="Next letter that day" style={{ transform: 'scaleX(-1)' }}>{Icon.back}</button>
           </div>
         )}
-        <article key={l.id} className={`sheet unfold stack${l.enchanted ? ' parch' : ''}`} style={{ gap: 16, minHeight: '60vh' }}
-          onPointerDown={(e) => { if (dayList.length > 1) setSwipe(e.clientX); }}
-          onPointerUp={(e) => { if (swipe != null) { const dx = e.clientX - swipe; if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1); } setSwipe(null); }}
-          onPointerCancel={() => setSwipe(null)}>
+        <article key={l.id} ref={sheet} className={`sheet stack${l.enchanted ? ' parch' : ''} ${paging && enter ? `slide-${enter}` : 'unfold'}`}
+          style={{ gap: 16, minHeight: '60vh', touchAction: paging ? 'pan-y' : undefined }}
+          onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
           <div className="crease" style={{ top: '33%' }} />
           <div className="crease" style={{ top: '66%' }} />
           {l.video_path && <Video path={l.video_path} />}
