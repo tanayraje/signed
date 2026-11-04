@@ -7,6 +7,7 @@ import { extFor, shrinkImage, upload } from '../lib/media';
 import type { WordTiming } from '../lib/types';
 import { BUILT_IN_STAMPS, Icon, Seal, Stamp } from '../components/bits';
 import Cutter from './Cutter';
+import SendOff from '../components/SendOff';
 import { setToAnswer, toAnswer, type ToAnswer } from '../lib/answers';
 
 interface Draft { body: string; caption?: string; question?: string | null; questions?: string[]; stamp: string; answers?: Record<string, string> }
@@ -35,6 +36,7 @@ export default function Compose({ id }: { id: string }) {
   const [elapsed, setElapsed] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [cutting, setCutting] = useState(false);
+  const [sent, setSent] = useState<{ id: string; arrive_at: string; stamp: string } | null>(null);
   const [asked, setAsked] = useState<ToAnswer[]>(() => toAnswer(id));
   const [nudge, setNudge] = useState(false);
   const rec = useRef<MediaRecorder | null>(null);
@@ -124,7 +126,7 @@ export default function Compose({ id }: { id: string }) {
       audio_path: audio?.path ?? null, video_path: video?.path ?? null, transcript: audio?.words.length ? audio.words : null,
       enchanted: enchanted || Boolean(audio || video),
       answers: answers.length ? answers.map(({ key: _k, ...a }) => a) : null
-    }).select('id').single();
+    }).select('id, arrive_at').single();
     setBusy(null);
     if (error || !data) {
       if (error?.message.includes('stamp')) { set({ stamp: 'signed' }); await refresh(); say('That stamp has already flown. Pick another.'); return; }
@@ -134,8 +136,7 @@ export default function Compose({ id }: { id: string }) {
     const done = new Set(answers.map((a) => a.key));
     setToAnswer(id, toAnswer(id).filter((q) => !done.has(q.key)));
     await refresh();
-    say('Signed and sealed.');
-    go(`flight/${data.id}`);
+    setSent({ id: data.id, arrive_at: (data as { arrive_at?: string }).arrive_at ?? new Date().toISOString(), stamp: stampOk ? draft.stamp : 'signed' });
   }
 
   const stampKeys = [...stamps.filter((s) => s.owner === uid && s.status === 'mine').map((s) => `custom:${s.id}`), ...BUILT_IN_STAMPS];
@@ -291,6 +292,7 @@ export default function Compose({ id }: { id: string }) {
         </div>
         {draft.stamp.startsWith('custom:') && stampOk && <p className="small muted">This stamp goes to {p.name} for good.</p>}
       </section>
+      {sent && <SendOff me={me} to={p} stamp={sent.stamp} arriveAt={sent.arrive_at} onDone={() => go(`flight/${sent.id}`)} />}
       {cutting && <Cutter onDone={(sid) => { setCutting(false); if (sid) set({ stamp: `custom:${sid}` }); }} />}
 
       <div className="foot">
