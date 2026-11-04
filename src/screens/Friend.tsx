@@ -97,7 +97,7 @@ export default function Friend({ id }: { id: string }) {
         <Seal p={p} size={44} />
         <div className="grow">
           <div style={{ fontSize: 22, fontWeight: 600 }}>{p.name}</div>
-          <div className="small muted">Writing to each other since {new Date(f.mine.since).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</div>
+          <div className="small muted">Pen pals since {new Date(f.mine.since).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</div>
         </div>
       </div>
       {hero}
