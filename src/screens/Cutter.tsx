@@ -74,6 +74,16 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
   const fingers = useRef(new Map<number, { x: number; y: number }>());
   const lastF = useRef<{ d: number; mx: number; my: number } | null>(null);
 
+  // everything outside the cutter window is shaded almost black, so you judge the stamp, not the room
+  const [hole, setHole] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  useEffect(() => {
+    const el = win.current; if (!el) return;
+    const read = () => { const r = el.getBoundingClientRect(); setHole({ x: r.left, y: r.top, w: r.width, h: r.height }); };
+    const ro = new ResizeObserver(read); ro.observe(el); read();
+    window.addEventListener('resize', read);
+    return () => { ro.disconnect(); window.removeEventListener('resize', read); };
+  }, [stage.kind === 'preview']); // eslint-disable-line react-hooks/exhaustive-deps
+
   const aspect = aspectOf(cutter);
   const winW = Math.min(window.innerWidth * (aspect > 1 ? 0.8 : 0.66), aspect > 1 ? 340 : 290);
   const winH = winW / aspect;
@@ -245,6 +255,12 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
             <div className="cut-photo-touch" onPointerDown={placeDown} onPointerMove={placeMove} onPointerUp={placeUp} onPointerCancel={placeUp} onWheel={placeWheel} />
           </>
         : <video ref={video} className={`cut-video${facing === 'user' ? ' mirror' : ''}`} playsInline muted autoPlay />}
+      {hole && (
+        <svg className="cut-shade" width="100%" height="100%" aria-hidden="true">
+          <path fillRule="evenodd" fill="rgba(6, 7, 9, .84)"
+            d={`M0 0H${window.innerWidth * 2}V${window.innerHeight * 2}H0Z M${hole.x} ${hole.y}h${hole.w}v${hole.h}h${-hole.w}Z`} />
+        </svg>
+      )}
       <div className="cut-top">
         <button className="cut-icon" onClick={leave} aria-label="Close the cutter">{Icon.close}</button>
         <span className="grow center cut-title">{stage.kind === 'place' ? 'Drag and pinch to fit' : cut > 0 ? `${cut} cut` : 'Stamp cutter'}</span>
