@@ -106,7 +106,7 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
     clampPlace();
     const p = place.current, w = g.iw * g.b * p.s, h = g.ih * g.b * p.s;
     el.style.width = `${w}px`; el.style.height = `${h}px`;
-    el.style.transform = `translate3d(${g.cx + p.x - w / 2}px, ${g.cy + p.y - h / 2}px, 0)`;
+    el.style.transform = `translate(${g.cx + p.x - w / 2}px, ${g.cy + p.y - h / 2}px)`;
   };
   useEffect(() => { if (stage.kind === 'place') requestAnimationFrame(drawPlace); }); // after each render (cutter shape changes too)
   const placeDown = (e: React.PointerEvent) => { (e.currentTarget as Element).setPointerCapture?.(e.pointerId); fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY }); lastF.current = null; };
@@ -257,7 +257,7 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
         : <video ref={video} className={`cut-video${facing === 'user' ? ' mirror' : ''}`} playsInline muted autoPlay />}
       {hole && (
         <svg className="cut-shade" width="100%" height="100%" aria-hidden="true">
-          <path fillRule="evenodd" fill="rgba(4, 5, 6, .9)"
+          <path fillRule="evenodd" fill="rgba(3, 4, 5, .94)"
             d={`M0 0H${window.innerWidth * 2}V${window.innerHeight * 2}H0Z M${hole.x} ${hole.y}h${hole.w}v${hole.h}h${-hole.w}Z`} />
         </svg>
       )}
