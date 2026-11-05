@@ -525,3 +525,9 @@ label.rec { cursor: pointer }
 @keyframes so-away-owl { from { opacity: 1; transform: translate(0, 0) scale(1) rotate(-4deg) } to { opacity: 0; transform: translate(-240px, -620px) scale(.35) rotate(-14deg) } }
 .sendoff.still .so-stage { display: none }
 .sendoff.still .so-words { opacity: 1; transform: translateY(-50%) }
+
+/* a picked photo under the cutter, to drag and pinch into place */
+.cut-photo { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; -webkit-user-select: none; user-select: none; pointer-events: none }
+.cut-photo-touch { position: absolute; inset: 0; z-index: 2; touch-action: none; cursor: grab }
+.cutter .cut-stage, .cutter .cut-top, .cutter .cut-panel { pointer-events: none }
+.cutter .cut-top > *, .cutter .cut-panel > *, .cutter .cut-stage .cut-error { pointer-events: auto }

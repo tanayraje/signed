@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { upload } from '../lib/media';
-import { CUTTERS, FINISHES, aspectOf, bake, centreRect, cropSource, loadImage, type Cutter as CutterId, type Finish } from '../lib/stampcut';
+import { CUTTERS, FINISHES, aspectOf, bake, cropSource, loadImage, type Cutter as CutterId, type Finish } from '../lib/stampcut';
 import { Icon } from '../components/bits';
 
 
@@ -48,7 +48,7 @@ function Die({ w, h, oval, pressing }: { w: number; h: number; oval: boolean; pr
   );
 }
 
-type Stage = { kind: 'camera' } | { kind: 'preview'; photo: HTMLCanvasElement };
+type Stage = { kind: 'camera' } | { kind: 'place'; img: HTMLImageElement } | { kind: 'preview'; photo: HTMLCanvasElement };
 
 /** Full-screen stamp cutter. Inside a letter, `onDone` gets the new stamp (or null when closed). */
 export default function Cutter({ onDone }: { onDone?: (stampId: string | null) => void }) {
@@ -68,10 +68,65 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
   const [busy, setBusy] = useState(false);
   const [cut, setCut] = useState(0);
   const toSend = stamps.filter((s) => s.owner === uid && s.status === 'mine').length;
+  // a picked photo sits under the cutter; drag and pinch it until the right part is in the window
+  const place = useRef({ x: 0, y: 0, s: 1 });
+  const placeImg = useRef<HTMLImageElement>(null);
+  const fingers = useRef(new Map<number, { x: number; y: number }>());
+  const lastF = useRef<{ d: number; mx: number; my: number } | null>(null);
 
   const aspect = aspectOf(cutter);
   const winW = Math.min(window.innerWidth * (aspect > 1 ? 0.8 : 0.66), aspect > 1 ? 340 : 290);
   const winH = winW / aspect;
+
+  // where the picked photo sits: it always covers the cutter window
+  const placeGeom = () => {
+    if (stage.kind !== 'place' || !win.current) return null;
+    const r = win.current.getBoundingClientRect(), iw = stage.img.naturalWidth, ih = stage.img.naturalHeight;
+    const b = Math.max(winW / iw, winH / ih);
+    return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, iw, ih, b };
+  };
+  const clampPlace = () => {
+    const g = placeGeom(); if (!g) return;
+    const p = place.current; p.s = Math.min(6, Math.max(1, p.s));
+    const mx = Math.max(0, (g.iw * g.b * p.s - winW) / 2), my = Math.max(0, (g.ih * g.b * p.s - winH) / 2);
+    p.x = Math.min(mx, Math.max(-mx, p.x)); p.y = Math.min(my, Math.max(-my, p.y));
+  };
+  const drawPlace = () => {
+    const g = placeGeom(), el = placeImg.current; if (!g || !el) return;
+    clampPlace();
+    const p = place.current, w = g.iw * g.b * p.s, h = g.ih * g.b * p.s;
+    el.style.width = `${w}px`; el.style.height = `${h}px`;
+    el.style.transform = `translate3d(${g.cx + p.x - w / 2}px, ${g.cy + p.y - h / 2}px, 0)`;
+  };
+  useEffect(() => { if (stage.kind === 'place') requestAnimationFrame(drawPlace); }); // after each render (cutter shape changes too)
+  const placeDown = (e: React.PointerEvent) => { (e.currentTarget as Element).setPointerCapture?.(e.pointerId); fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY }); lastF.current = null; };
+  const placeMove = (e: React.PointerEvent) => {
+    if (!fingers.current.has(e.pointerId)) return;
+    fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const f = [...fingers.current.values()];
+    const mx = f.length > 1 ? (f[0].x + f[1].x) / 2 : f[0].x, my = f.length > 1 ? (f[0].y + f[1].y) / 2 : f[0].y;
+    const d = f.length > 1 ? Math.hypot(f[0].x - f[1].x, f[0].y - f[1].y) : 0;
+    const l = lastF.current;
+    if (l && (f.length > 1) === (l.d > 0)) {
+      const p = place.current;
+      if (f.length > 1 && l.d) p.s *= d / l.d;
+      p.x += mx - l.mx; p.y += my - l.my;
+      requestAnimationFrame(drawPlace);
+    }
+    lastF.current = { d, mx, my };
+  };
+  const placeUp = (e: React.PointerEvent) => { fingers.current.delete(e.pointerId); lastF.current = null; };
+  const placeWheel = (e: React.WheelEvent) => { place.current.s *= Math.exp(-e.deltaY / 400); requestAnimationFrame(drawPlace); };
+  const cutPhoto = () => {
+    const g = placeGeom(); if (!g || stage.kind !== 'place') return;
+    clampPlace();
+    const p = place.current, k = g.b * p.s;
+    const rect = { x: (g.iw * k / 2 - p.x - winW / 2) / k, y: (g.ih * k / 2 - p.y - winH / 2) / k, w: winW / k, h: winH / k };
+    const photo = cropSource(stage.img, g.iw, g.ih, rect, aspect);
+    setPressing(true);
+    try { navigator.vibrate?.(18); } catch { /* not supported */ }
+    window.setTimeout(() => { setPressing(false); setFinish('natural'); setCaption(''); setStage({ kind: 'preview', photo }); }, 380);
+  };
 
   // camera on while on the camera stage
   useEffect(() => {
@@ -126,9 +181,8 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
   async function pick(file: File) {
     try {
       const img = await loadImage(file);
-      const rect = centreRect(img.naturalWidth, img.naturalHeight, aspect);
-      const photo = cropSource(img, img.naturalWidth, img.naturalHeight, rect, aspect);
-      setFinish('natural'); setCaption(''); setStage({ kind: 'preview', photo });
+      place.current = { x: 0, y: 0, s: 1 };
+      setStage({ kind: 'place', img });
     } catch (e) { say((e as Error).message); }
   }
 
@@ -185,18 +239,25 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
 
   return (
     <div className="cutter">
-      <video ref={video} className={`cut-video${facing === 'user' ? ' mirror' : ''}`} playsInline muted autoPlay />
+      {stage.kind === 'place'
+        ? <>
+            <img ref={placeImg} className="cut-photo" src={stage.img.src} alt="Your photo" draggable={false} />
+            <div className="cut-photo-touch" onPointerDown={placeDown} onPointerMove={placeMove} onPointerUp={placeUp} onPointerCancel={placeUp} onWheel={placeWheel} />
+          </>
+        : <video ref={video} className={`cut-video${facing === 'user' ? ' mirror' : ''}`} playsInline muted autoPlay />}
       <div className="cut-top">
         <button className="cut-icon" onClick={leave} aria-label="Close the cutter">{Icon.close}</button>
-        <span className="grow center cut-title">{cut > 0 ? `${cut} cut` : 'Stamp cutter'}</span>
-        <button className="cut-icon" onClick={() => setFacing(facing === 'user' ? 'environment' : 'user')} aria-label="Switch camera" disabled={Boolean(camError)}>{Icon.flip}</button>
+        <span className="grow center cut-title">{stage.kind === 'place' ? 'Drag and pinch to fit' : cut > 0 ? `${cut} cut` : 'Stamp cutter'}</span>
+        {stage.kind === 'place'
+          ? <button className="cut-icon" onClick={() => setStage({ kind: 'camera' })} aria-label="Back to the camera">{Icon.camera}</button>
+          : <button className="cut-icon" onClick={() => setFacing(facing === 'user' ? 'environment' : 'user')} aria-label="Switch camera" disabled={Boolean(camError)}>{Icon.flip}</button>}
       </div>
 
       <div className="cut-stage">
         <div ref={win} className={`cut-window${pressing ? ' pressing' : ''}`} style={{ width: winW, height: winH }}>
           <Die w={winW} h={winH} oval={cutter === 'oval'} pressing={pressing} />
         </div>
-        {camError && <p className="cut-error">{camError}</p>}
+        {camError && stage.kind === 'camera' && <p className="cut-error">{camError}</p>}
       </div>
 
       <div className="cut-panel">
@@ -206,7 +267,7 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
         <div className="cut-controls">
           <label className="cut-icon big" htmlFor="stampPhoto" aria-label="Cut from a photo">{Icon.photos}</label>
           {picker}
-          <button className="shutter" onClick={shoot} disabled={Boolean(camError) || pressing} aria-label="Cut the stamp" />
+          <button className="shutter" onClick={stage.kind === 'place' ? cutPhoto : shoot} disabled={(stage.kind === 'camera' && Boolean(camError)) || pressing} aria-label="Cut the stamp" />
           <button className="cut-icon big" onClick={leave} aria-label={`Your stamps, ${toSend} ready to send`}>
             <span className="cut-count">{toSend}</span>
           </button>
