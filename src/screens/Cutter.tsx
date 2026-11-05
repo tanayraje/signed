@@ -48,7 +48,7 @@ function Die({ w, h, oval, pressing }: { w: number; h: number; oval: boolean; pr
   );
 }
 
-type Stage = { kind: 'camera' } | { kind: 'place'; img: HTMLImageElement } | { kind: 'preview'; photo: HTMLCanvasElement };
+type Stage = { kind: 'camera' } | { kind: 'place'; img: HTMLImageElement } | { kind: 'preview'; photo: HTMLCanvasElement; from?: HTMLImageElement };
 
 /** Full-screen stamp cutter. Inside a letter, `onDone` gets the new stamp (or null when closed). */
 export default function Cutter({ onDone }: { onDone?: (stampId: string | null) => void }) {
@@ -122,10 +122,10 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
     clampPlace();
     const p = place.current, k = g.b * p.s;
     const rect = { x: (g.iw * k / 2 - p.x - winW / 2) / k, y: (g.ih * k / 2 - p.y - winH / 2) / k, w: winW / k, h: winH / k };
-    const photo = cropSource(stage.img, g.iw, g.ih, rect, aspect);
+    const photo = cropSource(stage.img, g.iw, g.ih, rect, aspect), from = stage.img;
     setPressing(true);
     try { navigator.vibrate?.(18); } catch { /* not supported */ }
-    window.setTimeout(() => { setPressing(false); setFinish('natural'); setCaption(''); setStage({ kind: 'preview', photo }); }, 380);
+    window.setTimeout(() => { setPressing(false); setFinish('natural'); setCaption(''); setStage({ kind: 'preview', photo, from }); }, 380);
   };
 
   // camera on while on the camera stage
@@ -216,7 +216,7 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
     return (
       <div className="cutter cut-preview">
         <div className="cut-top">
-          <button className="cut-icon" onClick={() => setStage({ kind: 'camera' })} aria-label="Retake">{Icon.back}</button>
+          <button className="cut-icon" onClick={() => setStage(stage.from ? { kind: 'place', img: stage.from } : { kind: 'camera' })} aria-label={stage.from ? 'Adjust the crop' : 'Retake'}>{Icon.back}</button>
           <span className="grow" />
         </div>
         <div className="cut-stage">
@@ -228,7 +228,7 @@ export default function Cutter({ onDone }: { onDone?: (stampId: string | null) =
           </div>
           <input type="text" className="cut-caption" maxLength={40} value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Name this stamp (optional)" aria-label="Stamp name" />
           <div className="row" style={{ gap: 10 }}>
-            <button className="btn cut-ghost" style={{ flex: 1 }} onClick={() => setStage({ kind: 'camera' })}>Retake</button>
+            <button className="btn cut-ghost" style={{ flex: 1 }} onClick={() => setStage(stage.from ? { kind: 'place', img: stage.from } : { kind: 'camera' })}>{stage.from ? 'Adjust crop' : 'Retake'}</button>
             <button className="btn cut-keep" style={{ flex: 1.4 }} disabled={busy || !preview} onClick={keep}>{busy ? 'Keeping…' : 'Keep stamp'}</button>
           </div>
           <p className="cut-note">Once a stamp flies on a letter, it belongs to your friend.</p>
