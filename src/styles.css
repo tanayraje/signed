@@ -6,7 +6,8 @@
   color-scheme: light;
 }
 * { box-sizing: border-box }
-html { background-color: #F4EFE6; overscroll-behavior-y: none }
+html { background-color: #F4EFE6; overscroll-behavior-y: none; overflow-x: hidden; max-width: 100%; touch-action: pan-x pan-y }
+body { overflow-x: hidden; max-width: 100% }
 html, body, #root { min-height: 100% }
 body { margin: 0; background: var(--paper) url(/assets/paper.jpg) center/cover fixed; color: var(--ink); font-family: var(--serif); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased }
 body.ench { --paper: #141A2E; --card: #1C2340; --ink: #F1E7CF; --muted: #C9BFA8; --line: #3B4566; --wax: #E2C27A; background: #141A2E url(/assets/night.jpg) center/cover fixed }
