@@ -166,7 +166,8 @@ function History({ me, p, uid, letters, incoming, now }: {
           const flying = new Date(l.arrive_at).getTime() > now;
           const what = l.kind === 'bundle' ? (out ? 'took your scraps' : 'brought scraps') : flying ? 'is flying' : 'flew';
           const line = out ? `${me.owl_name} ${what} to ${p.name}` : `${p.owl_name} ${what} to you`;
-          const note = flying ? `Lands in ${timeLeft(l.arrive_at)}` : !out && !l.opened_at ? 'Not opened yet' : null;
+          const at = new Date(l.arrive_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+          const note = flying ? `Lands at ${at}, in ${timeLeft(l.arrive_at)}` : `Reached at ${at}${!out && !l.opened_at ? ' · not opened yet' : ''}`;
           const to = flying ? `flight/${l.id}` : !out && !l.opened_at ? `open/${l.id}` : `read/${l.id}`;
           return (
             <li key={l.id}>
@@ -174,9 +175,9 @@ function History({ me, p, uid, letters, incoming, now }: {
                 <Seal p={who} size={24} />
                 <span className="grow stack" style={{ gap: 0 }}>
                   <span>{line}</span>
-                  {note && <span className="small muted">{note}</span>}
+                  <span className="small muted">{note}</span>
                 </span>
-                <span className="small muted">{day(l.sent_at)}</span>
+                <span className="small muted">{day(l.arrive_at)}</span>
               </button>
             </li>
           );
