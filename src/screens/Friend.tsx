@@ -6,6 +6,7 @@ import { km } from '../lib/geo';
 import { Icon, Owl, Seal, Stamp } from '../components/bits';
 import FlightMap from '../components/FlightMap';
 import { supabase } from '../lib/supabase';
+import type { Incoming, Letter, Profile } from '../lib/types';
 
 export default function Friend({ id }: { id: string }) {
   const { me, friend, letters, incoming, session, saveFriendSettings } = useStore();
@@ -129,10 +130,59 @@ export default function Friend({ id }: { id: string }) {
           </span>
         </div>
       </div>
+      <History me={me} p={p} uid={uid} letters={letters} incoming={inc} now={now} />
       <div className="foot">
         <button className="btn primary" onClick={() => go(`write/${p.id}`)}>Write a letter</button>
         <button className="btn" onClick={() => go(`pocket/${p.id}`)}>Drop a scrap</button>
       </div>
     </main>
+  );
+}
+
+/** A short log of every letter between you, newest first: whose owl flew, which way, and when. */
+function History({ me, p, uid, letters, incoming, now }: {
+  me: Profile; p: Profile; uid: string; letters: Letter[]; incoming: Incoming[]; now: number;
+}) {
+  const [all, setAll] = useState(false);
+  const seen = new Set<string>();
+  type Row = Pick<Letter, 'id' | 'sender' | 'sent_at' | 'arrive_at'> & Partial<Pick<Letter, 'kind' | 'opened_at'>>;
+  const list: Row[] = [...letters.filter((l) => (l.sender === uid && l.recipient === p.id) || (l.sender === p.id && l.recipient === uid)), ...incoming]
+    .filter((l) => (seen.has(l.id) ? false : (seen.add(l.id), true)))
+    .sort((a, b) => b.sent_at.localeCompare(a.sent_at));
+  if (!list.length) return null;
+  const mine = list.filter((l) => l.sender === uid).length;
+  const thisYear = new Date().getFullYear();
+  const day = (iso: string) => { const d = new Date(iso); return d.toLocaleDateString(undefined, d.getFullYear() === thisYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' }); };
+  const shown = all ? list : list.slice(0, 5);
+  return (
+    <section className="card hist">
+      <div className="hist-head">
+        <span style={{ fontWeight: 600 }}>Letters between you</span>
+        <span className="small muted">{list.length} {list.length === 1 ? 'letter' : 'letters'} · {mine} from you · {list.length - mine} from {p.name}</span>
+      </div>
+      <ol className="hist-list">
+        {shown.map((l) => {
+          const out = l.sender === uid, who = out ? me : p;
+          const flying = new Date(l.arrive_at).getTime() > now;
+          const what = l.kind === 'bundle' ? (out ? 'took your scraps' : 'brought scraps') : flying ? 'is flying' : 'flew';
+          const line = out ? `${me.owl_name} ${what} to ${p.name}` : `${p.owl_name} ${what} to you`;
+          const note = flying ? `Lands in ${timeLeft(l.arrive_at)}` : !out && !l.opened_at ? 'Not opened yet' : null;
+          const to = flying ? `flight/${l.id}` : !out && !l.opened_at ? `open/${l.id}` : `read/${l.id}`;
+          return (
+            <li key={l.id}>
+              <button className="hist-row" onClick={() => go(to)}>
+                <Seal p={who} size={24} />
+                <span className="grow stack" style={{ gap: 0 }}>
+                  <span>{line}</span>
+                  {note && <span className="small muted">{note}</span>}
+                </span>
+                <span className="small muted">{day(l.sent_at)}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      {list.length > 5 && <button className="hist-more small" onClick={() => setAll(!all)}>{all ? 'Show fewer' : `Show all ${list.length}`}</button>}
+    </section>
   );
 }

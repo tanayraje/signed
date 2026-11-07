@@ -533,3 +533,11 @@ label.rec { cursor: pointer }
 .cut-photo-touch { position: absolute; inset: 0; z-index: 2; touch-action: none; cursor: grab }
 .cutter .cut-stage, .cutter .cut-top, .cutter .cut-panel { pointer-events: none }
 .cutter .cut-top > *, .cutter .cut-panel > *, .cutter .cut-stage .cut-error { pointer-events: auto }
+
+/* the history of letters on a friend's page */
+.hist { padding: 14px 16px 6px }
+.hist-head { display: flex; flex-direction: column; gap: 1px; padding-bottom: 8px; border-bottom: 1px solid var(--line) }
+.hist-list { list-style: none; margin: 0; padding: 0 }
+.hist-list li + li { border-top: 1px solid var(--line) }
+.hist-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 8px 0; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer }
+.hist-more { display: block; width: 100%; padding: 10px 0 8px; background: none; border: 0; border-top: 1px solid var(--line); color: var(--wax); font: inherit; font-weight: 600; cursor: pointer }
