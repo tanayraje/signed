@@ -175,7 +175,7 @@ function History({ me, p, uid, letters, incoming, now }: {
                 <Seal p={who} size={24} />
                 <span className="grow stack" style={{ gap: 0 }}>
                   <span>{line}</span>
-                  <span className="small muted">{note}</span>
+                  <span className="muted hist-note">{note}</span>
                 </span>
                 <span className="small muted">{day(l.arrive_at)}</span>
               </button>
