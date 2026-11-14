@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
-import { Owl, Seal, Wordmark } from '../components/bits';
+import { FlyingOwl, Owl, Seal, Wordmark } from '../components/bits';
 
 /** A short swipeable welcome: the five things worth knowing. Shown once, and again from Profile. */
 export default function Tour() {
@@ -19,7 +19,7 @@ export default function Tour() {
       text: 'Write to the people you love the slow way. Every letter closes with the wax seal you designed.'
     },
     {
-      art: <div className="tour-art tour-map"><img src="/assets/owl-fly.png" alt="" className="tour-fly" /><span className="tour-dot a" /><span className="tour-dot b" /><svg viewBox="0 0 200 120" aria-hidden="true"><path d="M30 95C70 40 120 110 170 30" fill="none" stroke="#2B2622" strokeOpacity=".45" strokeDasharray="2 6" strokeWidth="1.6" strokeLinecap="round" /></svg></div>,
+      art: <div className="tour-art tour-map"><FlyingOwl className="tour-fly" width={58} /><span className="tour-dot a" /><span className="tour-dot b" /><svg viewBox="0 0 200 120" aria-hidden="true"><path d="M30 95C70 40 120 110 170 30" fill="none" stroke="#2B2622" strokeOpacity=".45" strokeDasharray="2 6" strokeWidth="1.6" strokeLinecap="round" /></svg></div>,
       title: 'Carried by owl',
       text: 'Your owl flies each letter from you to them. The farther apart you are, the longer it takes. Watch it cross the map.'
     },

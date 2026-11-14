@@ -7,7 +7,7 @@ export function km(a: [number, number], b: [number, number]): number {
 }
 
 // Places used to name where someone is ("near Pune"). Coarse on purpose.
-const PLACES: [string, number, number][] = [
+export const PLACES: [string, number, number][] = [
   ['Bengaluru', 12.97, 77.59], ['Mumbai', 19.08, 72.88], ['Delhi', 28.61, 77.21], ['Kolkata', 22.57, 88.36],
   ['Chennai', 13.08, 80.27], ['Hyderabad', 17.39, 78.49], ['Pune', 18.52, 73.86], ['Ahmedabad', 23.02, 72.57],
   ['Jaipur', 26.91, 75.79], ['Kochi', 9.93, 76.27], ['Goa', 15.5, 73.83], ['Chandigarh', 30.73, 76.78],
@@ -54,6 +54,22 @@ export function project(lat: number, lon: number, m: MapDef = INDIA): [number, n
   const x = (lon - m.lon0) / (m.lon1 - m.lon0);
   const y = (Y(m.lat1) - Y(lat)) / (Y(m.lat1) - Y(m.lat0));
   return [Math.min(0.97, Math.max(0.03, x)), Math.min(0.97, Math.max(0.03, y))];
+}
+
+/** The other way round: a 0..1 position on a map image back to [lat, lon]. */
+export function unproject(x: number, y: number, m: MapDef = INDIA): [number, number] {
+  const yy = Y(m.lat1) - y * (Y(m.lat1) - Y(m.lat0));
+  return [((2 * Math.atan(Math.exp(yy)) - Math.PI / 2) * 180) / Math.PI, m.lon0 + x * (m.lon1 - m.lon0)];
+}
+
+/** Roughly where a point is, in words: "over Pune", "near Nagpur", or far from any place we know. */
+export function whereabouts(lat: number, lon: number): string {
+  let best = PLACES[0], bd = Infinity;
+  for (const p of PLACES) {
+    const d = km([lat, lon], [p[1], p[2]]);
+    if (d < bd) { bd = d; best = p; }
+  }
+  return bd < 60 ? `over ${best[0]}` : bd < 400 ? `near ${best[0]}` : 'far from anywhere';
 }
 
 /** A gently wandering path between two map points; t in 0..1. Distance is still the straight line. */
