@@ -13,7 +13,6 @@ export default function Stamps() {
   const [open, setOpen] = useState<CustomStamp | null>(null);
   const yours = stamps.filter((s) => s.owner === uid && s.status === 'mine');
   const collected = stamps.filter((s) => s.owner === uid && s.status === 'collected');
-  const flying = stamps.filter((s) => s.made_by === uid && s.owner !== uid);
 
   // collected stamps, grouped by who sent them
   const groups = new Map<string, CustomStamp[]>();
@@ -47,7 +46,6 @@ export default function Stamps() {
                 <CutStamp s={s} size={s.cutter === 'wide' ? 96 : 78} />
               </button>
             ))}</div>}
-        {flying.length > 0 && <p className="small muted">{flying.length} {flying.length === 1 ? 'stamp is' : 'stamps are'} flying to friends.</p>}
       </section>
 
       <section className="stack">
