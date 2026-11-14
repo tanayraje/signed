@@ -1,3 +1,4 @@
+import { syncPush } from './lib/push';
 import { useEffect, useState } from 'react';
 import { useStore } from './lib/store';
 import { useRoute, go } from './lib/router';
@@ -28,6 +29,8 @@ export default function App() {
 
   // After signing in, go back to where the person was headed.
   useEffect(() => { if (session) restorePlace(); }, [session]);
+  // keep this phone's notification subscription fresh every time Signed opens
+  useEffect(() => { if (session) void syncPush(session.user.id); }, [session?.user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A remembered invite is accepted as soon as there is an account, before seal setup.
   useEffect(() => {

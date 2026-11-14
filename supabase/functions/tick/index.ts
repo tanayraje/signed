@@ -33,14 +33,20 @@ type Profile = { id: string; name: string; owl_name: string; tz: string };
 
 async function push(userId: string, payload: Record<string, unknown>) {
   const { data: subs } = await supabase.from('push_subscriptions').select('*').eq('user_id', userId);
+  const out: { status: number; body?: string }[] = [];
   for (const s of subs ?? []) {
     try {
-      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload));
+      const r = await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), { TTL: 86400, urgency: 'high' });
+      out.push({ status: r.statusCode });
     } catch (e) {
-      const code = (e as { statusCode?: number }).statusCode;
+      const err = e as { statusCode?: number; body?: string; message?: string };
+      const code = err.statusCode ?? 0;
+      console.error('push failed', code, err.body ?? err.message);
+      out.push({ status: code, body: String(err.body ?? err.message ?? '') });
       if (code === 404 || code === 410) await supabase.from('push_subscriptions').delete().eq('id', s.id);
     }
   }
+  return out;
 }
 
 function localParts(tz: string, d = new Date()) {
@@ -205,6 +211,8 @@ Deno.serve(async (req) => {
   const tick = Deno.env.get('TICK_SECRET') ?? (await secret('tick'));
   if (!tick || auth !== `Bearer ${tick}`) return new Response('Not allowed', { status: 401 });
   await setupPush();
+  const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
+  if (body?.test) return Response.json(await push(body.test, { title: 'Signed', body: 'Testing your notifications.', url: '/#/wall', tag: 'test' }));
   const [took, mid, delivered, posted, wished] = await Promise.all([takeoffs(), midways(), deliver(), postDay(), wishAlarm()]);
   return Response.json({ took, mid, delivered, posted, wished });
 });

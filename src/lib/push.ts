@@ -76,3 +76,24 @@ export async function disablePush(): Promise<string> {
     return 'Could not turn them off. Try again.';
   }
 }
+
+/**
+ * Runs each time Signed opens: if notifications are allowed, make sure this phone's current
+ * subscription is the one saved for this person. Phones quietly replace subscriptions
+ * (reinstalling the app, updates), and a stale one means notifications never arrive.
+ */
+export async function syncPush(userId: string) {
+  try {
+    if (!pushSupported() || Notification.permission !== 'granted') return;
+    if (!cachedKey) await preparePush();
+    if (!cachedKey) return;
+    const reg = await withTimeout(navigator.serviceWorker.ready, 8000);
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(cachedKey) });
+    const json = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
+    await supabase.from('push_subscriptions').upsert(
+      { user_id: userId, endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth },
+      { onConflict: 'endpoint' }
+    );
+  } catch { /* best effort */ }
+}
