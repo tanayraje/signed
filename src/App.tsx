@@ -1,4 +1,5 @@
 import { syncPush } from './lib/push';
+import NotifyAsk from './components/NotifyAsk';
 import { useEffect, useState } from 'react';
 import { useStore } from './lib/store';
 import { useRoute, go } from './lib/router';
@@ -131,6 +132,7 @@ export default function App() {
           </button>
         );
       })()}
+      {me.onboarded && me.toured !== false && !['tour', 'setup', 'invite', 'cutter', 'open', 'write', 'wish'].includes(r0) && <NotifyAsk me={me} uid={session.user.id} />}
       {alarm && r0 !== 'wish' && <Wish onClose={() => setAlarm(false)} />}
       {toast && <div className="toast" role="status">{toast}</div>}
     </>
