@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { timeLeft } from '../lib/format';
 import { km } from '../lib/geo';
-import { Icon, Owl } from '../components/bits';
+import { Icon, Owl, Seal } from '../components/bits';
 import FlightMap, { type MapOwl } from '../components/FlightMap';
 
 /** A letter's flight opens the map between the two of you, that letter first. */
@@ -30,10 +30,14 @@ export function PairMap({ friendId, focus }: { friendId: string; focus?: string 
   const out = letters.filter((x) => x.sender === uid && x.recipient === friendId && new Date(x.arrive_at).getTime() > now);
   const inc = incoming.filter((x) => x.sender === friendId && new Date(x.arrive_at).getTime() > now);
   const all = [
-    ...out.map((x) => ({ id: x.id, arrive: x.arrive_at, t: prog(x), out: true })),
-    ...inc.map((x) => ({ id: x.id, arrive: x.arrive_at, t: prog(x), out: false }))
+    ...out.map((x) => ({ id: x.id, arrive: x.arrive_at, t: prog(x), out: true, ench: x.enchanted })),
+    ...inc.map((x) => ({ id: x.id, arrive: x.arrive_at, t: prog(x), out: false, ench: false }))
   ].sort((a, b) => (a.id === focus ? -1 : b.id === focus ? 1 : a.arrive.localeCompare(b.arrive)));
-  const owls: MapOwl[] = all.map((o) => ({ t: o.t, back: !o.out, plume: o.out ? me.plume : p.plume, alt: o.out ? `${me.owl_name} carrying your letter` : `${p.owl_name} carrying a letter to you` }));
+  const owls: MapOwl[] = all.map((o) => ({
+    t: o.t, back: !o.out, ench: o.ench, plume: o.out ? me.plume : p.plume, wax: o.out ? me.wax : p.wax, name: o.out ? me.owl_name : p.owl_name,
+    note: o.out ? `Carrying your letter to ${p.name} · lands in ${timeLeft(o.arrive)}` : `Carrying a letter to you · lands in ${timeLeft(o.arrive)}`,
+    alt: o.out ? `${me.owl_name} carrying your letter` : `${p.owl_name} carrying a letter to you`
+  }));
 
   const has = me.last_lat != null && p.last_lat != null;
   const dist = has ? Math.round(km([me.last_lat!, me.last_lon!], [p.last_lat!, p.last_lon!])) : null;
@@ -49,11 +53,12 @@ export function PairMap({ friendId, focus }: { friendId: string; focus?: string 
       </div>
       <div className="mapview-map">
         {has
-          ? <FlightMap interactive from={[me.last_lat!, me.last_lon!]} to={[p.last_lat!, p.last_lon!]} fromLabel="You" toLabel={p.name} owls={owls} />
+          ? <FlightMap interactive from={[me.last_lat!, me.last_lon!]} to={[p.last_lat!, p.last_lon!]} fromLabel="You" toLabel={p.name} fromPin={<Seal p={me} size={30} />} toPin={<Seal p={p} size={30} />} owls={owls} />
           : <p className="muted center" style={{ padding: 30 }}>The map appears once you both open Signed with location allowed.</p>}
       </div>
       <div className="mapview-list">
         {all.length === 0 && <p className="small muted center" style={{ margin: 0 }}>No owls in the air right now. Pinch to explore the map.</p>}
+        {all.length > 0 && <p className="small muted center" style={{ margin: 0 }}>Tap an owl on the map to follow it or say hoo.</p>}
         {all.map((o) => (
           <div key={o.id} className={`mapview-row${o.id === focus ? ' on' : ''}`}>
             <Owl p={o.out ? me : p} width={30} />

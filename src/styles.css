@@ -399,8 +399,8 @@ label.rec { cursor: pointer }
 .tour-slide p { margin: 0; max-width: 320px; color: var(--muted); font-size: 17px; line-height: 1.5 }
 .tour-art { position: relative; width: 230px; height: 190px; display: flex; align-items: center; justify-content: center }
 .tour-map { background: url(/assets/map-india.jpg) center 62%/240% auto; border-radius: 18px; box-shadow: inset 0 0 0 1px var(--line), 0 6px 18px rgba(43, 38, 34, .12); overflow: hidden }
-.tour-map svg { position: absolute; inset: 0; width: 100%; height: 100% }
-.tour-fly { position: absolute; width: 58px; left: 46%; top: 30%; transform: rotate(35deg); animation: tourfly 3s ease-in-out infinite alternate }
+.tour-map > svg:not(.fowl) { position: absolute; inset: 0; width: 100%; height: 100% }
+.tour-fly { position: absolute; width: 58px; height: auto; left: 46%; top: 30%; transform: rotate(35deg); animation: tourfly 3s ease-in-out infinite alternate }
 @keyframes tourfly { from { transform: translate(-30px, 18px) rotate(35deg) } to { transform: translate(30px, -18px) rotate(35deg) } }
 .tour-dot { position: absolute; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #FBF6EE }
 .tour-dot.a { left: 26px; bottom: 18px; background: #7A2420 } .tour-dot.b { right: 25px; top: 28px; background: #2F5D50 }
@@ -453,12 +453,58 @@ label.rec { cursor: pointer }
 .zmap.live { height: 100%; cursor: grab; touch-action: none }
 .zmap-layer { position: absolute; left: 0; top: 0; transform-origin: 0 0 }
 .zmap-base { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; image-rendering: auto; -webkit-user-select: none; user-select: none }
-.zmap-layer svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none }
+.zmap-layer > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none }
 .zmap-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; border: 2.5px solid #FBF6EE; box-shadow: 0 1px 3px rgba(43, 38, 34, .35); pointer-events: none }
 .zmap-dot.from { background: #7A2420 } .zmap-dot.to { background: #2F5D50 }
 .zmap-pin { position: absolute; padding: 3px 9px; border-radius: 12px; background: rgba(251, 246, 238, .95); font-size: 13px; color: #2B2622; box-shadow: 0 2px 6px rgba(43, 38, 34, .18); white-space: nowrap;
   transform: translate(-50%, -100%) translateY(-10px); pointer-events: none }
-.zmap-owl { position: absolute; width: 46px; max-width: none; transform: translate(-50%, -50%) rotate(var(--a)); filter: drop-shadow(0 3px 3px rgba(43, 38, 34, .3)); pointer-events: none; transition: left 1s linear, top 1s linear }
+/* the owl in the air: drawn from above, wings beating, with a shadow that parts from it as it climbs */
+.fowl { display: block; overflow: visible; max-width: none }
+.fo-wing { transform-box: view-box; transform-origin: 54px 40px; animation: foflap 2.6s ease-in-out infinite }
+.zmap:not(.live) .fo-wing { animation: none }
+@keyframes foflap { 0%, 50%, 100% { transform: scaleX(1) rotate(0deg) } 8%, 24% { transform: scaleX(.6) rotate(-7deg) } 16%, 32% { transform: scaleX(1) rotate(0deg) } 40% { transform: scaleX(.68) rotate(-5deg) } }
+.zmap-fly { position: absolute; width: 0; height: 0; pointer-events: none; transition: left 1s linear, top 1s linear }
+.zmap-bird { position: absolute; left: -32px; top: -21px; width: 64px; height: 43px; transform: rotate(var(--a)) scale(calc(.55 + .45 * var(--up, 1))); transition: transform 1s linear }
+.zmap-bird > span { display: block }
+.zmap-shade { position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; border-radius: 50%; background: #2B2622; filter: blur(7px); opacity: calc(.42 - .2 * var(--up, 1));
+  transform: translate(calc(10px * var(--up, 1)), calc(15px * var(--up, 1))) scale(calc(.5 + .5 * var(--up, 1))); transition: transform 1s linear, opacity 1s linear }
+.zmap-fly.gilded .zmap-bird { filter: drop-shadow(0 0 7px rgba(226, 194, 122, .85)) }
+.zmap-fly.gilded .zmap-shade { opacity: 0 }
+.zmap-roll { animation: zroll .9s cubic-bezier(.3, .7, .3, 1) }
+@keyframes zroll { 0% { transform: rotate(0deg) scale(1) } 50% { transform: rotate(200deg) scale(1.25) } 100% { transform: rotate(360deg) scale(1) } }
+.zmap-hoo { position: absolute; left: 16px; top: -46px; padding: 2px 10px; border-radius: 12px; background: #FBF6EE; color: #2B2622; font-style: italic; font-size: 15px; line-height: 1.4; white-space: nowrap; box-shadow: 0 2px 6px rgba(43, 38, 34, .25); animation: zpop .9s ease both }
+@keyframes zpop { 0% { opacity: 0; transform: translateY(6px) scale(.8) } 20%, 75% { opacity: 1; transform: none } 100% { opacity: 0; transform: translateY(-8px) } }
+/* seals for pins, a ring when the owl comes in to land */
+.zmap-seal { position: absolute; transform: translate(-50%, -50%); line-height: 0; filter: drop-shadow(0 2px 3px rgba(43, 38, 34, .35)); pointer-events: none }
+.zmap-pin.high { transform: translate(-50%, -100%) translateY(-20px) }
+.zmap-ring { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 2px solid #2F5D50; pointer-events: none; animation: zring 1.8s ease-out infinite }
+.zmap.night .zmap-ring { border-color: #E2C27A }
+@keyframes zring { 0% { opacity: .8; transform: scale(.8) } 100% { opacity: 0; transform: scale(2.4) } }
+/* weather and places: cloud shadows drift over the map, names fade in as you zoom */
+.zmap-cloud { position: absolute; left: -40%; top: 22%; width: 34%; aspect-ratio: 5 / 2; border-radius: 50%; background: #fff; filter: blur(14px); opacity: .5; pointer-events: none; animation: zdrift 90s linear infinite; animation-delay: -25s }
+.zmap-cloud.c2 { top: 64%; width: 26%; animation-delay: -66s }
+.zmap-cloud.shade { background: #2B2622; opacity: .1; margin: 4% 0 0 3% }
+@keyframes zdrift { from { left: -40% } to { left: 110% } }
+.zmap-place { position: absolute; width: 0; height: 0; pointer-events: none }
+.zmap-place i { position: absolute; left: -1.5px; top: -1.5px; width: 3px; height: 3px; border-radius: 50%; background: rgba(43, 38, 34, .6); opacity: 0; transition: opacity .4s }
+.zmap-place b { position: absolute; left: 6px; top: -9px; font-weight: 400; font-style: italic; font-size: 12px; line-height: 1.4; color: #2B2622; white-space: nowrap; opacity: 0; transition: opacity .4s; text-shadow: 0 0 3px #FBF6EE, 0 0 3px #FBF6EE }
+.zmap-layer.close .zmap-place i, .zmap-layer.close .zmap-place b { opacity: .85 }
+/* an enchanted letter flies by night: dark map, city lights, a gold trail with sparks */
+.zmap.night { background: #0E1326 }
+.zmap.night .zmap-base { filter: grayscale(.5) contrast(1.15) }
+.zmap-dusk { position: absolute; inset: 0; background: #0C1436; opacity: .8; mix-blend-mode: multiply; pointer-events: none }
+.zmap.night .zmap-place i { left: -2px; top: -2px; width: 4px; height: 4px; opacity: 1; background: #F6D98C; box-shadow: 0 0 6px 2px rgba(246, 217, 140, .55); animation: zlamp 4s ease-in-out infinite }
+.zmap.night .zmap-place:nth-child(odd) i { animation-delay: -1.7s }
+.zmap.night .zmap-place b { color: #F1E7CF; text-shadow: 0 0 3px #0C1436, 0 0 3px #0C1436 }
+@keyframes zlamp { 0%, 100% { opacity: .55 } 50% { opacity: 1 } }
+.zmap-gilt { filter: drop-shadow(0 0 4px rgba(226, 194, 122, .9)) }
+.zmap-spark { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; background: #F6E3A8; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); pointer-events: none; transition: left 1s linear, top 1s linear; animation: ztwinkle 1.1s ease-in-out infinite }
+@keyframes ztwinkle { 0%, 100% { transform: scale(.4) rotate(0deg) } 50% { transform: scale(1) rotate(45deg) } }
+/* tap an owl: who it is, where it is, follow it or say hoo */
+.zmap-card { position: absolute; left: 12px; right: 66px; bottom: 12px; z-index: 3; max-width: 420px; padding: 8px 8px 12px 14px; border-radius: 16px; background: var(--card) url(/assets/card.jpg) center/cover; border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(43, 38, 34, .2); display: flex; flex-direction: column; gap: 10px; cursor: default }
+.zmap-card .icon { margin: -2px -2px 0 0 }
+.zmap-act { flex: 1; min-height: 44px; padding: 0 10px; border-radius: 22px; border: 1px solid #CFC5B6; background: transparent; font-size: 15px; font-weight: 600 }
+.zmap-act.wax { background: #7A2420; border-color: #7A2420; color: #FBF6EE }
 .zmap-touch { position: absolute; inset: 0; z-index: 2 }
 .zmap-btns { position: absolute; right: 12px; bottom: 12px; z-index: 3; display: flex; flex-direction: column; gap: 8px }
 .zmap-btns button { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(43, 38, 34, .14); background: rgba(251, 246, 238, .95); color: #2B2622; font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(43, 38, 34, .18); cursor: pointer; padding: 0 }

@@ -32,6 +32,45 @@ export function Owl({ p, width = 76, alt = '' }: { p: Pick<Profile, 'plume' | 'e
   return <img className="owl" src={owlSrc(p)} alt={alt} width={width} height={Math.round(width * 1.25)} />;
 }
 
+/** The owl seen from above, as it flies across the map. Drawn, not a picture, so its wings can beat. */
+const PLUMES: Record<string, [string, string, string, string, string, string]> = {
+  // wing, wing line, body, head, tail, ear tufts
+  tawny: ['#A9774A', '#6E4827', '#B98556', '#C2925F', '#7C5330', '#8A5E38'],
+  ash: ['#9A9A95', '#5F5F5B', '#ADADA8', '#B9B9B4', '#787874', '#6E6E6A'],
+  umber: ['#6B4A33', '#3F2A1C', '#7A573E', '#866349', '#4E3524', '#4A3222'],
+  sand: ['#D2B48A', '#9A7E55', '#DCC29C', '#E4CDAA', '#B0946A', '#A88C62'],
+  white: ['#E6DFD0', '#9C927F', '#F1EBDD', '#F6F1E6', '#C4BAA8', '#C4BAA8'],
+  dark: ['#4A3B30', '#2B211A', '#5A483B', '#655243', '#35291F', '#3B2E24'],
+  russet: ['#A2553A', '#6A3220', '#B26346', '#BD7052', '#7C3E28', '#733824'],
+  slate: ['#6F7B86', '#48525B', '#85929C', '#93A0AA', '#56616B', '#5E6973']
+};
+const WAX_INK: Record<string, string> = { oxblood: '#7A2420', forest: '#2F5D50', ink: '#1F2A44', mustard: '#B8964F', plum: '#6B3A5B', soot: '#3A3632' };
+const WING = 'M54 30C42 22 24 22 10 32C7 35 8 39 12 40C10 43 13 47 18 46C18 50 23 52 28 49C30 53 37 53 40 50C45 52 50 51 54 50Z';
+
+export function FlyingOwl({ plume = 'tawny', wax, gilded = false, width = 64, alt, className }: { plume?: string; wax?: string; gilded?: boolean; width?: number; alt?: string; className?: string }) {
+  const [wing, line, body, head, tail, tuft] = PLUMES[plume] ?? PLUMES.tawny;
+  const half = (
+    <g className="fo-wing">
+      <path d={WING} fill={wing} />
+      <path d="M50 37C40 32 28 32 18 37" fill="none" stroke={line} strokeWidth="1.6" strokeLinecap="round" opacity=".35" />
+    </g>
+  );
+  return (
+    <svg className={`fowl${className ? ` ${className}` : ''}`} viewBox="0 0 120 80" width={width} height={Math.round((width * 2) / 3)} role={alt ? 'img' : undefined} aria-label={alt || undefined} aria-hidden={alt ? undefined : true}>
+      <rect x="40" y="56" width="18" height="12" rx="1" fill={gilded ? '#1C2340' : '#FBF6EE'} stroke={gilded ? '#E2C27A' : '#CDBFA8'} strokeWidth=".7" transform="rotate(-15 49 62)" />
+      <circle cx="44.5" cy="63" r="2" fill={gilded ? '#E2C27A' : WAX_INK[wax ?? ''] ?? '#7A2420'} />
+      <path d="M54 55L52 66Q60 70.5 68 66L66 55Z" fill={tail} stroke={tail} strokeWidth="2" strokeLinejoin="round" />
+      {half}
+      <g transform="translate(120 0) scale(-1 1)">{half}</g>
+      <ellipse cx="60" cy="44" rx="13" ry="15" fill={body} />
+      <path d="M53 44Q60 48 67 44M54 51Q60 54.5 66 51" fill="none" stroke={line} strokeWidth="1.2" strokeLinecap="round" opacity=".35" />
+      <path d="M50.5 15.5L48.5 9.5L55.5 12.5ZM69.5 15.5L71.5 9.5L64.5 12.5Z" fill={tuft} stroke={tuft} strokeWidth="2" strokeLinejoin="round" />
+      <path d="M60 8.5L57.2 13L62.8 13Z" fill="#D9A441" stroke="#D9A441" strokeWidth="1" strokeLinejoin="round" />
+      <circle cx="60" cy="25" r="14" fill={head} />
+    </svg>
+  );
+}
+
 /** Signed's own stamps: always yours, never used up. Older letters used earlier names. */
 export const BUILT_IN_STAMPS = ['signed', 'owlpost', 'route', 'forgetmenot', 'eleven'];
 const LEGACY: Record<string, string> = { lotus: 'signed', peacock: 'owlpost', monsoon: 'route', chai: 'forgetmenot' };
