@@ -20,7 +20,7 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
   const drag = useRef<{ x: number; y: number; dx: number; on: boolean } | null>(null);
   const sheet = useRef<HTMLElement>(null);
   // select a line of the letter and it can go up on your wall as a note; tap a pinned line to take it down
-  const [chosen, setChosen] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [chosen, setChosen] = useState<{ text: string } | null>(null);
   const [tapped, setTapped] = useState<{ pin: WallPin; x: number; y: number } | null>(null);
   const [pinning, setPinning] = useState(false);
   const l = letters.find((x) => x.id === id);
@@ -33,9 +33,8 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
       const el = node ? (node.nodeType === 1 ? node as Element : node.parentElement) : null;
       const text = sel?.toString().replace(/\s+/g, ' ').trim() ?? '';
       if (!sel || sel.isCollapsed || !text || !el?.closest('.sheet .selectable')) { setChosen(null); return; }
-      const r = sel.getRangeAt(0).getBoundingClientRect();
       setTapped(null);
-      setChosen({ text, x: r.left + r.width / 2, y: r.bottom });
+      setChosen({ text });
     };
     document.addEventListener('selectionchange', on);
     return () => document.removeEventListener('selectionchange', on);
@@ -196,9 +195,14 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
           </div>
         </article>
         {chosen && (
-          <button className="pin-line" style={pillAt(chosen.x, chosen.y)} disabled={pinning}
+          // docked at the bottom of the screen, clear of the phone's own Copy menu next to the selection
+          <button className="pin-line pin-dock" disabled={pinning}
             onPointerDown={(e) => e.preventDefault()} onTouchStart={(e) => e.preventDefault()} onTouchEnd={(e) => { e.preventDefault(); void pinLine(); }} onClick={() => void pinLine()}>
-            <span className="pin-line-tack" aria-hidden="true" />{pinning ? 'Pinning…' : 'Pin this line to your wall'}
+            <span className="pin-line-tack" aria-hidden="true" />
+            <span className="pin-dock-text">
+              <b>{pinning ? 'Pinning…' : 'Pin to your wall'}</b>
+              <small>“{chosen.text.length > 48 ? `${chosen.text.slice(0, 46).trimEnd()}…` : chosen.text}”</small>
+            </span>
           </button>
         )}
         {tapped && (
