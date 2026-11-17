@@ -79,7 +79,7 @@ export function AchievementGrid({ stats, mine }: { stats: SealStats; mine?: Seal
               <b>{a.title}</b>
               {both && <span className="ach-shared">You have this too</span>}
               <span className="small muted">{a.desc}</span>
-              {!done && prog && <span className="ach-prog"><span className="bar"><i style={{ width: `${(prog[0] / prog[1]) * 100}%` }} /></span><span className="small muted">{prog[0]} / {prog[1]}</span></span>}
+              {!done && prog && <span className="ach-prog"><span className="bar"><i style={{ width: `${(prog[0] / prog[1]) * 100}%` }} /></span><span className="small muted">{prog[0].toLocaleString()} / {prog[1].toLocaleString()}{a.id === 'long_haul' ? ' km' : ''}</span></span>}
               {a.reward && <span className="ach-reward"><i aria-hidden="true" />{done ? 'Unlocked' : 'Unlocks'} {mixName(a.reward)}</span>}
             </div>
           );

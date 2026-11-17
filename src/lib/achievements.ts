@@ -8,6 +8,7 @@ export interface SealStats {
   sealed: number;
   night_owl: boolean;
   long_haul: boolean;
+  km?: number;                  // total distance flown by your letters
   enchanted: boolean;
   same_day: boolean;
   pen_pal_weeks: number;
@@ -26,10 +27,12 @@ export interface Achievement {
   done: (s: SealStats) => boolean;
 }
 
+export const LONG_HAUL_KM = 5000;
+
 export const ACHIEVEMENTS: Achievement[] = [
   { id: 'first', title: 'First letter', desc: 'Sealed and sent a first letter.', icon: 'letter', done: (s) => s.sealed >= 1 },
   { id: 'night_owl', title: 'Night owl', desc: 'Sealed a letter after midnight.', icon: 'moon', reward: 'feather', done: (s) => s.night_owl },
-  { id: 'long_haul', title: 'Long haul', desc: 'A letter flew over 1,000 km.', icon: 'route', reward: 'cornflower', done: (s) => s.long_haul },
+  { id: 'long_haul', title: 'Long haul', desc: 'Letters flew 5,000 km in all.', icon: 'route', reward: 'cornflower', progress: (s) => [Math.min(LONG_HAUL_KM, Math.round(s.km ?? 0)), LONG_HAUL_KM], done: (s) => (s.km ?? 0) >= LONG_HAUL_KM },
   { id: 'enchanted', title: 'Enchanted', desc: 'Sent a letter in your own voice.', icon: 'wave', reward: 'babysbreath', done: (s) => s.enchanted },
   { id: 'same_day', title: 'Same-day reply', desc: 'Wrote back within a day of a letter landing.', icon: 'clock', reward: 'chamomile', done: (s) => s.same_day },
   { id: 'pen_pal', title: 'Pen pal', desc: 'Wrote to one friend four weeks running.', icon: 'calendar', reward: 'forgetmenot', progress: (s) => [Math.min(4, s.pen_pal_weeks), 4], done: (s) => s.pen_pal_weeks >= 4 },
@@ -65,7 +68,8 @@ export function localStats(uid: string, letters: Letter[], friends: Friend[]): S
   return {
     sealed: sent.length,
     night_owl: sent.some((l) => new Date(l.sent_at).getHours() < 4),
-    long_haul: sent.some((l) => (l.distance_km ?? 0) >= 1000),
+    long_haul: sent.reduce((t, l) => t + (l.distance_km ?? 0), 0) >= LONG_HAUL_KM,
+    km: sent.reduce((t, l) => t + (l.distance_km ?? 0), 0),
     enchanted: sent.some((l) => l.enchanted || !!l.audio_path),
     same_day: sent.some((b) => got.some((a) => a.sender === b.recipient
       && new Date(b.sent_at).getTime() >= new Date(a.arrive_at).getTime()
