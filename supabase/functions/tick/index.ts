@@ -143,8 +143,8 @@ async function deliver() {
       .eq('recipient', l.recipient).is('opened_at', null).lte('arrive_at', new Date().toISOString());
     await push(l.recipient, {
       badge: count ?? 1,
-      title: `${from?.owl_name || 'An owl'} has landed`,
-      body: `${l.kind === 'bundle' ? 'A bundle of scraps' : 'A letter'} from ${from?.name || 'a friend'} is waiting on your windowsill. Hold the seal to open it.`,
+      title: `You've got a letter from ${from?.name || 'a friend'}! ✉️`,
+      body: `${from?.owl_name || 'Your owl'} just flew in with it. Come read it!`,
       url: `/#/friend/${l.sender}`,
       tag: `flight-${l.id}`
     });
