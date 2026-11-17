@@ -703,3 +703,4 @@ body.ench .ach-dots .ach-icon.on { background: var(--gold); color: #141A2E }
 .pin-line-back { position: fixed; inset: 0; z-index: 34 }
 @keyframes pinpop { from { opacity: 0; transform: translate(-50%, 6px) } }
 @media (prefers-reduced-motion: reduce) { .pin-line { animation: none } }
+.profile-sig { font-family: var(--sign); font-weight: 400; font-size: 52px; line-height: 1; color: #1F2A44; padding-top: 6px }

@@ -20,7 +20,7 @@ export default function Profile() {
   return (
     <main className="app">
       <div className="top">
-        <h1 className="grow">{me.name || 'You'}</h1>
+        <h1 className="grow profile-sig">{me.name || 'You'}</h1>
       </div>
 
       <div className="card" style={{ padding: '2px 16px' }}>
