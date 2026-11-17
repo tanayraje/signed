@@ -38,7 +38,7 @@ export function PatinaCard({ p, who }: { p: Pick<Profile, 'wax' | 'monogram' | '
       </div>
       <p className="small muted" style={{ margin: 0 }}>
         {st === 0
-          ? `${subject} sealed ${sealed} letter${sealed === 1 ? '' : 's'}. At 10, ${sealOf} starts to age.`
+          ? <>{subject} sealed {sealed} letter{sealed === 1 ? '' : 's'}.<br />At 10, {sealOf} starts to age.</>
           : <>Because {who ? `${who} has` : 'you’ve'} sealed {sealed} letters, {sealOf} is <b>{PATINA[st].name}</b>: {PATINA[st].note.charAt(0).toLowerCase() + PATINA[st].note.slice(1)}</>}
       </p>
       <div className="patina-steps">
