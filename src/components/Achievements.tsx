@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Profile } from '../lib/types';
 import { ACHIEVEMENTS, type Achievement, type SealStats } from '../lib/achievements';
 import { PATINA, Seal, patinaStage } from './bits';
@@ -58,13 +58,35 @@ export function PatinaCard({ p, who }: { p: Pick<Profile, 'wax' | 'monogram' | '
 }
 
 /** The achievement cards. Pass `mine` on a friend's page to mark the ones you share. */
-export function AchievementGrid({ stats, mine }: { stats: SealStats; mine?: SealStats | null }) {
-  const earned = ACHIEVEMENTS.filter((a) => a.done(stats)).length;
+export function AchievementGrid({ stats, mine, collapsed: startCollapsed = false }: { stats: SealStats; mine?: SealStats | null; collapsed?: boolean }) {
+  const [collapsed, setCollapsed] = useState(startCollapsed);
+  const earnedList = ACHIEVEMENTS.filter((a) => a.done(stats));
+  const earned = earnedList.length;
+  if (collapsed) {
+    const shared = mine ? earnedList.filter((a) => a.done(mine)).length : 0;
+    return (
+      <section className="card ach-summary">
+        <div className="row" style={{ alignItems: 'baseline' }}>
+          <h2 className="grow" style={{ margin: 0 }}>Achievements</h2>
+          <span className="small muted">{earned} of {ACHIEVEMENTS.length}{shared ? ` · ${shared} shared with you` : ''}</span>
+        </div>
+        <div className="ach-dots" aria-hidden="true">
+          {ACHIEVEMENTS.map((a) => (
+            <span key={a.id} className={`ach-icon${a.done(stats) ? ' on' : ''}`} title={a.title}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{ICONS[a.icon]}</svg>
+            </span>
+          ))}
+        </div>
+        <button className="chip" onClick={() => setCollapsed(false)} aria-expanded="false">See all {ACHIEVEMENTS.length}</button>
+      </section>
+    );
+  }
   return (
     <section className="stack">
       <div className="row" style={{ alignItems: 'baseline' }}>
         <h2 className="grow" style={{ margin: 0 }}>Achievements</h2>
         <span className="small muted">{earned} of {ACHIEVEMENTS.length}</span>
+        {startCollapsed && <button className="chip" onClick={() => setCollapsed(true)} aria-expanded="true" style={{ minHeight: 36 }}>Show less</button>}
       </div>
       <div className="ach-grid">
         {ACHIEVEMENTS.map((a) => {

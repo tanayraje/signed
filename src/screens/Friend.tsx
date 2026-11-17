@@ -143,7 +143,7 @@ export default function Friend({ id, section }: { id: string; section?: string }
       <section id="friend-achievements" className="stack" style={{ scrollMarginTop: 16 }}>
         {(theirStats || p.sealed != null) && <PatinaCard p={{ ...p, sealed: theirStats?.sealed ?? p.sealed }} who={p.name} />}
         {theirStats
-          ? <AchievementGrid stats={theirStats} mine={myStats} />
+          ? <AchievementGrid stats={theirStats} mine={myStats} collapsed />
           : <p className="small muted" style={{ margin: 0 }}>{p.name}’s achievements will show here soon.</p>}
       </section>
       <div className="foot">

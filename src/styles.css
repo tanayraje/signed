@@ -703,3 +703,9 @@ label.rec { cursor: pointer }
 .friend-ach-name { font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .chip.locked { color: var(--muted); border-style: dashed; opacity: .8 }
 body.ench .ach.done .ach-icon { background: var(--gold); color: #141A2E }
+.ach-summary { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start }
+.ach-summary .row { width: 100% }
+.ach-dots { display: flex; flex-wrap: wrap; gap: 8px }
+.ach-dots .ach-icon { width: 34px; height: 34px; margin: 0 }
+.ach-dots .ach-icon.on { background: radial-gradient(circle at 38% 32%, #B5544C, #7A2420 55%, #561713); color: #F6E9D8; box-shadow: 0 1px 1px rgba(0, 0, 0, .25), inset 0 -2px 3px rgba(0, 0, 0, .25) }
+body.ench .ach-dots .ach-icon.on { background: var(--gold); color: #141A2E }
