@@ -9,7 +9,7 @@
       "destination": "/terms.html"
     },
     {
-      "source": "/((?!assets/|sw.js|manifest.webmanifest|workbox-|privacy|terms).*)",
+      "source": "/((?!assets/|sw.js|manifest.webmanifest|workbox-|where-data.json|privacy|terms).*)",
       "destination": "/index.html"
     }
   ]

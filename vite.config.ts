@@ -1,10 +1,20 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { readFileSync } from 'node:fs';
+
+// The map data for "where is the owl" also goes out as /where-data.json, so the tick function can read it.
+const whereData = () => ({
+  name: 'where-data',
+  generateBundle(this: { emitFile: (f: { type: 'asset'; fileName: string; source: string }) => void }) {
+    this.emitFile({ type: 'asset', fileName: 'where-data.json', source: readFileSync('supabase/functions/_shared/where-data.json', 'utf8') });
+  }
+});
 
 export default defineConfig({
   plugins: [
     react(),
+    whereData(),
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',

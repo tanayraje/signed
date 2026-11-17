@@ -3,7 +3,7 @@
 // 2. Rings the 11:11 wish alarm for friends who both turned it on.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import webpush from 'npm:web-push@3.6.7';
-import { whereabouts } from '../_shared/where.ts';
+import { makeWhere, type WhereData } from '../_shared/where.ts';
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -56,6 +56,17 @@ function localParts(tz: string, d = new Date()) {
   return { day, hour: Number(p.hour), minute: Number(p.minute), date: `${p.year}-${p.month}-${p.day}` };
 }
 
+// Where an owl is, in words. The map data is served by the app; if it can't be fetched, pushes just skip the place.
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://signed-mail.vercel.app';
+let whereReady: Promise<((lat: number, lon: number) => string) | null> | null = null;
+function loadWhere() {
+  whereReady ??= fetch(`${APP_URL}/where-data.json`)
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((d: WhereData) => makeWhere(d).whereabouts)
+    .catch((e) => { console.error('where-data', e); whereReady = null; return null; });
+  return whereReady;
+}
+
 function inWords(ms: number): string {
   const m = Math.max(1, Math.round(ms / 60000));
   if (m < 60) return `${m} min`;
@@ -104,9 +115,10 @@ async function midways() {
   });
   if (!due.length) return 0;
   const byId = await people(due.flatMap((l: Flight) => [l.sender, l.recipient]));
+  const whereabouts = await loadWhere();
   for (const l of due as Flight[]) {
     const from = byId.get(l.sender), owl = from?.owl_name || 'The owl';
-    const where = l.from_lat != null && l.to_lat != null ? whereabouts((l.from_lat + l.to_lat) / 2, (l.from_lon! + l.to_lon!) / 2) : null;
+    const where = whereabouts && l.from_lat != null && l.to_lat != null ? whereabouts((l.from_lat + l.to_lat) / 2, (l.from_lon! + l.to_lon!) / 2) : null;
     await push(l.recipient, {
       title: `${owl} is halfway there`,
       body: `${where ? `Now ${where}, with` : 'Flying with'} ${what(l.kind)} from ${from?.name || 'a friend'}. About ${inWords(new Date(l.arrive_at).getTime() - now)} to go.`,

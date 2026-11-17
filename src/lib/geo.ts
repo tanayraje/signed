@@ -22,7 +22,9 @@ export const PLACES: [string, number, number][] = [
   ['Sydney', -33.87, 151.21], ['Tokyo', 35.68, 139.69]
 ];
 
-export { placeName, whereabouts } from '../../supabase/functions/_shared/where';
+import { makeWhere, type WhereData } from '../../supabase/functions/_shared/where';
+import whereData from '../../supabase/functions/_shared/where-data.json';
+export const { placeName, whereabouts } = makeWhere(whereData as WhereData);
 
 // Two hand-drawn maps in Web Mercator: India up close, and the world for friends further away.
 export interface MapDef { img: string; lon0: number; lon1: number; lat0: number; lat1: number; vw: number; vh: number; px: number }
