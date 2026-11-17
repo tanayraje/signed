@@ -4,13 +4,17 @@ import { ago } from '../lib/format';
 import { rememberPushChoice } from '../components/NotifyAsk';
 import { disablePush, enablePush, isInstalled, preparePush, pushState } from '../lib/push';
 import { useEffect, useState } from 'react';
-import { Nav, Owl, Seal, signOut } from '../components/bits';
+import { Nav, Owl, PATINA, Seal, patinaStage, signOut } from '../components/bits';
+import { AchievementGrid, PatinaCard } from '../components/Achievements';
+import { localStats, useSealStats } from '../lib/achievements';
 
 export default function Profile() {
-  const { me, friends, saveFriendSettings, session, say } = useStore();
+  const { me, friends, letters, saveFriendSettings, session, say } = useStore();
   const [push, setPush] = useState<'on' | 'off' | 'blocked' | 'unsupported' | null>(null);
   const [pushMsg, setPushMsg] = useState('');
   useEffect(() => { void pushState().then(setPush); void preparePush(); }, []);
+  const uid = session?.user.id;
+  const stats = useSealStats(uid, uid ? localStats(uid, letters, friends) : undefined);
   if (!me) return null;
 
   return (
@@ -37,6 +41,26 @@ export default function Profile() {
           </span>
         </div>
       </div>
+
+      <PatinaCard p={{ ...me, sealed: stats?.sealed ?? me.sealed }} />
+      {stats && <AchievementGrid stats={stats} />}
+      {friends.length > 0 && (
+        <section className="stack">
+          <div className="row" style={{ alignItems: 'baseline' }}>
+            <h2 className="grow" style={{ margin: 0 }}>Friends’ achievements</h2>
+            <span className="small muted">See how their seals are ageing</span>
+          </div>
+          <div className="friend-ach">
+            {friends.map(({ profile: f }) => (
+              <button key={f.id} className="card" onClick={() => go(`friend/${f.id}/achievements`)}>
+                <Seal p={f} size={52} />
+                <span className="friend-ach-name">{f.name}</span>
+                <span className="small muted">{f.sealed != null ? PATINA[patinaStage(f.sealed)].name : 'See achievements'}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="card" style={{ padding: '10px 16px 2px' }}>
         <div className="stack" style={{ gap: 0, paddingBottom: 8 }}>

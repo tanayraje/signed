@@ -4,13 +4,15 @@ Letters between friends, carried by owls. A phone-first web app (PWA): design yo
 
 ## What's in it
 
-- **Seal and owl.** Your wax seal is your identity: wax colour, pressed letters and mix-ins. Your owl (eight plumages, three eye colours, a name) carries everything you send. Change both later from Profile.
+- **Seal and owl.** Your wax seal is your identity: wax colour, edge, pressed letters and mix-ins pressed into the wax. Some mix-ins are earned through achievements, and your seal ages (patina) as you write more letters. Your owl (eight plumages, three eye colours, a name) carries everything you send. Change both later from Profile.
+- **Achievements.** Milestones like Night owl or Every season unlock new mix-ins. You can see your own on Profile and your friends' on their page.
 - **Friends by invite.** Share an invite link; once your friend opens it and signs in, you're connected.
 - **Location.** Each time someone opens Signed, it reads their location and keeps the last one. Letters fly from the sender's latest location to the recipient's latest location.
 - **Flight time.** Set by the server from the straight-line distance: owls cruise about 300 km/h, never less than 20 minutes or more than 6 hours. The map path wanders a little; the distance does not. Turn on Quick flights in Profile for one-minute test flights.
 - **Letters.** Text, a Polaroid, a question card, a stamp (four built in, or make your own from a photo), and your signature.
 - **Enchanted mode.** Only while writing: flip the switch, speak, and your words write themselves. The recipient hears your voice while each word appears in ink. You can also attach a moving picture (a short video).
 - **Pocket and post day.** Drop scraps through the week, then send now or save them for post day. With auto-post on, the pocket leaves on its own on post day evening.
+- **Sealing.** After you sign, the letter folds into its envelope; hold your seal to press it on, then your owl takes it.
 - **Opening.** Press and hold the seal to lift it off; it's kept for the seal calendar, the flap folds back and the letter rises.
 - **Wall, trunk and seals.** Pin letters to your wall, fold the rest into the trunk, and see every shared day as a seal on the calendar.
 - **11:11.** Turn it on per friend. When you have both turned it on, an alarm notification rings at 11:11 morning and night; hold to make your wish together.
@@ -45,4 +47,3 @@ On iPhone, open the site in Safari, use Share > Add to Home Screen, then turn on
 - The flight map currently covers India. Flights outside it show distance and progress without the map.
 - A web app can only read location while it's open, so "current location" means where each person last opened Signed.
 - Web push can't play a custom alarm sound or use the Dynamic Island. Both need a native iOS wrapper later.
-- Seal mix-ins other than gold flecks are saved but not yet drawn.

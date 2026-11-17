@@ -21,6 +21,7 @@ export interface Profile {
   last_seen_at: string | null;
   onboarded: boolean;
   toured: boolean;
+  sealed?: number;
 }
 
 export interface FriendSettings {

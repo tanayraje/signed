@@ -3,15 +3,23 @@ import { useStore } from '../lib/store';
 import type { Eye, Plume, Profile, Wax } from '../lib/types';
 import { MARKS, Owl, Seal, Top } from '../components/bits';
 import { go } from '../lib/router';
+import { earnedBy, localStats, unlocked, useSealStats } from '../lib/achievements';
 
 export const WAX: [Wax, string, string][] = [['oxblood', 'Oxblood', '#96261F'], ['forest', 'Forest', '#2C5C4E'], ['ink', 'Ink blue', '#2C3A68'], ['mustard', 'Mustard', '#B48028'], ['plum', 'Plum', '#5C2C50'], ['soot', 'Soot', '#302A26']];
 export const PLUME: [Plume, string, string][] = [['tawny', 'Tawny', '#9C7652'], ['ash', 'Ash', '#8A8880'], ['umber', 'Umber', '#684E3A'], ['sand', 'Sand', '#C4AA7E'], ['white', 'White', '#E4E0D6'], ['dark', 'Dark', '#3A3430'], ['russet', 'Russet', '#965636'], ['slate', 'Slate', '#606872']];
 export const EYES: [Eye, string, string][] = [['amber', 'Amber', '#D6962E'], ['gold', 'Gold', '#E2BE46'], ['ember', 'Ember', '#D66822']];
-const MIXINS: [string, string][] = [['gold', 'Gold flecks'], ['glitter', 'Glitter'], ['twigs', 'Twigs'], ['petals', 'Petals'], ['ribbon', 'Ribbon']];
+const MIXINS: [string, string][] = [['gold', 'Gold flakes'], ['glitter', 'Glitter'], ['twigs', 'Twigs'], ['petals', 'Petals'], ['ribbon', 'Ribbon'], ['lavender', 'Lavender'],
+  ['marigold', 'Marigold'], ['cornflower', 'Cornflower'], ['forgetmenot', 'Forget-me-nots'], ['chamomile', 'Chamomile'], ['babysbreath', 'Baby’s breath'],
+  ['bow', 'Ribbon bow'], ['lace', 'Lace'], ['feather', 'Owl feather']];
+const LOCK = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>;
 
 const swatch = (hex: string) => ({ background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,.28), rgba(255,255,255,0) 55%), ${hex}` });
 
 export function SealDesigner({ draft, set }: { draft: Profile; set: (p: Partial<Profile>) => void }) {
+  const { session, letters, friends } = useStore();
+  const uid = session?.user.id;
+  const stats = useSealStats(uid, uid ? localStats(uid, letters, friends) : undefined);
+  const anyLocked = MIXINS.some(([k]) => !unlocked(k, stats));
   return (
     <>
       <div className="row" style={{ justifyContent: 'center' }}><Seal p={draft} size={190} label="Your wax seal" /></div>
@@ -48,9 +56,14 @@ export function SealDesigner({ draft, set }: { draft: Profile; set: (p: Partial<
       <section className="stack"><h2>Pressed into the wax</h2>
         <div className="chips">{MIXINS.map(([k, label]) => {
           const on = draft.mixins.includes(k);
+          if (!unlocked(k, stats) && !on) {
+            const a = earnedBy(k);
+            return <button key={k} className="chip locked" disabled aria-label={`${label}, earned with ${a?.title}`} title={`Earn it with ${a?.title}`}>{LOCK}{label}</button>;
+          }
           return <button key={k} className={`chip${on ? ' on' : ''}`} aria-pressed={on}
             onClick={() => set({ mixins: on ? draft.mixins.filter((m) => m !== k) : [...draft.mixins, k] })}>{label}</button>;
         })}</div>
+        {anyLocked && <p className="small muted" style={{ margin: 0 }}>Locked ones are earned through achievements. See them on your profile.</p>}
       </section>
     </>
   );

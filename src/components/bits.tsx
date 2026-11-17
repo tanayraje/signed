@@ -6,21 +6,40 @@ import { go } from '../lib/router';
 import { useStore } from '../lib/store';
 
 /** A pressed wax seal: real wax image with the person's monogram embossed into it. */
-const ON_TOP = ['gold', 'glitter', 'twigs', 'petals'];
+const ON_TOP = ['gold', 'glitter', 'twigs', 'petals', 'marigold', 'cornflower', 'forgetmenot', 'chamomile', 'babysbreath', 'lavender', 'feather'];
+/** Mix-ins that sit under the wax and show around it (drawn at 150%, like the ribbon). */
+const UNDER = ['ribbon', 'bow', 'lace'];
+const underSrc = (m: string, wax: string) => (m === 'lace' ? '/assets/mix-lace.png' : `/assets/mix-${m}-${wax}.png`);
+const topSrc = (m: string, plume?: string) => (m === 'feather' ? `/assets/mix-feather-${plume || 'tawny'}.png` : `/assets/mix-${m}.png`);
+
+/** Patina: a seal ages as its owner writes. */
+export const PATINA: { at: number; name: string; note: string }[] = [
+  { at: 0, name: 'Fresh', note: 'Crisp edges and a matte pour.' },
+  { at: 10, name: 'Warmed', note: 'The wax has softened and picked up a gentle sheen.' },
+  { at: 25, name: 'Gilded', note: 'The rim around the initials is touched with gold.' },
+  { at: 50, name: 'Burnished', note: 'The raised wax has polished smooth, like it has been handled often.' },
+  { at: 100, name: 'Heirloom', note: 'The wax has deepened and caught a few flecks of gold leaf.' }
+];
+export const patinaStage = (sealed?: number | null) => { let s = 0; PATINA.forEach((p, i) => { if ((sealed ?? 0) >= p.at) s = i; }); return s; };
 
 /** Marks that can be pressed into the wax instead of letters (pre-rendered reliefs that sit on any wax). */
 export const MARKS: [string, string][] = [['owl', 'Owl'], ['letter', 'Letter'], ['quill', 'Quill and ink'], ['comet', 'Comet'], ['moon', 'Moon and stars'], ['sprig', 'Forget-me-nots'], ['rose', 'Rose'], ['key', 'Key']];
 const isMark = (k?: string | null) => !!k && MARKS.some(([m]) => m === k);
 
-export function Seal({ p, size = 56, label }: { p: Pick<Profile, 'wax' | 'monogram' | 'name'> & Partial<Pick<Profile, 'mixins' | 'edge' | 'mark'>>; size?: number; label?: string }) {
+export function Seal({ p, size = 56, label, stage }: { p: Pick<Profile, 'wax' | 'monogram' | 'name'> & Partial<Pick<Profile, 'mixins' | 'edge' | 'mark' | 'plume' | 'sealed'>>; size?: number; label?: string; stage?: number }) {
   const mono = (p.monogram || p.name.slice(0, 1) || '·').toUpperCase();
   const mix = p.mixins ?? [];
+  const clean = p.edge === 'clean' ? '-clean' : '';
+  const st = stage ?? patinaStage(p.sealed);
   return (
     <span className={`seal wax-${p.wax}`} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}
       style={{ width: size, height: size, fontSize: size * (mono.length > 1 ? 0.24 : 0.32) }}>
-      {mix.includes('ribbon') && <img className="ribbon" src={`/assets/mix-ribbon-${p.wax}.png`} alt="" />}
-      <img src={`/assets/wax-${p.wax}${p.edge === 'clean' ? '-clean' : ''}.png`} alt="" width={size} height={size} />
-      {ON_TOP.filter((m) => mix.includes(m)).map((m) => <img key={m} src={`/assets/mix-${m}.png`} alt="" width={size} height={size} />)}
+      {UNDER.filter((m) => mix.includes(m)).map((m) => <img key={m} className="ribbon" src={underSrc(m, p.wax)} alt="" />)}
+      <img src={`/assets/wax-${p.wax}${clean}.png`} alt="" width={size} height={size} style={st >= 4 ? { filter: 'brightness(.84) saturate(.92) sepia(.12)' } : undefined} />
+      {st >= 1 && <img src={`/assets/patina-${st >= 3 ? 'burnish' : 'warm'}${clean}.png`} alt="" width={size} height={size} />}
+      {ON_TOP.filter((m) => mix.includes(m)).map((m) => <img key={m} src={topSrc(m, p.plume)} alt="" width={size} height={size} />)}
+      {st >= 2 && <img src="/assets/patina-gilded.png" alt="" width={size} height={size} />}
+      {st >= 4 && <img src="/assets/patina-heirloom.png" alt="" width={size} height={size} />}
       <span className="mono">{isMark(p.mark) ? <img src={`/assets/mark-${p.mark}.png`} alt="" /> : <span>{mono}</span>}</span>
     </span>
   );

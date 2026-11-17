@@ -102,7 +102,7 @@ export default function App() {
   switch (r0) {
     case 'setup': screen = <Setup step={r1 === 'owl' ? 'owl' : 'seal'} />; break;
     case 'invite': screen = <Invite code={r1} />; break;
-    case 'friend': screen = <Friend id={r1} />; break;
+    case 'friend': screen = <Friend id={r1} section={r2} />; break;
     case 'pocket': screen = <Pocket id={r1} />; break;
     case 'write': screen = <Compose id={r1} />; break;
     case 'flight': screen = <Flight id={r1} />; break;

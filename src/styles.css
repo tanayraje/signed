@@ -537,7 +537,8 @@ label.rec { cursor: pointer }
 /* the send-off: fold, flap, seal, stamp, owl */
 .sendoff { position: fixed; inset: 0; z-index: 50; background: #262B32 url(/assets/slate.jpg) center/cover; color: #F4EFE6; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; cursor: pointer }
 .so-stage { position: relative; width: 300px; height: 360px; perspective: 900px }
-.so-carry { position: absolute; left: 30px; top: 170px; width: 240px; height: 156px; animation: so-away .8s 3.1s cubic-bezier(.5, 0, .7, .4) forwards }
+.so-carry { position: absolute; left: 30px; top: 170px; width: 240px; height: 156px }
+.sealed .so-carry { animation: so-away .8s 1.35s cubic-bezier(.5, 0, .7, .4) forwards }
 .so-env { position: absolute; inset: 0; background: #F6F0E4 url(/assets/envelope.jpg) center/cover; border-radius: 3px; box-shadow: 0 14px 30px rgba(0, 0, 0, .45) }
 .so-paper { position: absolute; left: 15px; top: -205px; width: 210px; height: 270px; transform-style: preserve-3d; animation: so-tuck .45s 1.0s cubic-bezier(.4, 0, .2, 1) forwards; z-index: 1 }
 .so-paper i { position: absolute; left: 0; right: 0; height: 90px; background: #FDFBF6 url(/assets/card.jpg) center/cover; box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
@@ -550,11 +551,24 @@ label.rec { cursor: pointer }
   clip-path: polygon(0 18%, 50% 62%, 100% 18%, 100% 100%, 0 100%); border-radius: 3px }
 .so-flap { position: absolute; left: 0; right: 0; top: 0; height: 96px; background: #EFE7D7 url(/assets/envelope.jpg) center/cover; clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform-origin: 50% 0; transform: rotateX(178deg); filter: brightness(.96); z-index: 0; animation: so-flap .4s 1.4s cubic-bezier(.3, .7, .3, 1) forwards }
-.so-seal { position: absolute; left: 50%; top: 68px; z-index: 4; margin-left: -29px; opacity: 0; transform: scale(2.6); animation: so-press .45s 1.85s cubic-bezier(.3, 1.4, .5, 1) forwards }
-.so-stamp { position: absolute; right: 12px; top: 10px; z-index: 4; opacity: 0; transform: scale(1.8) rotate(-14deg); animation: so-stick .35s 2.35s cubic-bezier(.3, 1.4, .5, 1) forwards }
-.so-to { position: absolute; left: 16px; bottom: 12px; z-index: 4; color: #2B2622; font-style: italic; font-size: 14px; opacity: 0; animation: so-fade .3s 2.2s forwards }
-.so-ring { position: absolute; left: 50%; top: 270px; width: 60px; height: 60px; margin: -30px; border-radius: 50%; border: 2px solid rgba(243, 227, 181, .7); opacity: 0; animation: so-ring .7s 2.15s ease-out forwards }
-.so-owl { position: absolute; left: 107px; top: 60px; z-index: 5; opacity: 0; transform: translate(220px, -300px) scale(.6) rotate(18deg); animation: so-swoop .65s 2.55s cubic-bezier(.2, .8, .3, 1) forwards, so-away-owl .8s 3.1s cubic-bezier(.5, 0, .7, .4) forwards }
+.so-seal { position: absolute; left: 50%; top: 68px; z-index: 4; width: 58px; height: 58px; margin-left: -29px; opacity: 0; transition: opacity .35s ease, transform 90ms linear }
+.so-seal.show { opacity: 1 }
+.so-bob { animation: so-bob 1.8s ease-in-out infinite }
+.so-pop { animation: so-pop .4s cubic-bezier(.3, 1.4, .5, 1) }
+.so-hold-ring { position: absolute; left: 98px; top: 215px; transform: rotate(-90deg); pointer-events: none }
+.so-hold { position: absolute; left: 20px; top: 150px; width: 260px; height: 200px; z-index: 6; border: 0; background: transparent; cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none }
+.so-hint { height: 72px; text-align: center; opacity: 0; transition: opacity .3s; pointer-events: none }
+.so-hint.in { opacity: 1 }
+.so-hint p { margin: 0 0 4px; font-size: 22px; color: #F3E3B5 }
+.so-hint .small { color: #BFB3A1; font-style: italic }
+.so-stamp { position: absolute; right: 12px; top: 10px; z-index: 4; opacity: 0; transform: scale(1.8) rotate(-14deg) }
+.sealed .so-stamp { animation: so-stick .35s .35s cubic-bezier(.3, 1.4, .5, 1) forwards }
+.so-to { position: absolute; left: 16px; bottom: 12px; z-index: 4; color: #2B2622; font-style: italic; font-size: 14px; opacity: 0 }
+.sealed .so-to { animation: so-fade .3s .3s forwards }
+.so-ring { position: absolute; left: 50%; top: 267px; width: 60px; height: 60px; margin: -30px; border-radius: 50%; border: 2px solid rgba(243, 227, 181, .7); opacity: 0 }
+.sealed .so-ring { animation: so-ring .7s .05s ease-out forwards }
+.so-owl { position: absolute; left: 107px; top: 60px; z-index: 5; opacity: 0; transform: translate(220px, -300px) scale(.6) rotate(18deg) }
+.sealed .so-owl { animation: so-swoop .65s .7s cubic-bezier(.2, .8, .3, 1) forwards, so-away-owl .8s 1.35s cubic-bezier(.5, 0, .7, .4) forwards }
 .so-words { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-40%); text-align: center; opacity: 0; pointer-events: none; transition: opacity .5s, transform .5s }
 .so-words.in { opacity: 1; transform: translateY(-50%) }
 .so-words h1 { font-size: 30px; margin-bottom: 8px; color: #F3E3B5 }
@@ -564,14 +578,15 @@ label.rec { cursor: pointer }
 @keyframes so-fold-top { to { transform: rotateX(-180deg) } }
 @keyframes so-tuck { to { transform: translateY(150px) } }
 @keyframes so-flap { 0% { z-index: 0 } 1% { z-index: 3 } 100% { z-index: 3; transform: rotateX(0) } }
-@keyframes so-press { 0% { opacity: 0; transform: scale(2.6) } 60% { opacity: 1; transform: scale(.9) } 100% { opacity: 1; transform: scale(1) } }
+@keyframes so-bob { 50% { transform: translateY(-5px) } }
+@keyframes so-pop { 0% { transform: scale(.9) } 100% { transform: scale(1) } }
 @keyframes so-stick { to { opacity: 1; transform: scale(1) rotate(5deg) } }
 @keyframes so-fade { to { opacity: 1 } }
 @keyframes so-ring { 0% { opacity: .9; transform: scale(.6) } 100% { opacity: 0; transform: scale(2.2) } }
 @keyframes so-swoop { to { opacity: 1; transform: translate(0, 0) scale(1) rotate(-4deg) } }
 @keyframes so-away { to { transform: translate(-240px, -620px) scale(.35) rotate(-14deg); opacity: .0 } }
 @keyframes so-away-owl { from { opacity: 1; transform: translate(0, 0) scale(1) rotate(-4deg) } to { opacity: 0; transform: translate(-240px, -620px) scale(.35) rotate(-14deg) } }
-.sendoff.still .so-stage { display: none }
+.sendoff.still .so-stage, .sendoff.still .so-hint { display: none }
 .sendoff.still .so-words { opacity: 1; transform: translateY(-50%) }
 
 /* a picked photo under the cutter, to drag and pinch into place */
@@ -658,3 +673,33 @@ label.rec { cursor: pointer }
 .night .sh-stack { filter: brightness(.55) saturate(.7) drop-shadow(0 calc(var(--u) * 4) calc(var(--u) * 3) rgba(0, 0, 0, .65)) }
 .night .sh-in > svg.sh-feather { filter: brightness(.55) drop-shadow(0 calc(var(--u) * 1.5) calc(var(--u) * 1) rgba(0, 0, 0, .85)) }
 .night .sh-letter { filter: brightness(.7) }
+
+/* seal patina and achievements */
+.patina { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px }
+.patina b { color: var(--ink); font-weight: 600 }
+.patina-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px }
+.patina-step { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted) }
+.patina-step .small { font-size: 12px }
+.patina-seal { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1.5px solid transparent }
+.patina-step.now { color: var(--ink); font-weight: 600 }
+.patina-step.now .patina-seal { border-color: var(--ink) }
+.patina-step.later { opacity: .45 }
+.patina .bar, .ach .bar { height: 5px; border-radius: 3px }
+.patina .bar i, .ach .bar i { height: 5px }
+.ach-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px }
+.ach { display: flex; flex-direction: column; gap: 6px; padding: 14px 12px; border-radius: 14px; border: 1px dashed #CFC5B6; line-height: 1.3 }
+.ach.done { border: 1px solid var(--line); background: var(--card) url(/assets/card.jpg) center/cover; box-shadow: 0 2px 6px rgba(60, 44, 30, .08) }
+.ach b { font-weight: 600 }
+.ach-icon { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #ECE5D9; color: var(--muted); margin-bottom: 2px }
+.ach.done .ach-icon { background: radial-gradient(circle at 38% 32%, #B5544C, #7A2420 55%, #561713); color: #F6E9D8; box-shadow: 0 1px 1px rgba(0, 0, 0, .25), 0 3px 6px rgba(0, 0, 0, .15), inset 0 -2px 3px rgba(0, 0, 0, .25) }
+.ach-prog { display: flex; align-items: center; gap: 8px }
+.ach-prog .bar { flex: 1 }
+.ach-prog .bar i { background: var(--muted) }
+.ach-reward { display: flex; align-items: center; gap: 6px; margin-top: auto; font-size: 13px; color: #7A5A1E }
+.ach-reward i { width: 7px; height: 7px; border-radius: 50%; background: #C9A24A; flex: none }
+.ach-shared { align-self: flex-start; font-size: 12px; font-weight: 600; color: #2F5D50; background: #E3ECE7; border-radius: 10px; padding: 2px 8px }
+.friend-ach { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px }
+.friend-ach button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px; color: inherit; font: inherit; cursor: pointer }
+.friend-ach-name { font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.chip.locked { color: var(--muted); border-style: dashed; opacity: .8 }
+body.ench .ach.done .ach-icon { background: var(--gold); color: #141A2E }

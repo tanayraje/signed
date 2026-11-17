@@ -62,7 +62,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       supabase.from('stamps').select('*').order('created_at', { ascending: false }),
       supabase.from('wall_pins').select('*').order('created_at', { ascending: false })
     ]);
-    if (meRow) setMe(meRow as Profile);
+    // patina needs how many letters you've sealed; the server counts them, or count the ones on this phone
+    if (meRow) setMe({ ...(meRow as Profile), sealed: (meRow as Profile).sealed ?? (mail ?? []).filter((l: Letter) => l.sender === uid).length });
     const mine = (settings ?? []).filter((s: FriendSettings) => s.owner === uid);
     const ids = mine.map((s: FriendSettings) => s.friend);
     let people: Profile[] = [];
