@@ -600,10 +600,10 @@ label.rec { cursor: pointer }
 .sh-perch > img.sh-perch-owl { left: 23px; bottom: 16px; height: 90px; width: auto; max-width: none; filter: drop-shadow(4px 6px 4px rgba(43, 30, 18, .4)) }
 .sh-perch > svg.sh-perch-feather { left: -66px; bottom: 1px; width: 64px; height: 22px; transform-origin: 50% 100%; transform: perspective(160px) rotateX(46deg) rotate(6deg); filter: drop-shadow(0 1.5px 1px rgba(43, 30, 18, .6)) }
 .sh-perch-string { left: 30px; bottom: 2px; width: 1px; height: 9px; background: #A8926A }
-.sh-perch-tag { left: -6px; top: calc(100% - 2px); width: 72px; padding: 8px 4px 5px; box-sizing: border-box; transform: rotate(-5deg); transform-origin: 50% 0; text-align: center; line-height: 1.15; color: #2B2622;
+.sh-perch-tag { left: 30px; top: calc(100% - 2px); width: max-content; min-width: 72px; max-width: 150px; padding: 8px 8px 5px; box-sizing: border-box; transform: translateX(-50%) rotate(-5deg); transform-origin: 50% 0; text-align: center; line-height: 1.15; color: #2B2622;
   clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 9px, 100% 100%, 0 100%, 0 9px); background: #FBF7F0 url(/assets/envelope.jpg) center/cover }
 .sh-perch-tag i { display: block; width: 5px; height: 5px; margin: 0 auto 2px; border-radius: 50%; background: #3A2A1D }
-.sh-perch-tag b { display: block; font-size: 13px; font-style: italic; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.sh-perch-tag b { display: block; font-size: 13px; font-style: italic; font-weight: 600; overflow-wrap: anywhere }
 .sh-perch-tag small { display: block; font-size: 12px; color: #5E554C }
 .sh-lid { height: 7px; margin: 0 4px; background: linear-gradient(180deg, rgba(255, 236, 205, .55), rgba(255, 236, 205, .15) 60%, rgba(0, 0, 0, .2)), #7B5636 url(/assets/wood-h.jpg) center/520px; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 100%, 0 100%) }
 .shelf { position: relative; z-index: 1; margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); box-shadow: 0 16px 24px rgba(43, 30, 18, .38) }
