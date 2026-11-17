@@ -143,8 +143,10 @@ function WallCallouts() {
           <Owl p={next.out ? me : nf} width={36} />
           <span className="grow stack" style={{ gap: 0 }}>
             <span style={{ fontWeight: 600 }}>{flights.length === 1 ? (next.out ? `Your letter to ${nf.name} is in the air` : `${nf.name}’s letter is in the air`) : `${flights.length} letters in the air`}</span>
-            {(() => { const w = flightWhere(next, me, nf); return w && <span className="small owl-where">{next.out ? me.owl_name : nf.owl_name} is {w}</span>; })()}
-            <span className="small muted">{next.out ? `Lands with ${nf.name}` : 'Reaches you'} in {timeLeft(next.arrive_at)}{flights.length > 1 ? ', the next one' : ''}</span>
+            <span className="small owl-where">
+              {(() => { const w = flightWhere(next, me, nf); return w && <span>{next.out ? me.owl_name : nf.owl_name} is {w}</span>; })()}
+              <span>{next.out ? `Lands with ${nf.name}` : 'Reaches you'} in {timeLeft(next.arrive_at)}{flights.length > 1 ? ', the next one' : ''}</span>
+            </span>
           </span>
         </button>
       )}
