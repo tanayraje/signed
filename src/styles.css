@@ -590,10 +590,23 @@ label.rec { cursor: pointer }
 .hist-note { font-size: 12.5px; font-style: italic; line-height: 1.3 }
 
 /* friends: the sorting shelf. Everything inside a pigeonhole is sized in --u, 1/181 of the hole's width. */
-.sh-top { position: relative; min-height: 84px; padding-right: 100px }
+.sh-top { position: relative; z-index: 3; min-height: 96px; padding-right: 136px }
 .sh-top h1 { line-height: 44px }
-.sh-mine { position: absolute; right: 18px; bottom: -20px; height: 80px; width: auto; z-index: 3; filter: drop-shadow(0 3px 3px rgba(43, 30, 18, .45)) }
-.shelf { margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); box-shadow: 0 16px 24px rgba(43, 30, 18, .38) }
+.sh-perch { position: absolute; right: 6px; bottom: -22px; width: 120px; height: 106px; pointer-events: none }
+.sh-perch > * { position: absolute }
+.sh-foot { left: 6px; bottom: 0; width: 12px; height: 13px; border-radius: 2px 2px 1px 1px; background: linear-gradient(90deg, rgba(255, 230, 190, .35), rgba(255, 230, 190, 0) 40%, rgba(0, 0, 0, .4)), #6B4A2E url(/assets/wood-v.jpg) center/200px; box-shadow: 0 3px 3px rgba(43, 30, 18, .45) }
+.sh-foot.r { left: 102px }
+.sh-rail { left: 2px; bottom: 9px; width: 116px; height: 9px; border-radius: 5px; background: linear-gradient(90deg, rgba(0, 0, 0, .3) 0, rgba(0, 0, 0, 0) 5px, rgba(0, 0, 0, 0) calc(100% - 5px), rgba(0, 0, 0, .3)), linear-gradient(180deg, #D2A672 0, #AE7F4E 30%, #74502F 75%, #3F2A18); box-shadow: 0 6px 5px rgba(43, 30, 18, .35) }
+.sh-perch > img.sh-perch-owl { left: 23px; bottom: 16px; height: 90px; width: auto; max-width: none; filter: drop-shadow(4px 6px 4px rgba(43, 30, 18, .4)) }
+.sh-perch > svg.sh-perch-feather { left: -66px; bottom: 1px; width: 64px; height: 22px; transform-origin: 50% 100%; transform: perspective(160px) rotateX(46deg) rotate(6deg); filter: drop-shadow(0 1.5px 1px rgba(43, 30, 18, .6)) }
+.sh-perch-string { left: 30px; bottom: 2px; width: 1px; height: 9px; background: #A8926A }
+.sh-perch-tag { left: -6px; top: calc(100% - 2px); width: 72px; padding: 8px 4px 5px; box-sizing: border-box; transform: rotate(-5deg); transform-origin: 50% 0; text-align: center; line-height: 1.15; color: #2B2622;
+  clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 9px, 100% 100%, 0 100%, 0 9px); background: #FBF7F0 url(/assets/envelope.jpg) center/cover }
+.sh-perch-tag i { display: block; width: 5px; height: 5px; margin: 0 auto 2px; border-radius: 50%; background: #3A2A1D }
+.sh-perch-tag b { display: block; font-size: 13px; font-style: italic; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.sh-perch-tag small { display: block; font-size: 12px; color: #5E554C }
+.sh-lid { height: 7px; margin: 0 4px; background: linear-gradient(180deg, rgba(255, 236, 205, .55), rgba(255, 236, 205, .15) 60%, rgba(0, 0, 0, .2)), #7B5636 url(/assets/wood-h.jpg) center/520px; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 100%, 0 100%) }
+.shelf { position: relative; z-index: 1; margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); box-shadow: 0 16px 24px rgba(43, 30, 18, .38) }
 .sh-row { display: flex; gap: 8px; padding: 0 10px; background: linear-gradient(90deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, 0) 10px, rgba(0, 0, 0, 0) calc(100% - 10px), rgba(0, 0, 0, .28)), #6B4A2E url(/assets/wood-v.jpg) center/360px }
 .sh-plank { position: relative; z-index: 2; height: 30px; display: flex; gap: 8px; padding: 0 10px; background: linear-gradient(180deg, rgba(255, 232, 196, .42) 0, rgba(255, 232, 196, .08) 3px, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, .38)), #7B5636 url(/assets/wood-h.jpg) center/520px; box-shadow: 0 10px 14px rgba(0, 0, 0, .6) }
 .sh-plank.crown { height: 14px; box-shadow: 0 8px 12px rgba(0, 0, 0, .6) }

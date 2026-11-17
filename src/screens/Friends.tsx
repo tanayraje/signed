@@ -44,10 +44,10 @@ function Stack({ n, under }: { n: number; under: boolean }) {
 }
 
 const VANE = 'M22 27.5C34 12 62 3 96 3C106 3 113 6 116 10C108 18 92 25 70 29C52 32 34 33 22 27.5Z';
-function Feather({ id, plume }: { id: string; plume: Plume }) {
+function Feather({ id, plume, className = 'sh-feather' }: { id: string; plume: Plume; className?: string }) {
   const [dark, mid, light, bars] = PLUME[plume] ?? PLUME.tawny;
   return (
-    <svg className="sh-feather" viewBox="0 0 120 40" aria-hidden="true">
+    <svg className={className} viewBox="0 0 120 40" aria-hidden="true">
       <defs>
         <linearGradient id={`fg-${id}`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor={dark} /><stop offset=".55" stopColor={mid} /><stop offset="1" stopColor={light} /></linearGradient>
         <clipPath id={`fc-${id}`}><path d={VANE} /></clipPath>
@@ -117,13 +117,14 @@ export default function Friends() {
     }
   }
 
-  // My own owl is out whenever one of my letters is in the air.
-  const mine = flights.find((f) => f.out);
-  const mineTo = mine ? friends.find((f) => f.profile.id === mine.friendId)?.profile : undefined;
+  // My own owl leaves its perch whenever one of my letters is in the air. The tag names the next to land.
+  const outs = flights.filter((f) => f.out).sort((a, b) => new Date(a.arrive_at).getTime() - new Date(b.arrive_at).getTime());
+  const mine = outs[0];
+  const mineTo = mine ? friends.find((f) => f.profile.id === mine.friendId)?.profile.name || 'a friend' : '';
+  const tagWho = outs.length > 1 ? `${mineTo} +${outs.length - 1}` : `To ${mineTo}`;
   const coming = flights.filter((f) => !f.out);
   let line = friends.length ? 'Every owl is home.' : 'No one to write to yet.';
-  if (mine) line = `${me.owl_name} is flying to ${mineTo?.name || 'a friend'}. Lands in ${timeLeft(mine.arrive_at)}.`;
-  else if (coming.length === 1) line = 'One owl is on its way to you.';
+  if (coming.length === 1) line = 'One owl is on its way to you.';
   else if (coming.length > 1) line = `${coming.length} owls are on their way to you.`;
 
   type Slot = { kind: 'friend'; f: Profile } | { kind: 'invite' } | { kind: 'bare' };
@@ -181,12 +182,26 @@ export default function Friends() {
 
   return (
     <main className="app">
-      <div className="sh-top" style={mine ? { paddingRight: 0 } : undefined}>
+      <div className="sh-top">
         <h1>Friends</h1>
         <p className="small muted" style={{ fontStyle: 'italic' }}>{line}</p>
-        {!mine && <img className="sh-mine" src={owlSrc(me)} alt={`${me.owl_name}, your owl, perched on top of the shelf`} />}
+        <div className="sh-perch">
+          <span className="sh-foot" aria-hidden="true" /><span className="sh-foot r" aria-hidden="true" /><span className="sh-rail" aria-hidden="true" />
+          {mine ? (
+            <>
+              <Feather id="mine" plume={me.plume} className="sh-perch-feather" />
+              <span className="sh-perch-string" aria-hidden="true" />
+              <span className="sh-perch-tag" role="img" aria-label={`${me.owl_name} is out delivering to ${outs.length > 1 ? `${mineTo} and ${outs.length - 1} more` : mineTo}. The next letter lands in ${timeLeft(mine.arrive_at)}.`}>
+                <i /><b>{tagWho}</b><small>{timeLeft(mine.arrive_at)}</small>
+              </span>
+            </>
+          ) : (
+            <img className="sh-perch-owl" src={owlSrc(me)} alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
+          )}
+        </div>
       </div>
       <div className="shelf">
+        <div className="sh-lid" aria-hidden="true" />
         <div className="sh-plank crown" />
         {rows.map((row, r) => (
           <div key={r}>
