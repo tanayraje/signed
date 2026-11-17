@@ -3,22 +3,17 @@ import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { DAYS, ago, timeLeft } from '../lib/format';
 import { km } from '../lib/geo';
-import { Icon, Owl, Seal, Stamp } from '../components/bits';
+import { Icon, Owl, PATINA, Seal, Stamp, patinaStage } from '../components/bits';
 import FlightMap from '../components/FlightMap';
 import { supabase } from '../lib/supabase';
 import { AchievementGrid, PatinaCard } from '../components/Achievements';
-import { localStats, useSealStats } from '../lib/achievements';
+import { ACHIEVEMENTS, localStats, useSealStats } from '../lib/achievements';
 import type { Incoming, Letter, Profile } from '../lib/types';
 
 export default function Friend({ id, section }: { id: string; section?: string }) {
   const { me, friend, friends, letters, incoming, session, saveFriendSettings } = useStore();
   const theirStats = useSealStats(id);
   const myStats = useSealStats(session?.user.id, session ? localStats(session.user.id, letters, friends) : undefined);
-  useEffect(() => {
-    if (section !== 'achievements') return;
-    const t = window.setTimeout(() => document.getElementById('friend-achievements')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
-    return () => window.clearTimeout(t);
-  }, [section, id]);
   const [scrapCount, setScrapCount] = useState(0);
   const [, tick] = useState(0);
   useEffect(() => { const t = window.setInterval(() => tick((n) => n + 1), 1000); return () => window.clearInterval(t); }, []);
@@ -27,6 +22,22 @@ export default function Friend({ id, section }: { id: string; section?: string }
   }, [id]);
   const f = friend(id);
   if (!me || !f) return <main className="app"><p className="muted">Loading…</p></main>;
+  if (section === 'achievements') {
+    const fp = f.profile;
+    return (
+      <main className="app">
+        <div className="top">
+          <button className="icon" onClick={() => go(`friend/${fp.id}`)} aria-label={`Back to ${fp.name}`}>{Icon.back}</button>
+          <h1 className="grow">{fp.name}’s seal</h1>
+        </div>
+        <div className="row" style={{ justifyContent: 'center' }}><Seal p={{ ...fp, sealed: theirStats?.sealed ?? fp.sealed }} size={150} label={`${fp.name}'s wax seal`} /></div>
+        <PatinaCard p={{ ...fp, sealed: theirStats?.sealed ?? fp.sealed }} who={fp.name} />
+        {theirStats
+          ? <AchievementGrid stats={theirStats} mine={myStats} />
+          : <p className="small muted" style={{ margin: 0 }}>Couldn’t load {fp.name}’s achievements just now. Try again in a moment.</p>}
+      </main>
+    );
+  }
   const uid = session!.user.id;
   const p = f.profile;
   const now = Date.now();
@@ -140,12 +151,14 @@ export default function Friend({ id, section }: { id: string; section?: string }
         </div>
       </div>
       <History me={me} p={p} uid={uid} letters={letters} incoming={inc} now={now} />
-      <section id="friend-achievements" className="stack" style={{ scrollMarginTop: 16 }}>
-        {(theirStats || p.sealed != null) && <PatinaCard p={{ ...p, sealed: theirStats?.sealed ?? p.sealed }} who={p.name} />}
-        {theirStats
-          ? <AchievementGrid stats={theirStats} mine={myStats} collapsed />
-          : <p className="small muted" style={{ margin: 0 }}>{p.name}’s achievements will show here soon.</p>}
-      </section>
+      <button className="item" onClick={() => go(`friend/${p.id}/achievements`)}>
+        <Seal p={{ ...p, sealed: theirStats?.sealed ?? p.sealed }} size={36} />
+        <span className="grow stack" style={{ gap: 0 }}>
+          <span>{p.name}’s seal and achievements</span>
+          <span className="small muted">{theirStats ? `${PATINA[patinaStage(theirStats.sealed)].name} seal · ${ACHIEVEMENTS.filter((a) => a.done(theirStats)).length} of ${ACHIEVEMENTS.length} achievements` : 'Patina and milestones'}</span>
+        </span>
+        <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--muted)' }}>›</span>
+      </button>
       <div className="foot">
         <button className="btn primary" onClick={() => go(`write/${p.id}`)}>Write a letter</button>
         <button className="btn" onClick={() => go(`pocket/${p.id}`)}>Drop a scrap</button>
