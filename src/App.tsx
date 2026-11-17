@@ -8,7 +8,6 @@ import SignIn, { restorePlace } from './screens/SignIn';
 import Setup from './screens/Setup';
 import Friends from './screens/Friends';
 import Friend from './screens/Friend';
-import Pocket from './screens/Pocket';
 import Compose from './screens/Compose';
 import Flight, { PairMap } from './screens/Flight';
 import Opening from './screens/Opening';
@@ -103,7 +102,6 @@ export default function App() {
     case 'setup': screen = <Setup step={r1 === 'owl' ? 'owl' : 'seal'} />; break;
     case 'invite': screen = <Invite code={r1} />; break;
     case 'friend': screen = <Friend id={r1} section={r2} />; break;
-    case 'pocket': screen = <Pocket id={r1} />; break;
     case 'write': screen = <Compose id={r1} />; break;
     case 'flight': screen = <Flight id={r1} />; break;
     case 'open': screen = <Opening id={r1} />; break;

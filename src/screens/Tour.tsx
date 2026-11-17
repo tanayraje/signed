@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { FlyingOwl, Owl, Seal, Wordmark } from '../components/bits';
 
-/** A short swipeable welcome: the five things worth knowing. Shown once, and again from Profile. */
+/** A short swipeable welcome: the four things worth knowing. Shown once, and again from Profile. */
 export default function Tour() {
   const { me, saveMe } = useStore();
   // seen once is enough: mark it as soon as the tour opens, so it never comes back on its own
@@ -27,11 +27,6 @@ export default function Tour() {
       art: <div className="tour-art"><div className="tour-env"><Seal p={me} size={64} /></div><div className="tour-owl"><Owl p={me} width={58} /></div></div>,
       title: 'Lift the seal',
       text: 'When a letter lands, press and hold the seal to open it. Pin it to your wall, or fold it into the trunk.'
-    },
-    {
-      art: <div className="tour-art"><span className="wm-paper tour-scrap" /><span className="wm-paper tour-scrap two" /><span className="wm-env tour-mini"><i /></span></div>,
-      title: 'Scraps for post day',
-      text: 'Drop little things into a friend’s pocket through the week: a line, a photo, a question. They leave together on post day.'
     },
     {
       art: <div className="tour-art"><img src="/assets/stamp-owlpost.png" alt="" className="tour-stamp" /><img src="/assets/stamp-forgetmenot.png" alt="" className="tour-stamp two" /></div>,

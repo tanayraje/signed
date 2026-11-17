@@ -3,6 +3,8 @@ import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { timeLeft } from '../lib/format';
 import { Owl, Seal } from './bits';
+import { owlAt, whereabouts } from '../lib/geo';
+import type { Profile } from '../lib/types';
 
 export interface Flight { id: string; friendId: string; out: boolean; sent_at: string; arrive_at: string }
 
@@ -18,6 +20,14 @@ export function useFlights(): Flight[] {
   const inc = incoming.filter((l) => new Date(l.arrive_at).getTime() > now)
     .map((l) => ({ id: l.id, friendId: l.sender, out: false, sent_at: l.sent_at, arrive_at: l.arrive_at }));
   return [...out, ...inc].sort((a, b) => new Date(a.arrive_at).getTime() - new Date(b.arrive_at).getTime());
+}
+
+/** Where the owl on this flight is now, in words ("over the Arabian Sea"), placed exactly as the map draws it. */
+export function flightWhere(f: Flight, me: Profile, p: Profile): string | null {
+  if (me.last_lat == null || me.last_lon == null || p.last_lat == null || p.last_lon == null) return null;
+  const t = progress(f);
+  const [lat, lon] = owlAt([me.last_lat, me.last_lon], [p.last_lat, p.last_lon], f.out ? t : 1 - t);
+  return whereabouts(lat, lon);
 }
 
 const progress = (f: Flight) => {
@@ -44,6 +54,7 @@ export default function InTheAir({ flights }: { flights: Flight[] }) {
                   <span style={{ fontWeight: 600 }}>{f.out ? `To ${p.name}` : `From ${p.name}`}</span>
                 </span>
                 <span className="small muted">{f.out ? `${me.owl_name} lands in ${timeLeft(f.arrive_at)}` : `${p.owl_name} reaches you in ${timeLeft(f.arrive_at)}`}</span>
+                {(() => { const w = flightWhere(f, me, p); return w && <span className="small owl-where">Now {w}</span>; })()}
                 <span className="bar"><i style={{ width: `${progress(f) * 100}%`, background: f.out ? 'var(--wax)' : '#2F5D50' }} /></span>
               </span>
             </button>

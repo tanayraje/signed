@@ -2,7 +2,7 @@ import { useStore } from '../lib/store';
 import { go } from '../lib/router';
 import { longDate } from '../lib/format';
 import { CutStamp, MediaImg, Nav, Owl, Seal, Wordmark } from '../components/bits';
-import { useFlights } from '../components/InTheAir';
+import { flightWhere, useFlights } from '../components/InTheAir';
 import { timeLeft } from '../lib/format';
 import { dayKey, lettersOn } from '../lib/days';
 import { SealPair } from './Seals';
@@ -27,7 +27,7 @@ export default function Wall() {
       <SealWeek />
       <WallCallouts />
       <div className="wall">
-        {pinned.length === 0 && pins.length === 0 && <p className="muted center" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>Pin a letter, or just its Polaroid, from its reading view and it lands here.</p>}
+        {pinned.length === 0 && pins.length === 0 && <p className="muted center" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>Pin a letter, a Polaroid, or just a line you love from its reading view and it lands here.</p>}
         {[
           ...pins.map((p) => ({ key: `p-${p.id}`, at: p.created_at, letter: p.letter_id, photo: p })),
           ...pinned.map((l) => ({ key: `l-${l.id}`, at: l.opened_at ?? l.sent_at, letter: l.id, photo: null as null | typeof pins[number] }))
@@ -36,8 +36,10 @@ export default function Wall() {
           const f = l ? friend(l.sender)?.profile : undefined;
           return (
             <button key={it.key} className="pinned" style={{ transform: `rotate(${((i % 3) - 1) * 3}deg)` }} onClick={() => go(`read/${it.letter}/wall`)}>
-              <span className="tack" style={{ background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,.5), ${TACKS[i % 4]} 70%)` }} />
-              {it.photo ? (
+              {!it.photo?.quote && <span className="tack" style={{ background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,.5), ${TACKS[i % 4]} 70%)` }} />}
+              {it.photo?.quote ? (
+                <NoteSlip quote={it.photo.quote} from={f?.name} i={i} />
+              ) : it.photo?.media_path ? (
                 <figure className="polaroid" style={{ width: '100%' }}><MediaImg path={it.photo.media_path} alt={it.photo.caption || 'Polaroid'} /><figcaption>{it.photo.caption}</figcaption></figure>
               ) : (
                 <div className="mini" style={{ minHeight: 110 }}>
@@ -98,6 +100,20 @@ export default function Wall() {
   );
 }
 
+/** A line from a letter, torn out and taped to the cork. */
+function NoteSlip({ quote, from, i }: { quote: string; from?: string; i: number }) {
+  const short = quote.length > 160 ? `${quote.slice(0, 157).trimEnd()}…` : quote;
+  return (
+    <div className={`note-slip tone-${i % 3}`}>
+      <span className="note-tape" aria-hidden="true" />
+      <div className="note-paper">
+        <p className="note-quote">{short}</p>
+        {from && <span className="note-from">{from}</span>}
+      </div>
+    </div>
+  );
+}
+
 /** On the way home: letters waiting to be opened, then anything still in the air. */
 function WallCallouts() {
   const { me, letters, friend, session } = useStore();
@@ -127,6 +143,7 @@ function WallCallouts() {
           <Owl p={next.out ? me : nf} width={36} />
           <span className="grow stack" style={{ gap: 0 }}>
             <span style={{ fontWeight: 600 }}>{flights.length === 1 ? (next.out ? `Your letter to ${nf.name} is in the air` : `${nf.name}’s letter is in the air`) : `${flights.length} letters in the air`}</span>
+            {(() => { const w = flightWhere(next, me, nf); return w && <span className="small owl-where">{next.out ? me.owl_name : nf.owl_name} is {w}</span>; })()}
             <span className="small muted">{next.out ? `Lands with ${nf.name}` : 'Reaches you'} in {timeLeft(next.arrive_at)}{flights.length > 1 ? ', the next one' : ''}</span>
           </span>
         </button>

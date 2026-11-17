@@ -242,7 +242,7 @@ function Layer({ M, from, to, fromLabel, toLabel, fromPin, toPin, owls, W, H, in
         <div className="zmap-card" role="group" aria-label="Flight details">
           <div className="row" style={{ alignItems: 'flex-start', gap: 8 }}>
             <div className="grow stack" style={{ gap: 2 }}>
-              <span style={{ fontWeight: 600, fontSize: 17 }}>{cur.name ?? 'The owl'}, {where}</span>
+              <span style={{ fontWeight: 600, fontSize: 17 }}>{cur.name ?? 'The owl'} is {where}</span>
               {cur.note && <span className="small muted">{cur.note}</span>}
             </div>
             <button type="button" className="icon" onClick={() => { setSel(null); setFollow(false); }} aria-label="Close flight details">{Icon.close}</button>

@@ -6,7 +6,7 @@ export function km(a: [number, number], b: [number, number]): number {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-// Places used to name where someone is ("near Pune"). Coarse on purpose.
+// Places drawn on the map as you zoom in. Coarse on purpose.
 export const PLACES: [string, number, number][] = [
   ['Bengaluru', 12.97, 77.59], ['Mumbai', 19.08, 72.88], ['Delhi', 28.61, 77.21], ['Kolkata', 22.57, 88.36],
   ['Chennai', 13.08, 80.27], ['Hyderabad', 17.39, 78.49], ['Pune', 18.52, 73.86], ['Ahmedabad', 23.02, 72.57],
@@ -22,14 +22,7 @@ export const PLACES: [string, number, number][] = [
   ['Sydney', -33.87, 151.21], ['Tokyo', 35.68, 139.69]
 ];
 
-export function placeName(lat: number, lon: number): string {
-  let best = PLACES[0], bd = Infinity;
-  for (const p of PLACES) {
-    const d = km([lat, lon], [p[1], p[2]]);
-    if (d < bd) { bd = d; best = p; }
-  }
-  return bd < 60 ? best[0] : `${best[0]} region`;
-}
+export { placeName, whereabouts } from '../../supabase/functions/_shared/where';
 
 // Two hand-drawn maps in Web Mercator: India up close, and the world for friends further away.
 export interface MapDef { img: string; lon0: number; lon1: number; lat0: number; lat1: number; vw: number; vh: number; px: number }
@@ -62,16 +55,6 @@ export function unproject(x: number, y: number, m: MapDef = INDIA): [number, num
   return [((2 * Math.atan(Math.exp(yy)) - Math.PI / 2) * 180) / Math.PI, m.lon0 + x * (m.lon1 - m.lon0)];
 }
 
-/** Roughly where a point is, in words: "over Pune", "near Nagpur", or far from any place we know. */
-export function whereabouts(lat: number, lon: number): string {
-  let best = PLACES[0], bd = Infinity;
-  for (const p of PLACES) {
-    const d = km([lat, lon], [p[1], p[2]]);
-    if (d < bd) { bd = d; best = p; }
-  }
-  return bd < 60 ? `over ${best[0]}` : bd < 400 ? `near ${best[0]}` : 'far from anywhere';
-}
-
 /** A gently wandering path between two map points; t in 0..1. Distance is still the straight line. */
 export function wander(a: [number, number], b: [number, number], t: number): [number, number] {
   const dx = b[0] - a[0], dy = b[1] - a[1];
@@ -79,4 +62,15 @@ export function wander(a: [number, number], b: [number, number], t: number): [nu
   const nx = -dy / L, ny = dx / L;
   const w = Math.sin(t * Math.PI * 3) * 0.018 * Math.sin(t * Math.PI);
   return [a[0] + dx * t + nx * w, a[1] + dy * t + ny * w];
+}
+
+/**
+ * Where an owl is right now, as [lat, lon]: the same wandering path the map draws,
+ * or a straight line when the two of you don't share a map. `t` is 0..1 from the sender.
+ */
+export function owlAt(from: [number, number], to: [number, number], t: number): [number, number] {
+  const m = pickMap(from, to);
+  if (!m) return [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t];
+  const q = wander(project(from[0], from[1], m), project(to[0], to[1], m), t);
+  return unproject(q[0], q[1], m);
 }

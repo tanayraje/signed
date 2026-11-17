@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
-import { DAYS, ago, timeLeft } from '../lib/format';
+import { ago, timeLeft } from '../lib/format';
 import { km } from '../lib/geo';
 import { Icon, Owl, PATINA, Seal, Stamp, patinaStage } from '../components/bits';
 import FlightMap from '../components/FlightMap';
-import { supabase } from '../lib/supabase';
 import { AchievementGrid, PatinaCard } from '../components/Achievements';
 import { ACHIEVEMENTS, localStats, useSealStats } from '../lib/achievements';
 import type { Incoming, Letter, Profile } from '../lib/types';
@@ -14,12 +13,8 @@ export default function Friend({ id, section }: { id: string; section?: string }
   const { me, friend, friends, letters, incoming, session, saveFriendSettings } = useStore();
   const theirStats = useSealStats(id);
   const myStats = useSealStats(session?.user.id, session ? localStats(session.user.id, letters, friends) : undefined);
-  const [scrapCount, setScrapCount] = useState(0);
   const [, tick] = useState(0);
   useEffect(() => { const t = window.setInterval(() => tick((n) => n + 1), 1000); return () => window.clearInterval(t); }, []);
-  useEffect(() => {
-    void supabase.from('scraps').select('id', { count: 'exact', head: true }).eq('friend', id).then(({ count }) => setScrapCount(count ?? 0));
-  }, [id]);
   const f = friend(id);
   if (!me || !f) return <main className="app"><p className="muted">Loading…</p></main>;
   if (section === 'achievements') {
@@ -85,7 +80,7 @@ export default function Friend({ id, section }: { id: string; section?: string }
     hero = (
       <section className="stone stack center" style={{ padding: '22px 16px', gap: 8 }}>
         <p>Nothing in the air right now.</p>
-        <p className="small muted">Write a letter, or drop a scrap in your pocket for {DAYS[f.mine.post_day]}.</p>
+        <p className="small muted">Write {p.name} a letter and send your owl off.</p>
       </section>
     );
   }
@@ -123,18 +118,13 @@ export default function Friend({ id, section }: { id: string; section?: string }
       </div>
       {hero}
       {mapCard}
-      <div className="row" style={{ alignItems: 'stretch' }}>
-        <button className="card grow stack" style={{ gap: 2, padding: 14, textAlign: 'left' }} onClick={() => go(`pocket/${p.id}`)}>
-          <span className="small muted" style={{ fontStyle: 'italic' }}>In your pocket</span>
-          <span style={{ fontSize: 20, fontWeight: 600 }}>{scrapCount} scrap{scrapCount === 1 ? '' : 's'}</span>
-          <span className="small muted">Leaves {DAYS[f.mine.post_day]} evening</span>
-        </button>
-        {!mapCard && <div className="card grow stack" style={{ gap: 2, padding: 14 }}>
+      {!mapCard && (
+        <div className="card stack" style={{ gap: 2, padding: 14 }}>
           <span className="small muted" style={{ fontStyle: 'italic' }}>Between you</span>
           <span style={{ fontSize: 20, fontWeight: 600 }}>{dist != null ? `${dist.toLocaleString()} km` : 'Unknown'}</span>
           <span className="small muted">as the crow flies</span>
-        </div>}
-      </div>
+        </div>
+      )}
       <div className="card" style={{ padding: '2px 16px' }}>
         <label className="toggle">
           <span className="grow stack" style={{ gap: 0 }}>
@@ -161,7 +151,6 @@ export default function Friend({ id, section }: { id: string; section?: string }
       </button>
       <div className="foot">
         <button className="btn primary" onClick={() => go(`write/${p.id}`)}>Write a letter</button>
-        <button className="btn" onClick={() => go(`pocket/${p.id}`)}>Drop a scrap</button>
       </div>
     </main>
   );
@@ -192,7 +181,7 @@ function History({ me, p, uid, letters, incoming, now }: {
         {shown.map((l) => {
           const out = l.sender === uid, who = out ? me : p;
           const flying = new Date(l.arrive_at).getTime() > now;
-          const what = l.kind === 'bundle' ? (out ? 'took your scraps' : 'brought scraps') : flying ? 'is flying' : 'flew';
+          const what = flying ? 'is flying' : 'flew';
           const line = out ? `${me.owl_name} ${what} to ${p.name}` : `${p.owl_name} ${what} to you`;
           const at = new Date(l.arrive_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
           const note = flying ? `Lands at ${at}, in ${timeLeft(l.arrive_at)}` : `Reached at ${at}${!out && !l.opened_at ? ' · not opened yet' : ''}`;

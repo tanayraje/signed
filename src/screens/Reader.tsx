@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { longDate } from '../lib/format';
 import { Icon, Polaroid, Stamp, useSigned } from '../components/bits';
-import type { Letter } from '../lib/types';
+import type { Letter, WallPin } from '../lib/types';
 import { toAnswer, toggleAnswer } from '../lib/answers';
 import { lettersOn } from '../lib/days';
 
@@ -19,7 +19,28 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
   useEffect(() => { slideFrom = null; }, [id]);
   const drag = useRef<{ x: number; y: number; dx: number; on: boolean } | null>(null);
   const sheet = useRef<HTMLElement>(null);
+  // select a line of the letter and it can go up on your wall as a note; tap a pinned line to take it down
+  const [chosen, setChosen] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [tapped, setTapped] = useState<{ pin: WallPin; x: number; y: number } | null>(null);
+  const [pinning, setPinning] = useState(false);
   const l = letters.find((x) => x.id === id);
+  const canPin = !!l && !!session && l.recipient === session.user.id;
+  useEffect(() => {
+    if (!canPin) return;
+    const on = () => {
+      const sel = window.getSelection();
+      const node = sel && sel.rangeCount ? sel.getRangeAt(0).commonAncestorContainer : null;
+      const el = node ? (node.nodeType === 1 ? node as Element : node.parentElement) : null;
+      const text = sel?.toString().replace(/\s+/g, ' ').trim() ?? '';
+      if (!sel || sel.isCollapsed || !text || !el?.closest('.sheet .selectable')) { setChosen(null); return; }
+      const r = sel.getRangeAt(0).getBoundingClientRect();
+      setTapped(null);
+      setChosen({ text, x: r.left + r.width / 2, y: r.bottom });
+    };
+    document.addEventListener('selectionchange', on);
+    return () => document.removeEventListener('selectionchange', on);
+  }, [canPin, id]);
+  useEffect(() => { setChosen(null); setTapped(null); }, [id]);
   if (!me || !l) return null;
   const uid = session!.user.id;
   const fromMe = l.sender === uid;
@@ -85,6 +106,33 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
     );
   }
 
+  const notes = pins.filter((x) => x.letter_id === l.id && x.quote);
+  async function pinLine() {
+    if (!chosen || pinning) return;
+    const quote = chosen.text;
+    if (quote.length > 400) { say('That’s a lot for one note. Pick a line or two.'); return; }
+    if (notes.some((n) => n.quote === quote)) { say('That line is already on your wall.'); return; }
+    setPinning(true);
+    const { error } = await supabase.from('wall_pins').insert({ letter_id: l!.id, quote });
+    setPinning(false);
+    if (error) { say('Could not pin it. Try again.'); return; }
+    window.getSelection()?.removeAllRanges(); setChosen(null);
+    await refresh(); say('Pinned to your wall as a note.');
+  }
+  async function unpinLine(pin: WallPin) {
+    setTapped(null);
+    await supabase.from('wall_pins').delete().eq('id', pin.id);
+    await refresh(); say('Taken off your wall.');
+  }
+  const tapNote = (pin: WallPin, e: React.MouseEvent) => {
+    const sel = window.getSelection(); if (sel && !sel.isCollapsed) return;
+    const r = (e.currentTarget as Element).getBoundingClientRect();
+    setTapped({ pin, x: r.left + r.width / 2, y: r.bottom });
+  };
+  const pillAt = (x: number, y: number): React.CSSProperties => ({
+    left: Math.min(window.innerWidth - 90, Math.max(90, x)), top: Math.min(window.innerHeight - 130, y + 14)
+  });
+
   async function file(where: 'wall' | 'trunk') {
     await supabase.rpc('file_letter', { letter_id: l!.id, where_to: where });
     await refresh();
@@ -111,7 +159,7 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
           <div className="crease" style={{ top: '33%' }} />
           <div className="crease" style={{ top: '66%' }} />
           {l.video_path && <Video path={l.video_path} />}
-          {l.audio_path ? <TalkingBody letter={l} /> : l.body && <div className="body selectable">{l.body}</div>}
+          {l.audio_path ? <TalkingBody letter={l} notes={notes} onNote={tapNote} /> : l.body && <div className="body selectable"><Marked text={l.body} notes={notes} onNote={tapNote} /></div>}
           {(l.scraps ?? []).map((s, i) =>
             s.type === 'photo' && s.media_path ? <div key={i} className="stack" style={{ width: '55%', gap: 8 }}><Polaroid path={s.media_path} caption={s.text} width="100%" tilt={((i % 3) - 1) * 3} /><PinPhoto path={s.media_path} caption={s.text} /></div>
               : s.type === 'question' ? <QCard key={i} label={fromMe ? 'You asked' : `${other.name} asks you`} q={s.text ?? ''} k={`${l.id}:${i}`} />
@@ -147,6 +195,18 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
             </div>
           </div>
         </article>
+        {chosen && (
+          <button className="pin-line" style={pillAt(chosen.x, chosen.y)} disabled={pinning}
+            onPointerDown={(e) => e.preventDefault()} onTouchStart={(e) => e.preventDefault()} onTouchEnd={(e) => { e.preventDefault(); void pinLine(); }} onClick={() => void pinLine()}>
+            <span className="pin-line-tack" aria-hidden="true" />{pinning ? 'Pinning…' : 'Pin this line to your wall'}
+          </button>
+        )}
+        {tapped && (
+          <>
+            <div className="pin-line-back" onClick={() => setTapped(null)} />
+            <button className="pin-line off" style={pillAt(tapped.x, tapped.y)} onClick={() => void unpinLine(tapped.pin)}>Take this note off your wall</button>
+          </>
+        )}
         {peek && (() => {
           const cs = l.stamp.startsWith('custom:') ? stamps.find((s) => `custom:${s.id}` === l.stamp) : undefined;
           return (
@@ -183,7 +243,7 @@ function Video({ path }: { path: string }) {
 
 /** The letter reads itself: each word appears in ink as the voice says it. */
 /** A voice note. When we have word timings, the spoken words write themselves in ink as it plays. */
-function TalkingBody({ letter }: { letter: Letter }) {
+function TalkingBody({ letter, notes, onNote }: { letter: Letter; notes: WallPin[]; onNote: (pin: WallPin, e: React.MouseEvent) => void }) {
   const url = useSigned(letter.audio_path);
   const [time, setTime] = useState(-1);
   const words = letter.transcript?.length ? letter.transcript : null;
@@ -197,7 +257,30 @@ function TalkingBody({ letter }: { letter: Letter }) {
           {words.map((w, i) => <span key={i} className={`ink-word${time < 0 || w.start <= time ? ' on' : ''}`}>{w.word} </span>)}
         </div>
       )}
-      {letter.body && <div className="body selectable">{letter.body}</div>}
+      {letter.body && <div className="body selectable"><Marked text={letter.body} notes={notes} onNote={onNote} /></div>}
     </div>
   );
+}
+
+/** The letter's text, with the lines you pinned to your wall softly highlighted. Tap one to take it down. */
+function Marked({ text, notes, onNote }: { text: string; notes: WallPin[]; onNote: (pin: WallPin, e: React.MouseEvent) => void }) {
+  // a pinned line was saved with its spaces tidied, so match it across any line breaks in the letter
+  const spans: { a: number; b: number; pin: WallPin }[] = [];
+  for (const pin of notes) {
+    const words = (pin.quote ?? '').split(' ').filter(Boolean).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    if (!words.length) continue;
+    const m = new RegExp(words.join('\\s+')).exec(text);
+    if (m && !spans.some((x) => m.index < x.b && m.index + m[0].length > x.a)) spans.push({ a: m.index, b: m.index + m[0].length, pin });
+  }
+  if (!spans.length) return <>{text}</>;
+  spans.sort((x, y) => x.a - y.a);
+  const out: React.ReactNode[] = [];
+  let at = 0;
+  spans.forEach((x) => {
+    if (x.a > at) out.push(text.slice(at, x.a));
+    out.push(<mark key={x.pin.id} className="pinned-line" onClick={(e) => onNote(x.pin, e)}>{text.slice(x.a, x.b)}</mark>);
+    at = x.b;
+  });
+  if (at < text.length) out.push(text.slice(at));
+  return <>{out}</>;
 }

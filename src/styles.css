@@ -260,9 +260,7 @@ input, textarea, [contenteditable], .selectable { -webkit-user-select: text; use
 img, svg { -webkit-touch-callout: none; -webkit-user-drag: none }
 .seal img, .cutstamp img, .cutstamp svg, .owl, .flyer, .map img, .wordmark img, .press * { pointer-events: none }
 
-/* pocket scraps can be taken out */
-.scrap { position: relative }
-.scrap > .qcard, .scrap > .mini { width: 100% }
+/* a small round close button on cards and Polaroids */
 .scrap-x { position: absolute; top: -10px; right: -10px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(43, 38, 34, .15); background: #FBF8F2; color: #5E554C;
   display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 6px rgba(43, 38, 34, .2); cursor: pointer; z-index: 2 }
 .scrap-x svg { width: 14px; height: 14px }
@@ -272,6 +270,7 @@ img, svg { -webkit-touch-callout: none; -webkit-user-drag: none }
 .air { align-items: center }
 .air-owl { width: 44px; display: flex; justify-content: center; flex: none }
 .air .bar { width: 100%; margin-top: 2px }
+.owl-where { font-style: italic; color: #6E4F1A }
 .callout { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--card) url(/assets/card.jpg) center/cover; text-align: left; color: inherit; cursor: pointer; box-shadow: 0 2px 6px rgba(60, 44, 30, .08) }
 .callout.landed { background: #7A2420; border-color: #7A2420; color: #FBF6EE; box-shadow: 0 4px 12px rgba(74, 20, 16, .3) }
 .callout.landed .small { color: #F1DCC8 }
@@ -362,33 +361,6 @@ label.rec { cursor: pointer }
 .q-edit textarea:focus { outline: none; border-bottom-style: solid }
 .q-idea { margin-top: 8px; border: 0; background: none; padding: 4px 0; color: #6E4F1A; font-size: 13px; font-style: italic; text-decoration: underline; text-underline-offset: 3px; cursor: pointer }
 
-/* Write opens into two small choices, left and right of the button */
-.write-menu { position: fixed; inset: 0; z-index: 30; background: linear-gradient(to top, rgba(43, 38, 34, .9) 0%, rgba(43, 38, 34, .62) 26%, rgba(43, 38, 34, .18) 55%, rgba(43, 38, 34, 0) 78%);
-  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); opacity: 0; transition: opacity .22s ease }
-.write-menu.in { opacity: 1 }
-.write-menu-title { position: absolute; left: 0; right: 0; top: calc(var(--cy) - 152px); margin: 0; text-align: center; color: #FBF6EE; font-size: 19px; font-style: italic; font-weight: 600;
-  opacity: 0; transform: translateY(8px); transition: opacity .25s .08s, transform .25s .08s }
-.write-menu.in .write-menu-title { opacity: 1; transform: none }
-.wm-opt { position: absolute; left: var(--cx); top: var(--cy); width: 104px; margin-left: -52px; margin-top: -24px; border: 0; background: none; padding: 0; color: #FBF6EE;
-  display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; font-family: var(--serif);
-  opacity: 0; transform: translate(0, 0) scale(.4); transition: transform .38s cubic-bezier(.2, .9, .3, 1.25), opacity .2s }
-.write-menu.in .wm-letter { opacity: 1; transform: translate(-92px, -84px) scale(1) }
-.write-menu.in .wm-scrap { opacity: 1; transform: translate(92px, -84px) scale(1); transition-delay: .04s }
-.wm-opt b { font-size: 16px; font-style: italic; font-weight: 600; margin-top: 6px }
-.wm-opt small { font-size: 12px; font-style: italic; color: #E2D6C4 }
-/* a little sealed envelope */
-.wm-env { position: relative; width: 50px; height: 34px; margin: 4px 0 0; background: #FBF7F0 url(/assets/envelope.jpg) center/cover; border-radius: 2px; box-shadow: 0 6px 14px rgba(0, 0, 0, .35); transform: rotate(-4deg) }
-.wm-env::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom right, transparent 49%, rgba(150, 130, 100, .45) 50%, transparent 52%) left/50% 100% no-repeat, linear-gradient(to bottom left, transparent 49%, rgba(150, 130, 100, .45) 50%, transparent 52%) right/50% 100% no-repeat; height: 62% }
-.wm-env i { position: absolute; left: 50%; top: 52%; width: 13px; height: 13px; margin: -6.5px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #C0503F, #7A2420 70%); box-shadow: 0 1px 2px rgba(0, 0, 0, .4) }
-/* a torn scrap of paper */
-.wm-paper { width: 38px; height: 42px; background: repeating-linear-gradient(to bottom, transparent 0 9px, rgba(120, 100, 70, .28) 9px 10px) 0 10px / 100% calc(100% - 12px) no-repeat, #FBF8F1 url(/assets/card.jpg) center/cover;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, .35); transform: rotate(5deg); margin-bottom: -4px; height: 38px;
-  clip-path: polygon(0 4%, 12% 0, 26% 5%, 40% 1%, 55% 6%, 70% 1%, 84% 5%, 100% 2%, 100% 100%, 0 100%) }
-.wm-close { position: absolute; left: var(--cx); top: var(--cy); width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 0; background: #7A2420; color: #FBF6EE;
-  display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0, 0, 0, .4); cursor: pointer; transition: transform .3s cubic-bezier(.2, .9, .3, 1.2) }
-.write-menu:not(.in) .wm-close { transform: rotate(-90deg) }
-@media (prefers-reduced-motion: reduce) { .wm-opt, .write-menu, .wm-close, .write-menu-title { transition: none } }
-
 /* the welcome tour */
 .tour { position: fixed; inset: 0; z-index: 40; background: var(--paper) url(/assets/paper.jpg) center/cover; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px) }
 .tour-skip { align-self: flex-end; margin: 10px 14px 0; min-height: 40px; min-width: 60px; border: 0; background: none; color: var(--muted); font-size: 16px; font-style: italic; cursor: pointer }
@@ -406,10 +378,6 @@ label.rec { cursor: pointer }
 .tour-dot.a { left: 26px; bottom: 18px; background: #7A2420 } .tour-dot.b { right: 25px; top: 28px; background: #2F5D50 }
 .tour-env { width: 200px; height: 130px; background: #FBF7F0 url(/assets/envelope.jpg) center/cover; box-shadow: 0 8px 20px rgba(43, 38, 34, .2); display: flex; align-items: center; justify-content: center; transform: rotate(-3deg); margin-top: 30px }
 .tour-owl { position: absolute; left: 16px; top: -6px }
-.tour-scrap { position: absolute; width: 74px; height: 84px; left: 40px; top: 40px; transform: rotate(-8deg) }
-.tour-scrap.two { left: 100px; top: 26px; transform: rotate(6deg) }
-.tour-mini { position: absolute !important; right: 18px; bottom: 26px; width: 80px !important; height: 54px !important; transform: rotate(-6deg) }
-.tour-mini i { width: 18px !important; height: 18px !important; margin: -9px !important }
 .tour-stamp { position: absolute; width: 100px; left: 30px; top: 20px; transform: rotate(-7deg); filter: drop-shadow(0 6px 10px rgba(43, 38, 34, .25)) }
 .tour-stamp.two { left: 110px; top: 34px; transform: rotate(6deg) }
 .tour-foot { padding: 12px 24px calc(22px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 16px; max-width: 440px; width: 100%; margin: 0 auto }
@@ -709,3 +677,28 @@ body.ench .ach.done .ach-icon { background: var(--gold); color: #141A2E }
 .ach-dots .ach-icon { width: 34px; height: 34px; margin: 0 }
 .ach-dots .ach-icon.on { background: radial-gradient(circle at 38% 32%, #B5544C, #7A2420 55%, #561713); color: #F6E9D8; box-shadow: 0 1px 1px rgba(0, 0, 0, .25), inset 0 -2px 3px rgba(0, 0, 0, .25) }
 body.ench .ach-dots .ach-icon.on { background: var(--gold); color: #141A2E }
+
+/* a line from a letter, torn out and taped to the wall */
+.note-slip { position: relative; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .22)) drop-shadow(3px 8px 9px rgba(40, 20, 6, .32)) }
+.note-paper { padding: 20px 14px 14px; background: #FCF8EF url(/assets/card.jpg) center/cover; color: #2B2622;
+  clip-path: polygon(0 3%, 9% 0, 21% 2.5%, 34% .5%, 47% 3%, 60% .5%, 73% 2.5%, 86% 0, 100% 2%, 100% 97%, 91% 100%, 78% 97.5%, 64% 99.5%, 50% 97%, 36% 99.5%, 22% 97.5%, 9% 100%, 0 98%) }
+.tone-1 .note-paper { background-color: #F7F1E2 }
+.tone-2 .note-paper { background-color: #FBF5EA }
+.note-tape { position: absolute; left: 50%; top: -7px; width: 58px; height: 18px; transform: translateX(-50%) rotate(-3deg); background: rgba(232, 222, 196, .78);
+  box-shadow: 0 1px 2px rgba(60, 40, 20, .18); z-index: 1 }
+.tone-1 .note-tape { transform: translateX(-50%) rotate(4deg); background: rgba(214, 226, 214, .78) }
+.tone-2 .note-tape { transform: translateX(-50%) rotate(-1deg); background: rgba(236, 214, 206, .78) }
+.note-quote { margin: 0; font-style: italic; font-size: 16px; line-height: 1.4; overflow-wrap: anywhere }
+.note-quote::before { content: '“'; display: block; height: 18px; margin: -4px 0 2px -2px; font-size: 38px; line-height: 1; color: rgba(122, 36, 32, .55); font-style: normal }
+.note-from { display: block; margin-top: 6px; font-family: var(--sign); font-size: 26px; line-height: 1; color: #1F2A44; text-align: right }
+
+/* picking a line in a letter to pin up */
+.pinned-line { background: linear-gradient(transparent 55%, rgba(226, 194, 122, .55) 55%); color: inherit; padding: 0 1px; cursor: pointer; border-radius: 1px }
+.pin-line { position: fixed; z-index: 35; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px;
+  border-radius: 22px; border: 0; background: #2B2622; color: #FBF6EE; font: italic 600 15px var(--serif); white-space: nowrap; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(20, 12, 6, .35); animation: pinpop .18s ease-out }
+.pin-line.off { background: #FBF6EE; color: #7A2420; border: 1px solid #D9CDB9 }
+.pin-line-tack { width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .55), #8E231C 70%); flex: none }
+.pin-line-back { position: fixed; inset: 0; z-index: 34 }
+@keyframes pinpop { from { opacity: 0; transform: translate(-50%, 6px) } }
+@media (prefers-reduced-motion: reduce) { .pin-line { animation: none } }
