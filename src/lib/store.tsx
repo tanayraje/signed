@@ -19,6 +19,8 @@ interface Store {
   saveMe: (patch: Partial<Profile>) => Promise<void>;
   saveFriendSettings: (friendId: string, patch: Partial<FriendSettings>) => Promise<void>;
   friend: (id: string) => Friend | undefined;
+  /** Read this phone's location and save it. From a tap it also brings up the permission prompt. */
+  locate: () => Promise<'ok' | 'denied' | 'error'>;
 }
 
 const Ctx = createContext<Store | null>(null);
@@ -87,8 +89,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [uid]);
 
   // Location: read it every time the app opens and keep the last one.
-  useEffect(() => {
-    if (!uid || !('geolocation' in navigator)) return;
+  const locate = useCallback(() => new Promise<'ok' | 'denied' | 'error'>((resolve) => {
+    if (!uid || !('geolocation' in navigator)) { resolve('error'); return; }
     navigator.geolocation.getCurrentPosition(
       async (p) => {
         const patch = {
@@ -99,11 +101,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         };
         await supabase.from('profiles').update(patch).eq('id', uid);
         setMe((m) => (m ? { ...m, ...patch } : m));
+        resolve('ok');
       },
-      () => undefined,
+      (e) => resolve(e.code === e.PERMISSION_DENIED ? 'denied' : 'error'),
       { maximumAge: 5 * 60 * 1000, timeout: 15000 }
     );
-  }, [uid]);
+  }), [uid]);
+  useEffect(() => { void locate(); }, [locate]);
 
   useEffect(() => {
     if (!uid) return;
@@ -130,8 +134,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Store>(() => ({
     session, ready, me, friends, letters, incoming, stamps, pins, toast, say, refresh, saveMe, saveFriendSettings,
-    friend: (id: string) => friends.find((f) => f.profile.id === id)
-  }), [session, ready, me, friends, letters, incoming, stamps, pins, toast, say, refresh, saveMe, saveFriendSettings]);
+    friend: (id: string) => friends.find((f) => f.profile.id === id), locate
+  }), [session, ready, me, friends, letters, incoming, stamps, pins, toast, say, refresh, saveMe, saveFriendSettings, locate]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
