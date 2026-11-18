@@ -4,7 +4,7 @@ import { FlyingOwl, Icon } from './bits';
 
 type LatLon = [number, number];
 /** One owl in the air. `name` and `note` fill the card that opens when you tap it; `ench` flies it by night. */
-export interface MapOwl { t: number; back?: boolean; alt?: string; plume?: string; wax?: string; ench?: boolean; name?: string; note?: string }
+export interface MapOwl { t: number; back?: boolean; alt?: string; breed?: string; wax?: string; ench?: boolean; name?: string; note?: string }
 
 /**
  * The map with two people on it and every owl flying between them, live.
@@ -222,7 +222,7 @@ function Layer({ M, from, to, fromLabel, toLabel, fromPin, toPin, owls, W, H, in
         {flights.map((o, n) => (
           <span key={n} className={`zmap-fly${o.ench ? ' gilded' : ''}`} style={{ ...at(o.q), ['--a' as string]: `${o.ang}deg`, ['--up' as string]: o.up }}>
             <span className="zmap-shade" />
-            <span className="zmap-bird"><span className={hoot === n ? 'zmap-roll' : undefined}><FlyingOwl plume={o.plume} wax={o.wax} gilded={o.ench} alt={o.alt ?? 'Owl in flight'} /></span></span>
+            <span className="zmap-bird"><span className={hoot === n ? 'zmap-roll' : undefined}><FlyingOwl breed={o.breed} wax={o.wax} gilded={o.ench} delay={-n * 0.55} alt={o.alt ?? 'Owl in flight'} /></span></span>
             {hoot === n && <span className="zmap-hoo">hoo!</span>}
           </span>
         ))}

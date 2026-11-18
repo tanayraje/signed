@@ -34,7 +34,7 @@ export function PairMap({ friendId, focus }: { friendId: string; focus?: string 
     ...inc.map((x) => ({ id: x.id, arrive: x.arrive_at, t: prog(x), out: false, ench: false }))
   ].sort((a, b) => (a.id === focus ? -1 : b.id === focus ? 1 : a.arrive.localeCompare(b.arrive)));
   const owls: MapOwl[] = all.map((o) => ({
-    t: o.t, back: !o.out, ench: o.ench, plume: o.out ? me.plume : p.plume, wax: o.out ? me.wax : p.wax, name: o.out ? me.owl_name : p.owl_name,
+    t: o.t, back: !o.out, ench: o.ench, breed: o.out ? me.breed : p.breed, wax: o.out ? me.wax : p.wax, name: o.out ? me.owl_name : p.owl_name,
     note: o.out ? `Carrying your letter to ${p.name} · lands in ${timeLeft(o.arrive)}` : `Carrying a letter to you · lands in ${timeLeft(o.arrive)}`,
     alt: o.out ? `${me.owl_name} carrying your letter` : `${p.owl_name} carrying a letter to you`
   }));

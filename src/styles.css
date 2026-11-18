@@ -376,7 +376,7 @@ label.rec { cursor: pointer }
 .tour-art { position: relative; width: 230px; height: 190px; display: flex; align-items: center; justify-content: center }
 .tour-map { background: url(/assets/map-india.jpg) center 62%/240% auto; border-radius: 18px; box-shadow: inset 0 0 0 1px var(--line), 0 6px 18px rgba(43, 38, 34, .12); overflow: hidden }
 .tour-map > svg:not(.fowl) { position: absolute; inset: 0; width: 100%; height: 100% }
-.tour-fly { position: absolute; width: 58px; height: auto; left: 46%; top: 30%; transform: rotate(35deg); animation: tourfly 3s ease-in-out infinite alternate }
+.tour-fly { position: absolute; width: 58px; height: 58px; left: 46%; top: 30%; transform: rotate(35deg); animation: tourfly 3s ease-in-out infinite alternate }
 @keyframes tourfly { from { transform: translate(-30px, 18px) rotate(35deg) } to { transform: translate(30px, -18px) rotate(35deg) } }
 .tour-dot { position: absolute; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #FBF6EE }
 .tour-dot.a { left: 26px; bottom: 18px; background: #7A2420 } .tour-dot.b { right: 25px; top: 28px; background: #2F5D50 }
@@ -431,12 +431,19 @@ label.rec { cursor: pointer }
 .zmap-pin { position: absolute; padding: 3px 9px; border-radius: 12px; background: rgba(251, 246, 238, .95); font-size: 13px; color: #2B2622; box-shadow: 0 2px 6px rgba(43, 38, 34, .18); white-space: nowrap;
   transform: translate(-50%, -100%) translateY(-10px); pointer-events: none }
 /* the owl in the air: drawn from above, wings beating, with a shadow that parts from it as it climbs */
-.fowl { display: block; overflow: visible; max-width: none }
-.fo-wing { transform-box: view-box; transform-origin: 54px 40px; animation: foflap 2.6s ease-in-out infinite }
-.zmap:not(.live) .fo-wing { animation: none }
-@keyframes foflap { 0%, 50%, 100% { transform: scaleX(1) rotate(0deg) } 8%, 24% { transform: scaleX(.6) rotate(-7deg) } 16%, 32% { transform: scaleX(1) rotate(0deg) } 40% { transform: scaleX(.68) rotate(-5deg) } }
+.fowl { position: relative; display: block; max-width: none }
+.fowl-wings { position: absolute; inset: 0; background-size: 400% 100%; background-repeat: no-repeat; background-position: 0 0;
+  animation: fowlflap 1.44s step-end infinite }
+.fowl-letter { position: absolute; left: 33%; top: 63%; width: 34%; height: auto; transform: rotate(-8deg); filter: drop-shadow(0 1px 1px rgba(43, 38, 34, .25)) }
+.zmap:not(.live) .fowl-wings { animation: none }
+/* 13 beats: two wingbeats (frames 1-2-3-4, twice), then the glide frame held for five */
+@keyframes fowlflap {
+  0% { background-position: 0 0 } 7.69% { background-position: 33.333% 0 } 15.38% { background-position: 66.667% 0 } 23.08% { background-position: 100% 0 }
+  30.77% { background-position: 0 0 } 38.46% { background-position: 33.333% 0 } 46.15% { background-position: 66.667% 0 } 53.85% { background-position: 100% 0 }
+  61.54%, 100% { background-position: 0 0 } }
+@media (prefers-reduced-motion: reduce) { .fowl-wings { animation: none } }
 .zmap-fly { position: absolute; width: 0; height: 0; pointer-events: none; transition: left 1s linear, top 1s linear }
-.zmap-bird { position: absolute; left: -32px; top: -21px; width: 64px; height: 43px; transform: rotate(var(--a)) scale(calc(.55 + .45 * var(--up, 1))); transition: transform 1s linear }
+.zmap-bird { position: absolute; left: -36px; top: -36px; width: 72px; height: 72px; transform: rotate(var(--a)) scale(calc(.55 + .45 * var(--up, 1))); transition: transform 1s linear }
 .zmap-bird > span { display: block }
 .zmap-shade { position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; border-radius: 50%; background: #2B2622; filter: blur(7px); opacity: calc(.42 - .2 * var(--up, 1));
   transform: translate(calc(10px * var(--up, 1)), calc(15px * var(--up, 1))) scale(calc(.5 + .5 * var(--up, 1))); transition: transform 1s linear, opacity 1s linear }
