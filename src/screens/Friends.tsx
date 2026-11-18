@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { timeLeft } from '../lib/format';
 import { Icon, Nav, Owl, Seal } from '../components/bits';
-import { rankOf, type RankKey } from '../lib/owl';
+import { rankOf } from '../lib/owl';
 import { useFlights } from '../components/InTheAir';
 import type { Plume, Profile } from '../lib/types';
 
@@ -97,20 +97,26 @@ function Walls() {
   return <><span className="sh-back" /><span className="sh-lw" /><span className="sh-rw" /><span className="sh-floor" /></>;
 }
 
-/** Each owl stands on its rank perch: twig, wood, silver caps, gold caps, solid gold. [height, top of the bar], both / width. */
-const PERCH_GEO: Record<RankKey, [number, number]> = { new: [0.4397, 0.2412], courier: [0.2, 0.016], senior: [0.2141, 0.019], veteran: [0.2133, 0.0213], master: [0.1841, 0.0077] };
+/** Each owl stands on its rank perch: twig, wood, silver caps, gold caps, solid gold.
+ *  In a pigeonhole it's a peg fixed to the side wall; on top of the shelf it stands on two feet.
+ *  [height, top of the rod], both as a share of the picture's width. */
+const PEG: Record<string, [number, number]> = {
+  'wall-new': [0.6603, 0.3587], 'wall-courier': [0.462, 0.1551], 'wall-senior': [0.4606, 0.1577], 'wall-veteran': [0.4635, 0.1587], 'wall-master': [0.4665, 0.1629],
+  'stand-new': [0.7156, 0.3211], 'stand-courier': [0.4141, 0.0184], 'stand-senior': [0.4232, 0.0219], 'stand-veteran': [0.4193, 0.0217], 'stand-master': [0.4098, 0.0183]
+};
+const TOP_W = 100;   // the standing perch on top of the shelf, in px
 function RankPerch({ km, where }: { km?: number; where: 'hole' | 'top' }) {
   const r = rankOf(km).id;
-  const [h, top] = PERCH_GEO[r];
-  const below = h - top;                       // how much of the picture hangs under the bar's top edge, per unit of width
+  const key = `${where === 'hole' ? 'wall' : 'stand'}-${r}`;
+  const [h, top] = PEG[key];
+  const below = h - top;                       // how much of the picture sits under the top of the rod, per unit of width
   const style = where === 'hole'
-    ? { width: 'calc(var(--u) * 84)', bottom: `calc(var(--u) * ${(48 - below * 84).toFixed(2)})` }
-    : { width: 116, bottom: 18 - below * 116 };
-  return <>
-    {where === 'hole' && <span className="sh-mount" aria-hidden="true" />}
-    <img className={`sh-rank sh-rank-${where}`} src={`/owls/perch-${r}-lg.webp`} alt="" draggable={false} style={style} />
-  </>;
+    ? { width: 'calc(var(--u) * 86)', bottom: `calc(var(--u) * ${(48 - below * 86).toFixed(2)})` }
+    : { width: TOP_W, bottom: 0 };
+  return <img className={`sh-rank sh-rank-${where}`} src={`/owls/peg-${key}.webp`} alt="" draggable={false} style={style} />;
 }
+/** Where the owl's feet go on top of the shelf: the top of its standing perch's rod. */
+const topRod = (km?: number) => { const [h, t] = PEG[`stand-${rankOf(km).id}`]; return (h - t) * TOP_W; };
 
 export default function Friends() {
   const { me, friends, letters, say, session } = useStore();
@@ -202,7 +208,7 @@ export default function Friends() {
         <h1>Friends</h1>
         <p className="small muted" style={{ fontStyle: 'italic' }}>{line}</p>
         <div className="sh-perch">
-          <span className="sh-foot" aria-hidden="true" /><span className="sh-foot r" aria-hidden="true" /><RankPerch km={me.flown_km} where="top" />
+          <RankPerch km={me.flown_km} where="top" />
           {mine ? (
             <>
               <Feather id="mine" plume={me.plume} className="sh-perch-feather" />
@@ -212,7 +218,7 @@ export default function Friends() {
               </span>
             </>
           ) : (
-            <Owl p={me} className="sh-perch-owl" alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
+            <Owl p={me} className="sh-perch-owl" style={{ bottom: topRod(me.flown_km) - 3 }} alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
           )}
         </div>
       </div>
