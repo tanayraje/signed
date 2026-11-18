@@ -624,7 +624,7 @@ label.rec { cursor: pointer }
   box-shadow: 0 calc(var(--u) * 10) calc(var(--u) * 8) rgba(0, 0, 0, .55) }
 .sh-peg::before { content: ''; position: absolute; left: calc(var(--u) * -1); top: calc(var(--u) * -4); width: calc(var(--u) * 7); height: calc(var(--u) * 18); border-radius: calc(var(--u) * 2); background: linear-gradient(180deg, #B08556, #6B4A2B 55%, #33210F) }
 .flip .sh-peg { transform: scaleX(-1) }
-.sh-in > .sh-owl { bottom: calc(var(--u) * 45); inset-inline-start: calc(var(--u) * 22); height: calc(var(--u) * 106); width: auto; max-width: none; filter: brightness(.9) saturate(.92) drop-shadow(calc(var(--u) * 5) calc(var(--u) * 9) calc(var(--u) * 6) rgba(0, 0, 0, .6)) }
+.sh-in > .sh-owl { bottom: calc(var(--u) * 37); inset-inline-start: calc(var(--u) * 22); height: calc(var(--u) * 106); width: auto; max-width: none; filter: brightness(.9) saturate(.92) drop-shadow(calc(var(--u) * 5) calc(var(--u) * 9) calc(var(--u) * 6) rgba(0, 0, 0, .6)) }
 .sh-stack { bottom: calc(var(--u) * 8); inset-inline-end: calc(var(--u) * 24); width: calc(var(--u) * 62); display: flex; flex-direction: column-reverse; align-items: flex-start; filter: drop-shadow(0 calc(var(--u) * 4) calc(var(--u) * 3) rgba(0, 0, 0, .65)) }
 .sh-stack.under { inset-inline-end: auto; inset-inline-start: calc(var(--u) * 24) }
 .sh-stack i { display: block; height: calc(var(--u) * 3); border-radius: calc(var(--u) * .5); box-shadow: inset 0 calc(var(--u) * -1) 0 rgba(70, 48, 24, .4) }

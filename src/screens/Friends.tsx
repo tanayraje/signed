@@ -217,7 +217,7 @@ export default function Friends() {
               </span>
             </>
           ) : (
-            <Owl p={me} className="sh-perch-owl" style={{ bottom: `calc(var(--u) * ${(topRod(me.flown_km) - 3).toFixed(2)})` }} alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
+            <Owl p={me} className="sh-perch-owl" style={{ bottom: `calc(var(--u) * ${(topRod(me.flown_km) - 11).toFixed(2)})` }} alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
           )}
         </div>
       </div>
