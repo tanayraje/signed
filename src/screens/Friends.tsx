@@ -104,7 +104,6 @@ const PEG: Record<string, [number, number]> = {
   'wall-new': [0.6603, 0.3587], 'wall-courier': [0.462, 0.1551], 'wall-senior': [0.4606, 0.1577], 'wall-veteran': [0.4635, 0.1587], 'wall-master': [0.4665, 0.1629],
   'stand-new': [0.7156, 0.3211], 'stand-courier': [0.4141, 0.0184], 'stand-senior': [0.4232, 0.0219], 'stand-veteran': [0.4193, 0.0217], 'stand-master': [0.4098, 0.0183]
 };
-const TOP_W = 76;   // the standing perch on top of the shelf, in px
 function RankPerch({ km, where }: { km?: number; where: 'hole' | 'top' }) {
   const r = rankOf(km).id;
   const key = `${where === 'hole' ? 'wall' : 'stand'}-${r}`;
@@ -112,11 +111,11 @@ function RankPerch({ km, where }: { km?: number; where: 'hole' | 'top' }) {
   const below = h - top;                       // how much of the picture sits under the top of the rod, per unit of width
   const style = where === 'hole'
     ? { width: 'calc(var(--u) * 86)', bottom: `calc(var(--u) * ${(48 - below * 86).toFixed(2)})` }
-    : { width: TOP_W, bottom: 0 };
+    : { width: 'calc(var(--u) * 86)', bottom: 0 };
   return <img className={`sh-rank sh-rank-${where}`} src={`/owls/peg-${key}.webp`} alt="" draggable={false} style={style} />;
 }
-/** Where the owl's feet go on top of the shelf: the top of its standing perch's rod. */
-const topRod = (km?: number) => { const [h, t] = PEG[`stand-${rankOf(km).id}`]; return (h - t) * TOP_W; };
+/** Where the owl's feet go on top of the shelf: the top of its standing perch's rod, in the pigeonholes' --u. */
+const topRod = (km?: number) => { const [h, t] = PEG[`stand-${rankOf(km).id}`]; return (h - t) * 86; };
 
 export default function Friends() {
   const { me, friends, letters, say, session } = useStore();
@@ -218,7 +217,7 @@ export default function Friends() {
               </span>
             </>
           ) : (
-            <Owl p={me} className="sh-perch-owl" style={{ bottom: topRod(me.flown_km) - 3 }} alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
+            <Owl p={me} className="sh-perch-owl" style={{ bottom: `calc(var(--u) * ${(topRod(me.flown_km) - 3).toFixed(2)})` }} alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
           )}
         </div>
       </div>
