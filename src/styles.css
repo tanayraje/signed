@@ -832,8 +832,8 @@ body.ench .logbook { color: #2B2622 }
 .log-totals { display: flex; gap: 18px; margin-top: 8px; font-size: 13px; flex-wrap: wrap; justify-content: center }
 .log-totals b { font-weight: 600 }
 .log-panel { position: relative; padding: 14px 14px 12px }
-.log-frame { position: absolute; inset: 0; border: 2.4px solid currentColor; outline: 1px solid currentColor; outline-offset: 3px; border-radius: 3px; opacity: .85; filter: url(#ink-rough); mix-blend-mode: multiply }
-.log-panel > * { position: relative }
+.log-frame { position: absolute; inset: 0; display: block; pointer-events: none; border: 2.4px solid currentColor; outline: 1px solid currentColor; outline-offset: 3px; border-radius: 3px; opacity: .85; filter: url(#ink-rough); mix-blend-mode: multiply }
+.log-panel > :not(.log-frame) { position: relative }
 .log-panel-title { flex: 1; display: flex; flex-direction: column; line-height: 1.1 }
 .log-panel-title b { font-size: 24px; letter-spacing: .08em; font-weight: 600 }
 .log-note { font-size: 12px; opacity: .9; margin-top: 2px }

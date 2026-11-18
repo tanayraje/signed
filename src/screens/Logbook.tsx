@@ -31,15 +31,16 @@ function useLog(stats: SealStats | null, rows: StampRow[]) {
   }, [stats, rows]);
 }
 
-/** The progress ring around a blank stamp: how close it is to being stamped. */
+/** The next stamp: a blank dotted circle with an ink ring showing how close it is. */
 function Ring({ a, s, size }: { a: Achievement; s: SealStats; size: number }) {
   const C = 2 * Math.PI * 46, f = frac(a, s), pr = a.progress?.(s);
   return (
-    <StampBlank id={a.id} size={size}>
-      <circle cx="50" cy="50" r="46" fill="none" stroke={ink(a)} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${(C * f).toFixed(1)} ${C.toFixed(1)}`} transform="rotate(-90 50 50)" filter="url(#ink-rough)" />
-      {pr && <text x="50" y="58" textAnchor="middle" fontFamily="Newsreader, Georgia, serif" fontSize={pr[1] >= 1000 ? 15 : 22} fontWeight={600} fill={ink(a)}>
+    <svg viewBox="0 0 100 100" aria-hidden="true" width={size} height={size} style={{ overflow: 'visible', flex: 'none' }}>
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#8E8375" strokeWidth="1.5" strokeDasharray="1 4.2" strokeLinecap="round" />
+      <circle cx="50" cy="50" r="46" fill="none" stroke={ink(a)} strokeWidth="3.2" strokeLinecap="round" strokeDasharray={`${(C * f).toFixed(1)} ${C.toFixed(1)}`} transform="rotate(-90 50 50)" filter="url(#ink-rough)" />
+      {pr && <text x="50" y="58" textAnchor="middle" fontFamily="Newsreader, Georgia, serif" fontSize={22} fontWeight={600} fill={ink(a)}>
         {pr[1] >= 1000 ? `${Math.round(f * 100)}%` : `${pr[0]}/${pr[1]}`}</text>}
-    </StampBlank>
+    </svg>
   );
 }
 
