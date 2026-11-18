@@ -1,9 +1,11 @@
 // Runs every minute (see supabase/cron.sql).
 // 1. Tells the story of each flight: takeoff, halfway (long flights), and landing.
 // 2. Rings the 11:11 wish alarm for friends who both turned it on.
+// 3. Files new logbook stamps (achievements), seal patina and owl rank changes, and tells people about them.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import webpush from 'npm:web-push@3.6.7';
 import { makeWhere, type WhereData } from '../_shared/where.ts';
+import { PATINA, RANKS, RULES, patinaStage, rankIndex, type Stats } from '../_shared/stamp-rules.ts';
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -187,6 +189,88 @@ async function seaCrossings() {
   return data.length;
 }
 
+// 5. Logbook stamps. Anyone who sent or got a letter lately (or hasn't been filed yet) is checked against the rules.
+// The first check files what they already had, quietly, dated from their letters; after that each new stamp,
+// patina stage and owl rank gets a notification that opens the logbook, where it is stamped in front of them.
+type Sent = { sent_at: string; distance_km: number | null; enchanted: boolean | null; audio_path: string | null; to_place: string | null; over_sea: boolean | null };
+
+function datesFromLetters(sent: Sent[]): Record<string, string> {
+  const at = (i: number) => sent[i]?.sent_at;
+  const nth = (pred: (l: Sent) => boolean, n: number) => { let c = 0; for (const l of sent) { if (pred(l) && ++c === n) return l.sent_at; } return undefined; };
+  const kmAt = (target: number) => { let t = 0; for (const l of sent) { t += l.distance_km ?? 0; if (t >= target) return l.sent_at; } return undefined; };
+  const cityAt = (n: number) => { const seen = new Set<string>(); for (const l of sent) { const c = l.to_place?.toLowerCase(); if (c) { seen.add(c); if (seen.size === n) return l.sent_at; } } return undefined; };
+  const out: Record<string, string | undefined> = {
+    first: at(0), busy_beak: at(14), full_bag: at(39), rain_shine: at(79), old_hand: at(149),
+    long_haul: kmAt(20000), first_1000: kmAt(2500), cross_country: kmAt(25000), jet_stream: kmAt(50000), wayfarer: kmAt(80000), true_north: kmAt(120000),
+    enchanted: nth((l) => !!l.enchanted || !!l.audio_path, 1), explorer: cityAt(5),
+    sea: nth((l) => !!l.over_sea, 3), far_flight: nth((l) => (l.distance_km ?? 0) > 5000, 3),
+  };
+  return Object.fromEntries(Object.entries(out).filter(([, v]) => v)) as Record<string, string>;
+}
+
+async function stampCheck() {
+  const since = new Date(Date.now() - 30 * 60000).toISOString();
+  const [{ data: recent }, { data: states }, { data: everyone }] = await Promise.all([
+    supabase.from('letters').select('sender, recipient').gt('sent_at', since).limit(500),
+    supabase.from('stamp_state').select('user_id, ready, patina_told, rank_told'),
+    supabase.from('profiles').select('id').eq('onboarded', true).limit(1000),
+  ]);
+  const stateOf = new Map((states ?? []).map((s) => [s.user_id as string, s]));
+  const due = new Set<string>((recent ?? []).flatMap((l) => [l.sender as string, l.recipient as string]));
+  for (const p of everyone ?? []) if (!stateOf.get(p.id)?.ready && due.size < 60) due.add(p.id);
+  if (!due.size) return 0;
+  const byId = await people([...due]);
+  let told = 0;
+  for (const uid of due) {
+    const { data: stats } = await supabase.rpc('seal_stats_raw', { target: uid });
+    if (!stats) continue;
+    const s = stats as Stats;
+    const st = stateOf.get(uid);
+    const first = !st?.ready;
+    const { data: rows } = await supabase.from('stamps').select('achievement').eq('user_id', uid);
+    const have = new Set((rows ?? []).map((r) => r.achievement as string));
+    const fresh = RULES.filter((r) => r.done(s) && !have.has(r.id));
+    const patina = patinaStage(s.sealed, s.seal_since), rank = rankIndex(Math.round(s.km ?? 0));
+
+    if (first) {
+      let dated: Record<string, string> = {};
+      if (fresh.length) {
+        const { data: sent } = await supabase.from('letters').select('sent_at, distance_km, enchanted, audio_path, to_place, over_sea')
+          .eq('sender', uid).order('sent_at', { ascending: true }).limit(5000);
+        dated = datesFromLetters((sent ?? []) as Sent[]);
+        const last = (sent ?? []).at(-1)?.sent_at as string | undefined;
+        const now = new Date().toISOString();
+        await supabase.from('stamps').upsert(fresh.map((r) => ({ user_id: uid, achievement: r.id, earned_at: dated[r.id] ?? last ?? now, seen_at: now, notified: true })), { onConflict: 'user_id,achievement', ignoreDuplicates: true });
+      }
+      await supabase.from('stamp_state').upsert({ user_id: uid, ready: true, patina_told: patina, rank_told: rank });
+      continue;
+    }
+
+    const owl = byId.get(uid)?.owl_name || 'Your owl';
+    if (fresh.length) {
+      await supabase.from('stamps').upsert(fresh.map((r) => ({ user_id: uid, achievement: r.id, notified: true })), { onConflict: 'user_id,achievement', ignoreDuplicates: true });
+      const why = (r: (typeof fresh)[number]) => r.why.replace('{owl}', owl);
+      await push(uid, fresh.length === 1
+        ? { title: 'Ka-chunk! A new stamp for your log', body: `${fresh[0].title}: ${why(fresh[0])}. Come and watch it get stamped.`, url: '/#/logbook', tag: 'stamp' }
+        : { title: `Ka-chunk! ${fresh.length} new stamps for your log`, body: `${fresh.map((r) => r.title).join(', ')}. Come and watch them get stamped.`, url: '/#/logbook', tag: 'stamp' });
+      told++;
+    }
+    const upd: Record<string, number> = {};
+    if (patina > (st?.patina_told ?? patina)) {
+      await push(uid, { title: `Your seal just turned ${PATINA[patina].name}`, body: `${s.sealed} letters in. ${PATINA[patina].note} Take a look.`, url: '/#/logbook', tag: 'patina' });
+      told++;
+    }
+    if (rank > (st?.rank_told ?? rank)) {
+      await push(uid, { title: `${owl} is now a ${RANKS[rank].name}`, body: `${owl} stands on ${RANKS[rank].perch} now, and your letters fly ${RANKS[rank].speed}% faster.`, url: '/#/logbook', tag: 'rank' });
+      told++;
+    }
+    if (patina !== st?.patina_told) upd.patina_told = patina;
+    if (rank !== st?.rank_told) upd.rank_told = rank;
+    if (Object.keys(upd).length) await supabase.from('stamp_state').update(upd).eq('user_id', uid);
+  }
+  return told;
+}
+
 async function wishAlarm() {
   const { data: rows } = await supabase.from('friend_settings').select('owner, friend').eq('wish_1111', true);
   if (!rows?.length) return 0;
@@ -216,5 +300,6 @@ Deno.serve(async (req) => {
   const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
   if (body?.test) return Response.json(await push(body.test, { title: 'Signed', body: 'Testing your notifications.', url: '/#/wall', tag: 'test' }));
   const [took, mid, delivered, wished, seas] = await Promise.all([takeoffs(), midways(), deliver(), wishAlarm(), seaCrossings()]);
-  return Response.json({ took, mid, delivered, wished, seas });
+  const stamped = await stampCheck().catch((e) => { console.error('stamps', e); return -1; });
+  return Response.json({ took, mid, delivered, wished, seas, stamped });
 });

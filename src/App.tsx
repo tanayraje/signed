@@ -21,12 +21,16 @@ import Invite from './screens/Invite';
 import Stamps from './screens/Stamps';
 import Cutter from './screens/Cutter';
 import Tour from './screens/Tour';
-import { Owl } from './components/bits';
+import Logbook from './screens/Logbook';
+import { useUnseenStamps } from './lib/achievements';
+import { Icon, Owl } from './components/bits';
 
 export default function App() {
   const { session, ready, me, friends, toast, letters, friend, say, refresh } = useStore();
   const [r0, r1, r2, r3] = useRoute();
   const [alarm, setAlarm] = useState(false);
+  const unseenStamps = useUnseenStamps(session?.user.id);
+  const [stampBanner, setStampBanner] = useState(true);
 
   // After signing in, go back to where the person was headed.
   useEffect(() => { if (session) restorePlace(); }, [session]);
@@ -115,6 +119,7 @@ export default function App() {
     case 'tour': screen = <Tour />; break;
     case 'cutter': screen = <Cutter />; break;
     case 'profile': screen = <Profile />; break;
+    case 'logbook': screen = <Logbook />; break;
     case 'wish': screen = <Wish />; break;
     case 'friends': screen = <Friends />; break;
     default: screen = <Wall />;
@@ -135,6 +140,18 @@ export default function App() {
       })()}
       {me.onboarded && me.toured !== false && !['tour', 'setup', 'invite', 'cutter', 'open', 'write', 'wish'].includes(r0) && <NotifyAsk me={me} uid={session.user.id} />}
       {alarm && r0 !== 'wish' && <Wish onClose={() => setAlarm(false)} />}
+      {unseenStamps > 0 && stampBanner && !['logbook', 'profile', 'open', 'read', 'write', 'cutter', 'wish', 'setup', 'tour', 'flight'].includes(r0) && (
+        <div className="stamp-banner" role="status">
+          <button className="stamp-banner-go" onClick={() => { setStampBanner(false); go('logbook'); }}>
+            <svg viewBox="0 0 100 100" aria-hidden="true" width="46" height="46"><circle cx="50" cy="50" r="44" fill="none" stroke="#7A2420" strokeWidth="3" strokeDasharray="1 6" strokeLinecap="round" /><text x="50" y="63" textAnchor="middle" fontFamily="Newsreader, Georgia, serif" fontSize="36" fontWeight="600" fill="#7A2420">?</text></svg>
+            <span className="grow stack" style={{ gap: 1, textAlign: 'left' }}>
+              <b>{unseenStamps === 1 ? 'You’ve earned a stamp' : `You’ve earned ${unseenStamps} stamps`}</b>
+              <span className="small muted">It’s waiting in your logbook. Tap to stamp it.</span>
+            </span>
+          </button>
+          <button className="icon" onClick={() => setStampBanner(false)} aria-label="Not now">{Icon.close}</button>
+        </div>
+      )}
       {toast && <div className="toast" role="status">{toast}</div>}
     </>
   );

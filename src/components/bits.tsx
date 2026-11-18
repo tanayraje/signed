@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { useStore } from '../lib/store';
 import { breedOf, cleanOutfit, owlLayers, perchOf, rankOf, type Outfit, type RankKey } from '../lib/owl';
+import { useUnseenStamps } from '../lib/achievements';
 
 /** A pressed wax seal: real wax image with the person's monogram embossed into it. */
 const ON_TOP = ['gold', 'glitter', 'twigs', 'petals', 'marigold', 'cornflower', 'forgetmenot', 'chamomile', 'babysbreath', 'lavender', 'feather'];
@@ -189,8 +190,9 @@ const QUILL = (
 
 /** The bottom bar. Write sits in the middle and starts a letter (asking who to, if there are several friends). */
 export function Nav({ on }: { on?: 'friends' | 'wall' | 'stamps' | 'profile' }) {
-  const { friends, say, me } = useStore();
+  const { friends, say, me, session } = useStore();
   const [picking, setPicking] = useState(false);
+  const unseenStamps = useUnseenStamps(session?.user.id);
   function write() {
     if (friends.length === 0) { say('Invite a friend first, then you can write.'); go('friends'); return; }
     if (friends.length === 1) { go(`write/${friends[0].profile.id}`); return; }
@@ -206,7 +208,7 @@ export function Nav({ on }: { on?: 'friends' | 'wall' | 'stamps' | 'profile' }) 
         {tab('friends', 'Friends', Icon.mail)}
         <button className="nav-write" onClick={write} aria-label="Write a letter"><span className="nav-write-dot">{QUILL}</span>Write</button>
         {tab('stamps', 'Stamps', Icon.stamp)}
-        {tab('profile', me?.name || 'You', me ? <span className="nav-seal"><Seal p={me} size={26} /></span> : Icon.me)}
+        {tab('profile', me?.name || 'You', me ? <span className="nav-seal"><Seal p={me} size={26} />{unseenStamps > 0 && <i className="nav-new" aria-label="New stamp" />}</span> : Icon.me)}
       </nav>
       {picking && (
         <div className="sheet-back" onClick={() => setPicking(false)}>

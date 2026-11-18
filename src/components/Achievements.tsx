@@ -5,6 +5,7 @@ import { ACHIEVEMENTS, type Achievement, type SealStats } from '../lib/achieveme
 import { RANKS, pieceOf, rankIndex, speedPct, type Outfit } from '../lib/owl';
 import { go } from '../lib/router';
 import { HEIRLOOM_DAYS, Icon, Owl, PATINA, Seal, patinaStage, sealAgeDays } from './bits';
+import { InkDefs, OWL_INK, SEAL_INK, StampArt, StampBlank } from './StampArt';
 
 const MIX_NAMES: Record<string, string> = {
   feather: 'owl feather', cornflower: 'cornflower petals', babysbreath: "baby's breath", chamomile: 'chamomile',
@@ -127,7 +128,7 @@ function Progress({ a, s, big }: { a: Achievement; s: SealStats; big?: boolean }
 }
 
 /** One achievement up close: how to earn it, how far along, and what it unlocks. */
-export function AchievementSheet({ a, stats, p, mine, onClose }: { a: Achievement; stats: SealStats; p: Who; mine: boolean; onClose: () => void }) {
+export function AchievementSheet({ a, stats, p, mine, onClose, date }: { a: Achievement; stats: SealStats; p: Who; mine: boolean; onClose: () => void; date?: string | null }) {
   const done = a.done(stats);
   const piece = a.kind === 'owl' ? pieceOf(a.reward) : undefined;
   const preview: Outfit = piece ? { [piece.slot]: piece.id } : {};
@@ -135,9 +136,10 @@ export function AchievementSheet({ a, stats, p, mine, onClose }: { a: Achievemen
     <div className="sheet-back" onClick={onClose}>
       <div className="stamp-sheet stack" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={a.title}>
         <div className="row" style={{ alignItems: 'center', gap: 14 }}>
-          <Badge a={a} done={done} size={72} />
+          <InkDefs />
+          <span style={{ flex: 'none', width: 84, display: 'flex', justifyContent: 'center' }}>{done ? <StampArt id={a.id} color={a.kind === 'owl' ? OWL_INK : SEAL_INK} date={date} size={84} rotate={-6} uid="-sheet" /> : <StampBlank id={a.id} size={76} />}</span>
           <div className="grow stack" style={{ gap: 2 }}>
-            <span className="eyebrow">{a.kind === 'owl' ? 'Owl achievement' : 'Seal achievement'}{done ? ' · earned' : ''}</span>
+            <span className="eyebrow">{a.kind === 'owl' ? 'Owl stamp' : 'Seal stamp'}{done ? ' · stamped' : ' · not yet'}</span>
             <h2 className="sheet-title">{a.title}</h2>
             <span className="muted">{a.desc}</span>
           </div>

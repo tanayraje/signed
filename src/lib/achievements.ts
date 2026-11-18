@@ -153,3 +153,58 @@ export function useSealStats(target: string | undefined, fallback?: SealStats): 
   }, [target]); // eslint-disable-line react-hooks/exhaustive-deps
   return s ?? fallback ?? null;
 }
+
+/** A stamp in someone's logbook: when it was earned and whether its owner has watched it get stamped. */
+export interface StampRow { achievement: string; earned_at: string; seen_at: string | null }
+
+const rowCache = new Map<string, StampRow[]>();
+/** Logbook stamps for you or a friend (filed by the server as achievements are earned). */
+export function useStampRows(target: string | undefined): [StampRow[], () => void] {
+  const [rows, setRows] = useState<StampRow[]>(target ? rowCache.get(target) ?? [] : []);
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!target) return;
+    let live = true;
+    void supabase.from('stamps').select('achievement, earned_at, seen_at').eq('user_id', target).then(({ data, error }) => {
+      if (!live || error || !data) return;
+      rowCache.set(target, data as StampRow[]);
+      setRows(data as StampRow[]);
+    });
+    return () => { live = false; };
+  }, [target, n]);
+  return [rows, () => setN((x) => x + 1)];
+}
+
+// How many of your stamps are still waiting to be stamped, for the Profile tab dot and the in-app banner.
+let unseen = 0;
+const unseenSubs = new Set<(n: number) => void>();
+export async function refreshUnseen(uid: string) {
+  const { count, error } = await supabase.from('stamps').select('achievement', { count: 'exact', head: true }).eq('user_id', uid).is('seen_at', null);
+  if (error) return;
+  unseen = count ?? 0;
+  unseenSubs.forEach((f) => f(unseen));
+}
+export function useUnseenStamps(uid: string | undefined) {
+  const [n, setN] = useState(unseen);
+  useEffect(() => {
+    unseenSubs.add(setN);
+    return () => { unseenSubs.delete(setN); };
+  }, []);
+  useEffect(() => {
+    if (!uid) return;
+    void refreshUnseen(uid);
+    const on = () => { if (!document.hidden) void refreshUnseen(uid); };
+    document.addEventListener('visibilitychange', on);
+    const t = window.setInterval(on, 120000);
+    return () => { document.removeEventListener('visibilitychange', on); window.clearInterval(t); };
+  }, [uid]);
+  return n;
+}
+/** You've watched these get stamped. */
+export async function markStampsSeen(uid: string, ids: string[]) {
+  if (!ids.length) return;
+  await supabase.rpc('stamps_seen', { ids });
+  const c = rowCache.get(uid);
+  if (c) rowCache.set(uid, c.map((r) => (ids.includes(r.achievement) ? { ...r, seen_at: new Date().toISOString() } : r)));
+  await refreshUnseen(uid);
+}
