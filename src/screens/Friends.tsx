@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { timeLeft } from '../lib/format';
 import { Icon, Nav, Owl, Seal } from '../components/bits';
+import { rankOf, type RankKey } from '../lib/owl';
 import { useFlights } from '../components/InTheAir';
 import type { Plume, Profile } from '../lib/types';
 
@@ -96,6 +97,21 @@ function Walls() {
   return <><span className="sh-back" /><span className="sh-lw" /><span className="sh-rw" /><span className="sh-floor" /></>;
 }
 
+/** Each owl stands on its rank perch: twig, wood, silver caps, gold caps, solid gold. [height, top of the bar], both / width. */
+const PERCH_GEO: Record<RankKey, [number, number]> = { new: [0.4397, 0.2412], courier: [0.2, 0.016], senior: [0.2141, 0.019], veteran: [0.2133, 0.0213], master: [0.1841, 0.0077] };
+function RankPerch({ km, where }: { km?: number; where: 'hole' | 'top' }) {
+  const r = rankOf(km).id;
+  const [h, top] = PERCH_GEO[r];
+  const below = h - top;                       // how much of the picture hangs under the bar's top edge, per unit of width
+  const style = where === 'hole'
+    ? { width: 'calc(var(--u) * 84)', bottom: `calc(var(--u) * ${(48 - below * 84).toFixed(2)})` }
+    : { width: 116, bottom: 18 - below * 116 };
+  return <>
+    {where === 'hole' && <span className="sh-mount" aria-hidden="true" />}
+    <img className={`sh-rank sh-rank-${where}`} src={`/owls/perch-${r}-lg.webp`} alt="" draggable={false} style={style} />
+  </>;
+}
+
 export default function Friends() {
   const { me, friends, letters, say, session } = useStore();
   const [invite, setInvite] = useState<string | null>(null);
@@ -162,7 +178,7 @@ export default function Friends() {
         <button className="sh-in" onClick={() => go(`friend/${f.id}`)} aria-label={label}>
           <Walls />
           {night && <><span className="sh-dusk" /><span className="sh-warm" />{shade}</>}
-          <span className="sh-peg" />
+          <RankPerch km={f.flown_km} where="hole" />
           {showStack && <Stack n={Math.min(9, count)} under={night} />}
           {!away && <Owl p={f} className="sh-owl" />}
           {onFloor === 'feather' && <Feather id={f.id} plume={f.plume} />}
@@ -186,7 +202,7 @@ export default function Friends() {
         <h1>Friends</h1>
         <p className="small muted" style={{ fontStyle: 'italic' }}>{line}</p>
         <div className="sh-perch">
-          <span className="sh-foot" aria-hidden="true" /><span className="sh-foot r" aria-hidden="true" /><span className="sh-rail" aria-hidden="true" />
+          <span className="sh-foot" aria-hidden="true" /><span className="sh-foot r" aria-hidden="true" /><RankPerch km={me.flown_km} where="top" />
           {mine ? (
             <>
               <Feather id="mine" plume={me.plume} className="sh-perch-feather" />
