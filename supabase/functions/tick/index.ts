@@ -58,14 +58,15 @@ function localParts(tz: string, d = new Date()) {
 
 // Where an owl is, in words. The map data is served by the app; if it can't be fetched, pushes just skip the place.
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://signed-mail.vercel.app';
-let whereReady: Promise<((lat: number, lon: number) => string) | null> | null = null;
-function loadWhere() {
-  whereReady ??= fetch(`${APP_URL}/where-data.json`)
+let mapReady: Promise<ReturnType<typeof makeWhere> | null> | null = null;
+function loadMap() {
+  mapReady ??= fetch(`${APP_URL}/where-data.json`)
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-    .then((d: WhereData) => makeWhere(d).whereabouts)
-    .catch((e) => { console.error('where-data', e); whereReady = null; return null; });
-  return whereReady;
+    .then((d: WhereData) => makeWhere(d))
+    .catch((e) => { console.error('where-data', e); mapReady = null; return null; });
+  return mapReady;
 }
+const loadWhere = () => loadMap().then((m) => m?.whereabouts ?? null);
 
 function inWords(ms: number): string {
   const m = Math.max(1, Math.round(ms / 60000));
@@ -153,6 +154,39 @@ async function deliver() {
   return landed.length;
 }
 
+// 4. Sea crossings, for the owl achievement: did the straight path between the two places cross open sea?
+function crossesSea(isLand: (lat: number, lon: number) => boolean, a: [number, number], b: [number, number]) {
+  const r = Math.PI / 180;
+  const [p1, l1, p2, l2] = [a[0] * r, a[1] * r, b[0] * r, b[1] * r];
+  const d = 2 * Math.asin(Math.sqrt(Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin((l2 - l1) / 2) ** 2));
+  if (d < 1e-6) return false;
+  const steps = Math.max(8, Math.ceil((d * 6371) / 25));   // a look every ~25 km
+  let run = 0;
+  for (let i = 1; i < steps; i++) {
+    const f = i / steps, A = Math.sin((1 - f) * d) / Math.sin(d), B = Math.sin(f * d) / Math.sin(d);
+    const x = A * Math.cos(p1) * Math.cos(l1) + B * Math.cos(p2) * Math.cos(l2);
+    const y = A * Math.cos(p1) * Math.sin(l1) + B * Math.cos(p2) * Math.sin(l2);
+    const z = A * Math.sin(p1) + B * Math.sin(p2);
+    const lat = Math.atan2(z, Math.sqrt(x * x + y * y)) / r, lon = Math.atan2(y, x) / r;
+    run = isLand(lat, lon) ? 0 : run + 1;
+    if (run >= 4) return true;                              // ~100 km of water in a row, not just a river or bay
+  }
+  return false;
+}
+
+async function seaCrossings() {
+  const { data } = await supabase.from('letters').select('id, from_lat, from_lon, to_lat, to_lon')
+    .is('over_sea', null).not('from_lat', 'is', null).not('to_lat', 'is', null).limit(300);
+  if (!data?.length) return 0;
+  const map = await loadMap();
+  if (!map) return 0;
+  for (const l of data) {
+    const sea = crossesSea(map.isLand, [l.from_lat, l.from_lon], [l.to_lat, l.to_lon]);
+    await supabase.from('letters').update({ over_sea: sea }).eq('id', l.id);
+  }
+  return data.length;
+}
+
 async function wishAlarm() {
   const { data: rows } = await supabase.from('friend_settings').select('owner, friend').eq('wish_1111', true);
   if (!rows?.length) return 0;
@@ -181,6 +215,6 @@ Deno.serve(async (req) => {
   await setupPush();
   const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
   if (body?.test) return Response.json(await push(body.test, { title: 'Signed', body: 'Testing your notifications.', url: '/#/wall', tag: 'test' }));
-  const [took, mid, delivered, wished] = await Promise.all([takeoffs(), midways(), deliver(), wishAlarm()]);
-  return Response.json({ took, mid, delivered, wished });
+  const [took, mid, delivered, wished, seas] = await Promise.all([takeoffs(), midways(), deliver(), wishAlarm(), seaCrossings()]);
+  return Response.json({ took, mid, delivered, wished, seas });
 });

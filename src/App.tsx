@@ -14,7 +14,8 @@ import Opening from './screens/Opening';
 import Reader from './screens/Reader';
 import Wall from './screens/Wall';
 import Seals from './screens/Seals';
-import Profile from './screens/Profile';
+import Profile, { Settings } from './screens/Profile';
+import Dress from './screens/Dress';
 import Wish from './screens/Wish';
 import Invite from './screens/Invite';
 import Stamps from './screens/Stamps';
@@ -99,7 +100,9 @@ export default function App() {
 
   let screen;
   switch (r0) {
-    case 'setup': screen = <Setup step={r1 === 'owl' ? 'owl' : 'seal'} />; break;
+    case 'setup': screen = r1 === 'owl' && me.onboarded ? <Dress /> : <Setup step={r1 === 'owl' ? 'owl' : 'seal'} />; break;
+    case 'dress': screen = <Dress />; break;
+    case 'settings': screen = <Settings />; break;
     case 'invite': screen = <Invite code={r1} />; break;
     case 'friend': screen = <Friend id={r1} section={r2} />; break;
     case 'write': screen = <Compose id={r1} />; break;

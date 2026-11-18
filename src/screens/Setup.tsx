@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import type { Eye, Plume, Profile, Wax } from '../lib/types';
+import type { Profile, Wax } from '../lib/types';
+import { PLUME_OF, breedName, breedOf } from '../lib/owl';
+import { BreedPicker, OwlName } from './Dress';
 import { MARKS, Owl, Seal, Top } from '../components/bits';
 import { go } from '../lib/router';
 import { earnedBy, localStats, unlocked, useSealStats } from '../lib/achievements';
 
 export const WAX: [Wax, string, string][] = [['oxblood', 'Oxblood', '#96261F'], ['forest', 'Forest', '#2C5C4E'], ['ink', 'Ink blue', '#2C3A68'], ['mustard', 'Mustard', '#B48028'], ['plum', 'Plum', '#5C2C50'], ['soot', 'Soot', '#302A26']];
-export const PLUME: [Plume, string, string][] = [['tawny', 'Tawny', '#9C7652'], ['ash', 'Ash', '#8A8880'], ['umber', 'Umber', '#684E3A'], ['sand', 'Sand', '#C4AA7E'], ['white', 'White', '#E4E0D6'], ['dark', 'Dark', '#3A3430'], ['russet', 'Russet', '#965636'], ['slate', 'Slate', '#606872']];
-export const EYES: [Eye, string, string][] = [['amber', 'Amber', '#D6962E'], ['gold', 'Gold', '#E2BE46'], ['ember', 'Ember', '#D66822']];
 const MIXINS: [string, string][] = [['gold', 'Gold flakes'], ['glitter', 'Glitter'], ['twigs', 'Twigs'], ['petals', 'Petals'], ['ribbon', 'Ribbon'], ['lavender', 'Lavender'],
   ['marigold', 'Marigold'], ['cornflower', 'Cornflower'], ['forgetmenot', 'Forget-me-nots'], ['chamomile', 'Chamomile'], ['babysbreath', 'Baby’s breath'],
   ['bow', 'Ribbon bow'], ['lace', 'Lace'], ['feather', 'Owl feather']];
@@ -69,34 +69,21 @@ export function SealDesigner({ draft, set }: { draft: Profile; set: (p: Partial<
   );
 }
 
-const OWL_NAMES = ['Wren', 'Postscript', 'Detour', 'Quill', 'Inkwell', 'Vellum', 'Sepia', 'Moth', 'Dusk', 'Comet', 'Nimbus', 'Ember', 'Vesper',
-  'Hazel', 'Juniper', 'Bramble', 'Clementine', 'Tara', 'Megh', 'Kesar', 'Chandu', 'Archibald', 'Bartholomew', 'Sir Reginald', 'The Professor', 'Courier', 'Wanderer', 'Pip', 'Biscuit', 'Mango'];
-export const randomOwlName = (not?: string) => { let n = not; while (n === not) n = OWL_NAMES[Math.floor(Math.random() * OWL_NAMES.length)]; return n!; };
-
+/** First meeting: pick a breed and a name. Clothes come later, from Profile. */
 export function OwlEditor({ draft, set }: { draft: Profile; set: (p: Partial<Profile>) => void }) {
+  const breed = breedOf(draft.breed);
   return (
     <>
       <div className="stone row" style={{ justifyContent: 'center', gap: 20, padding: '18px 16px 14px', alignItems: 'flex-end' }}>
-        <Owl p={draft} width={120} alt="Your owl" />
+        <Owl p={draft} width={120} alt={`Your owl, a felt ${breedName(breed).toLowerCase()}`} />
         <div className="stack" style={{ paddingBottom: 14, width: 150 }}>
           <label htmlFor="owlName" className="small muted" style={{ fontStyle: 'italic' }}>Name it anything</label>
-          <div className="owl-name">
-            <input id="owlName" type="text" value={draft.owl_name} maxLength={20} placeholder="Your owl's name" onChange={(e) => set({ owl_name: e.target.value })} />
-            <button type="button" className="owl-dice" onClick={() => set({ owl_name: randomOwlName(draft.owl_name) })} aria-label="Suggest a name">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5" /><circle cx="9" cy="9" r="1.2" fill="currentColor" /><circle cx="15" cy="15" r="1.2" fill="currentColor" /><circle cx="15" cy="9" r="1.2" fill="currentColor" /><circle cx="9" cy="15" r="1.2" fill="currentColor" /></svg>
-            </button>
-          </div>
+          <OwlName value={draft.owl_name} set={(v) => set({ owl_name: v })} />
         </div>
       </div>
-      <section className="stack"><h2>Plumage</h2>
-        <div className="swatches">{PLUME.map(([k, label, hex]) => (
-          <button key={k} className={`sw${draft.plume === k ? ' on' : ''}`} style={{ background: hex }} aria-label={`${label} plumage`} aria-pressed={draft.plume === k} onClick={() => set({ plume: k })} />
-        ))}</div>
-      </section>
-      <section className="stack"><h2>Eyes</h2>
-        <div className="swatches">{EYES.map(([k, label, hex]) => (
-          <button key={k} className={`sw${draft.eye === k ? ' on' : ''}`} style={{ background: hex }} aria-label={`${label} eyes`} aria-pressed={draft.eye === k} onClick={() => set({ eye: k })} />
-        ))}</div>
+      <section className="stack" style={{ gap: 6 }}><h2>Breed</h2>
+        <BreedPicker breed={breed} km={draft.flown_km ?? 0} set={(b) => set({ breed: b, plume: PLUME_OF[b] })} />
+        <p className="small muted">Three more breeds open as your owl ranks up by flying letters.</p>
       </section>
     </>
   );
@@ -134,7 +121,7 @@ export default function Setup({ step }: { step: 'seal' | 'owl' }) {
       <OwlEditor draft={draft} set={set} />
       <div className="foot">
         <button className="btn wax" onClick={async () => {
-          await saveMe({ plume: draft.plume, eye: draft.eye, owl_name: draft.owl_name.trim() || 'Wren', onboarded: true });
+          await saveMe({ breed: breedOf(draft.breed), plume: PLUME_OF[breedOf(draft.breed)], owl_name: draft.owl_name.trim() || 'Wren', onboarded: true });
           go(me.onboarded ? 'profile' : 'tour');
         }}>{me.onboarded ? 'Save my owl' : 'Start writing'}</button>
       </div>

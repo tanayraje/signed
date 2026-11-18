@@ -1,28 +1,28 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Profile } from '../lib/types';
 import { ACHIEVEMENTS, type Achievement, type SealStats } from '../lib/achievements';
-import { PATINA, Seal, patinaStage } from './bits';
+import { RANKS, pieceOf, rankIndex, type Outfit } from '../lib/owl';
+import { go } from '../lib/router';
+import { Icon, Owl, PATINA, Seal, patinaStage } from './bits';
 
 const MIX_NAMES: Record<string, string> = {
   feather: 'owl feather', cornflower: 'cornflower petals', babysbreath: "baby's breath", chamomile: 'chamomile',
   forgetmenot: 'forget-me-nots', lace: 'lace', marigold: 'marigold petals', bow: 'ribbon bow'
 };
 export const mixName = (m: string) => MIX_NAMES[m] ?? m;
+/** What an achievement unlocks, in words: a mix-in for the seal or a piece for the owl. */
+export const rewardName = (a: Achievement) => (!a.reward ? '' : a.kind === 'owl' ? (pieceOf(a.reward)?.name ?? a.reward).replace(/^./, (c) => c.toLowerCase()) : mixName(a.reward));
 
-const ICONS: Record<Achievement['icon'], ReactNode> = {
-  letter: <><rect x="3" y="6" width="18" height="12" rx="1.5" /><path d="M3.5 7l8.5 6 8.5-6" /></>,
-  moon: <path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z" />,
-  route: <><circle cx="5" cy="18" r="2" /><circle cx="19" cy="6" r="2" /><path d="M6.5 16.5C10 10 14 14 17.5 7.5" strokeDasharray="2 2.5" /></>,
-  wave: <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" />,
-  clock: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>,
-  calendar: <><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></>,
-  shelf: <><rect x="4" y="4" width="16" height="16" rx="1" /><path d="M4 12h16M12 4v16" /></>,
-  leaf: <><path d="M5 19C5 10 11 5 19 5c0 8-5 14-14 14z" /><path d="M5 19l8-8" /></>,
-  ring: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4.5" /></>
-};
+/** A stitched felt patch: red for seal achievements, navy for owl ones. Greyed until earned. */
+export function Badge({ a, done, size = 42 }: { a: Achievement; done: boolean; size?: number }) {
+  return <img className={`badge${done ? '' : ' off'}`} src={`/assets/badges/${a.id}.webp`} alt="" width={size} height={size} draggable={false} />;
+}
+
+type Who = Pick<Profile, 'wax' | 'monogram' | 'name' | 'mixins' | 'edge' | 'mark' | 'plume' | 'breed' | 'outfit' | 'owl_name'> & { sealed?: number; flown_km?: number };
 
 /** How far a seal has aged, with the five stages and a bar to the next one. */
-export function PatinaCard({ p, who }: { p: Pick<Profile, 'wax' | 'monogram' | 'name' | 'mixins' | 'edge' | 'mark' | 'plume'> & { sealed?: number }; who?: string }) {
+function PatinaSteps({ p, who }: { p: Who; who?: string }) {
   const sealed = p.sealed ?? 0;
   const st = patinaStage(sealed);
   const next = PATINA[st + 1];
@@ -31,16 +31,7 @@ export function PatinaCard({ p, who }: { p: Pick<Profile, 'wax' | 'monogram' | '
   const subject = who ? `${who} has` : 'You’ve';
   const sealOf = who ? `${who}’s seal` : 'your seal';
   return (
-    <div className="card patina">
-      <div className="row" style={{ alignItems: 'baseline' }}>
-        <h2 className="grow" style={{ margin: 0 }}>Seal patina</h2>
-        <span className="small muted">{next ? `${next.at - sealed} letter${next.at - sealed === 1 ? '' : 's'} to ${next.name}` : 'Fully aged'}</span>
-      </div>
-      <p className="small muted" style={{ margin: 0 }}>
-        {st === 0
-          ? <>{subject} sealed {sealed} letter{sealed === 1 ? '' : 's'}.<br />At 10, {sealOf} starts to age.</>
-          : <>Because {who ? `${who} has` : 'you’ve'} sealed {sealed} letters, {sealOf} is <b>{PATINA[st].name}</b>: {PATINA[st].note.charAt(0).toLowerCase() + PATINA[st].note.slice(1)}</>}
-      </p>
+    <div className="stack" style={{ gap: 10 }}>
       <div className="patina-steps">
         {PATINA.map((s, i) => (
           <div key={s.name} className={`patina-step${i === st ? ' now' : ''}${i > st ? ' later' : ''}`}>
@@ -49,64 +40,220 @@ export function PatinaCard({ p, who }: { p: Pick<Profile, 'wax' | 'monogram' | '
           </div>
         ))}
       </div>
-      {next && <>
-        <div className="bar" role="progressbar" aria-valuemin={from} aria-valuemax={next.at} aria-valuenow={sealed} aria-label={`Letters to ${next.name}`}><i style={{ width: `${pct}%` }} /></div>
-        <div className="row small muted" style={{ justifyContent: 'space-between' }}><span>{from}</span><span>{sealed} sealed</span><span>{next.at}</span></div>
-      </>}
+      <p className="small muted">
+        {st === 0
+          ? <>{subject} sealed {sealed} letter{sealed === 1 ? '' : 's'}. At 10, {sealOf} starts to age.</>
+          : <>Because {who ? `${who} has` : 'you’ve'} sealed {sealed} letters, {sealOf} is <b>{PATINA[st].name}</b>: {PATINA[st].note.charAt(0).toLowerCase() + PATINA[st].note.slice(1)}</>}
+      </p>
+      <div className="stack" style={{ gap: 4 }}>
+        <div className="bar" role="progressbar" aria-valuemin={from} aria-valuemax={next?.at ?? sealed} aria-valuenow={sealed} aria-label={next ? `Letters to ${next.name}` : 'Fully aged'}><i style={{ width: `${pct}%` }} /></div>
+        <div className="row small muted" style={{ justifyContent: 'space-between' }}><span>{sealed} sealed</span><span>{next ? `${next.at - sealed} more to ${next.name}` : 'Fully aged'}</span></div>
+      </div>
     </div>
   );
 }
 
-/** The achievement cards. Pass `mine` on a friend's page to mark the ones you share. */
-export function AchievementGrid({ stats, mine, collapsed: startCollapsed = false }: { stats: SealStats; mine?: SealStats | null; collapsed?: boolean }) {
-  const [collapsed, setCollapsed] = useState(startCollapsed);
-  const earnedList = ACHIEVEMENTS.filter((a) => a.done(stats));
-  const earned = earnedList.length;
-  if (collapsed) {
-    const shared = mine ? earnedList.filter((a) => a.done(mine)).length : 0;
-    return (
-      <section className="card ach-summary">
-        <div className="row" style={{ alignItems: 'baseline' }}>
-          <h2 className="grow" style={{ margin: 0 }}>Achievements</h2>
-          <span className="small muted">{earned} of {ACHIEVEMENTS.length}{shared ? ` · ${shared} shared with you` : ''}</span>
+/** Rank: distance flown sets the perch the owl stands on and how fast it flies. */
+function RankSteps({ p, who }: { p: Who; who?: string }) {
+  const km = p.flown_km ?? 0;
+  const r = rankIndex(km);
+  const next = RANKS[r + 1];
+  const from = RANKS[r].at;
+  const pct = next ? Math.round(((km - from) / (next.at - from)) * 100) : 100;
+  const owl = p.owl_name || (who ? `${who}’s owl` : 'Your owl');
+  return (
+    <div className="stack" style={{ gap: 10 }}>
+      <div className="patina-steps">
+        {RANKS.map((x, i) => (
+          <div key={x.id} className={`patina-step rank-step${i === r ? ' now' : ''}${i > r ? ' later' : ''}`}>
+            <span className="rank-perch"><img src={`/owls/perch-${x.id}.webp`} alt="" /></span>
+            <span className="small">{x.short}</span>
+            <span className="rank-speed">{x.speed.toFixed(1)}×</span>
+          </div>
+        ))}
+      </div>
+      <p className="small muted">
+        {owl} has flown {km.toLocaleString('en-GB')} km, so {owl} is a <b>{RANKS[r].name}</b>
+        {r === 0 ? ': a twig perch, and letters fly at the usual speed.' : `: ${RANKS[r].perch}, and letters land ${RANKS[r].speed.toFixed(1)}× faster.`}
+      </p>
+      <div className="stack" style={{ gap: 4 }}>
+        <div className="bar" role="progressbar" aria-valuemin={from} aria-valuemax={next?.at ?? km} aria-valuenow={km} aria-label={next ? `Kilometres to ${next.name}` : 'Top rank'}><i style={{ width: `${pct}%` }} /></div>
+        <div className="row small muted" style={{ justifyContent: 'space-between' }}><span>{km.toLocaleString('en-GB')} km</span><span>{next ? `${(next.at - km).toLocaleString('en-GB')} km to ${next.name}` : 'Top rank'}</span></div>
+      </div>
+    </div>
+  );
+}
+
+/** Seal patina and owl rank, one card with two tabs. */
+export function ProgressCard({ p, who }: { p: Who; who?: string }) {
+  const [tab, setTab] = useState<'seal' | 'owl'>('seal');
+  return (
+    <section className="card progress-card">
+      <div className="seg" role="tablist" aria-label="Progress">
+        <button role="tab" aria-selected={tab === 'seal'} className={tab === 'seal' ? 'on' : ''} onClick={() => setTab('seal')}>Seal patina</button>
+        <button role="tab" aria-selected={tab === 'owl'} className={tab === 'owl' ? 'on' : ''} onClick={() => setTab('owl')}>Owl rank</button>
+      </div>
+      {tab === 'seal' ? <PatinaSteps p={p} who={who} /> : <RankSteps p={p} who={who} />}
+    </section>
+  );
+}
+/** Kept for older callers: just the patina. */
+export function PatinaCard({ p, who }: { p: Who; who?: string }) {
+  return <section className="card progress-card"><h2>Seal patina</h2><PatinaSteps p={p} who={who} /></section>;
+}
+
+const ratio = (a: Achievement, s: SealStats) => { const pr = a.progress?.(s); return pr ? pr[0] / pr[1] : -1; };
+const closest = (list: Achievement[], s: SealStats) => list.filter((a) => !a.done(s) && a.progress).sort((x, y) => ratio(y, s) - ratio(x, s));
+const fmt = (a: Achievement, n: number) => `${n.toLocaleString('en-GB')}${a.unit ?? ''}`;
+
+function Progress({ a, s, big }: { a: Achievement; s: SealStats; big?: boolean }) {
+  const pr = a.progress?.(s);
+  if (!pr || a.done(s)) return null;
+  return (
+    <span className={`ach-prog${big ? ' big' : ''}`}>
+      <span className="bar"><i style={{ width: `${(pr[0] / pr[1]) * 100}%` }} /></span>
+      <span className="small muted">{fmt(a, pr[0])} / {fmt(a, pr[1])}</span>
+    </span>
+  );
+}
+
+/** One achievement up close: how to earn it, how far along, and what it unlocks. */
+export function AchievementSheet({ a, stats, p, mine, onClose }: { a: Achievement; stats: SealStats; p: Who; mine: boolean; onClose: () => void }) {
+  const done = a.done(stats);
+  const piece = a.kind === 'owl' ? pieceOf(a.reward) : undefined;
+  const preview: Outfit = piece ? { [piece.slot]: piece.id } : {};
+  return (
+    <div className="sheet-back" onClick={onClose}>
+      <div className="stamp-sheet stack" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={a.title}>
+        <div className="row" style={{ alignItems: 'center', gap: 14 }}>
+          <Badge a={a} done={done} size={72} />
+          <div className="grow stack" style={{ gap: 2 }}>
+            <span className="eyebrow">{a.kind === 'owl' ? 'Owl achievement' : 'Seal achievement'}{done ? ' · earned' : ''}</span>
+            <h2 className="sheet-title">{a.title}</h2>
+            <span className="muted">{a.desc}</span>
+          </div>
+          <button className="icon" onClick={onClose} aria-label="Close" style={{ alignSelf: 'flex-start' }}>{Icon.close}</button>
         </div>
-        <div className="ach-dots" aria-hidden="true">
-          {ACHIEVEMENTS.map((a) => (
-            <span key={a.id} className={`ach-icon${a.done(stats) ? ' on' : ''}`} title={a.title}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{ICONS[a.icon]}</svg>
+        <Progress a={a} s={stats} big />
+        {a.reward && (
+          <div className="card row" style={{ padding: 12, gap: 14 }}>
+            <span className="reward-pic">
+              {piece ? <Owl p={p} outfit={preview} width={112} /> : <Seal p={{ ...p, mixins: [a.reward] }} size={84} />}
             </span>
+            <div className="stack" style={{ gap: 4 }}>
+              <span className="eyebrow gold">{done ? 'Unlocked' : 'Unlocks'}</span>
+              <b style={{ fontSize: 18 }}>{piece ? piece.name : mixName(a.reward).replace(/^./, (c) => c.toUpperCase())}</b>
+              <span className="small muted">{piece ? piece.note : 'Pressed into your wax seal.'}</span>
+            </div>
+          </div>
+        )}
+        <div className="foot" style={{ marginTop: 4 }}>
+          {mine && done && a.reward && <button className="btn" onClick={() => go(piece ? 'dress' : 'setup/seal')}>{piece ? `Dress ${p.owl_name || 'your owl'}` : 'Use it on your seal'}</button>}
+          <button className="btn wax" onClick={onClose}>Done</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type Filter = 'all' | 'seal' | 'owl';
+const pool = (f: Filter) => ACHIEVEMENTS.filter((a) => f === 'all' || a.kind === f);
+
+/** Every achievement: the ones closest to done, the ones earned, and the rest. */
+function AllAchievements({ stats, onPick, onClose }: { stats: SealStats; onPick: (a: Achievement) => void; onClose: () => void }) {
+  const [f, setF] = useState<Filter>('all');
+  const list = pool(f);
+  const count = (k: Filter) => `${pool(k).filter((a) => a.done(stats)).length}/${pool(k).length}`;
+  const next = closest(list, stats).slice(0, 4);
+  const earned = list.filter((a) => a.done(stats));
+  const rest = list.filter((a) => !a.done(stats) && !next.includes(a));
+  return (
+    <div className="sheet-back" onClick={onClose}>
+      <div className="stamp-sheet stack all-ach" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="All achievements">
+        <div className="row">
+          <h2 className="sheet-title grow">Achievements</h2>
+          <span className="small muted">{ACHIEVEMENTS.filter((a) => a.done(stats)).length} of {ACHIEVEMENTS.length}</span>
+          <button className="icon" onClick={onClose} aria-label="Close">{Icon.close}</button>
+        </div>
+        <div className="chips tight">
+          {(['all', 'seal', 'owl'] as const).map((k) => (
+            <button key={k} className={`chip${f === k ? ' on' : ''}`} aria-pressed={f === k} onClick={() => setF(k)}>{k === 'all' ? 'All' : `${k === 'seal' ? 'Seal' : 'Owl'} · ${count(k)}`}</button>
           ))}
         </div>
-        <button className="chip" onClick={() => setCollapsed(false)} aria-expanded="false">See all {ACHIEVEMENTS.length}</button>
-      </section>
-    );
-  }
-  return (
-    <section className="stack">
-      <div className="row" style={{ alignItems: 'baseline' }}>
-        <h2 className="grow" style={{ margin: 0 }}>Achievements</h2>
-        <span className="small muted">{earned} of {ACHIEVEMENTS.length}</span>
-        {startCollapsed && <button className="chip" onClick={() => setCollapsed(true)} aria-expanded="true" style={{ minHeight: 36 }}>Show less</button>}
-      </div>
-      <div className="ach-grid">
-        {ACHIEVEMENTS.map((a) => {
-          const done = a.done(stats);
-          const prog = a.progress?.(stats);
-          const both = mine && done && a.done(mine);
-          return (
-            <div key={a.id} className={`ach${done ? ' done' : ''}`}>
-              <span className="ach-icon" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{ICONS[a.icon]}</svg>
+        {next.length > 0 && <div className="stack" style={{ gap: 0 }}>
+          <h3 className="sub">Closest next</h3>
+          {next.map((a) => (
+            <button key={a.id} className="next-row" onClick={() => onPick(a)}>
+              <Badge a={a} done={false} size={36} />
+              <span className="grow stack" style={{ gap: 4 }}>
+                <span className="row" style={{ gap: 6, alignItems: 'baseline' }}><b>{a.title}</b><span className="small muted">{a.kind === 'owl' ? 'Owl' : 'Seal'}</span></span>
+                <Progress a={a} s={stats} />
+                {a.reward && <span className="small gold-text">Unlocks {rewardName(a)}</span>}
               </span>
-              <b>{a.title}</b>
-              {both && <span className="ach-shared">You have this too</span>}
-              <span className="small muted">{a.desc}</span>
-              {!done && prog && <span className="ach-prog"><span className="bar"><i style={{ width: `${(prog[0] / prog[1]) * 100}%` }} /></span><span className="small muted">{prog[0].toLocaleString()} / {prog[1].toLocaleString()}{a.id === 'long_haul' ? ' km' : ''}</span></span>}
-              {a.reward && <span className="ach-reward"><i aria-hidden="true" />{done ? 'Unlocked' : 'Unlocks'} {mixName(a.reward)}</span>}
-            </div>
+            </button>
+          ))}
+        </div>}
+        {earned.length > 0 && <div className="stack" style={{ gap: 8 }}>
+          <h3 className="sub">Earned</h3>
+          <div className="pill-grid">{earned.map((a) => <button key={a.id} className="ach-pill" onClick={() => onPick(a)}><Badge a={a} done size={30} /><span>{a.title}</span></button>)}</div>
+        </div>}
+        {rest.length > 0 && <div className="stack" style={{ gap: 8 }}>
+          <h3 className="sub">Still to earn</h3>
+          <div className="pill-grid">{rest.map((a) => <button key={a.id} className="ach-pill off" onClick={() => onPick(a)}><Badge a={a} done={false} size={30} /><span>{a.title}</span></button>)}</div>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+/** The achievements card: every patch at a glance, the closest next one, and a sheet with all of them.
+ *  Pass `mine` on a friend's page to mark the ones you share. */
+export function AchievementGrid({ stats, mine, p, own = false }: { stats: SealStats; mine?: SealStats | null; p: Who; own?: boolean }) {
+  const [f, setF] = useState<Filter>('all');
+  const [open, setOpen] = useState<Achievement | null>(null);
+  const [all, setAll] = useState(false);
+  const list = pool(f);
+  const earned = list.filter((a) => a.done(stats)).length;
+  const shared = mine ? ACHIEVEMENTS.filter((a) => a.done(stats) && a.done(mine)).length : 0;
+  const next = closest(list, stats)[0];
+  return (
+    <section className="card ach-card">
+      <div className="row" style={{ alignItems: 'baseline' }}>
+        <h2 className="grow">Achievements</h2>
+        <span className="small muted">{earned} of {list.length} earned{shared ? ` · ${shared} shared with you` : ''}</span>
+      </div>
+      <div className="chips tight">
+        {(['all', 'seal', 'owl'] as const).map((k) => (
+          <button key={k} className={`chip${f === k ? ' on' : ''}`} aria-pressed={f === k} onClick={() => setF(k)}>{k === 'all' ? 'All' : k === 'seal' ? 'Seal' : 'Owl'}</button>
+        ))}
+      </div>
+      <div className="badge-grid">
+        {list.map((a) => {
+          const done = a.done(stats);
+          const pr = !done ? a.progress?.(stats) : undefined;
+          return (
+            <button key={a.id} className="badge-tile" onClick={() => setOpen(a)} aria-label={`${a.title}${done ? '' : pr ? ', in progress' : ', not earned yet'}`}>
+              <Badge a={a} done={done} />
+              {pr && <span className="badge-bar" aria-hidden="true"><i style={{ width: `${(pr[0] / pr[1]) * 100}%` }} /></span>}
+            </button>
           );
         })}
       </div>
+      {next && (
+        <button className="next-card" onClick={() => setOpen(next)}>
+          <Badge a={next} done={false} size={46} />
+          <span className="grow stack" style={{ gap: 3, minWidth: 0 }}>
+            <span className="small muted" style={{ fontSize: 12 }}>Closest next</span>
+            <b style={{ fontSize: 15 }}>{next.title}</b>
+            <Progress a={next} s={stats} />
+            {next.reward && <span className="small gold-text">Unlocks {rewardName(next)}</span>}
+          </span>
+          <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--muted)' }}>›</span>
+        </button>
+      )}
+      <button className="chip mini-chip" onClick={() => setAll(true)}>See all {ACHIEVEMENTS.length}</button>
+      {all && createPortal(<AllAchievements stats={stats} onPick={(a) => setOpen(a)} onClose={() => setAll(false)} />, document.body)}
+      {open && createPortal(<AchievementSheet a={open} stats={stats} p={p} mine={own} onClose={() => setOpen(null)} />, document.body)}
     </section>
   );
 }

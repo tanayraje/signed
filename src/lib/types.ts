@@ -22,6 +22,9 @@ export interface Profile {
   onboarded: boolean;
   toured: boolean;
   sealed?: number;
+  breed?: string;               // which felt owl (see lib/owl)
+  outfit?: Record<string, string>; // one piece per slot
+  flown_km?: number;            // distance flown in all: sets the owl's rank
 }
 
 export interface FriendSettings {
@@ -68,6 +71,7 @@ export interface Letter {
   from_lat: number | null; from_lon: number | null; from_place: string | null;
   to_lat: number | null; to_lon: number | null; to_place: string | null;
   distance_km: number | null;
+  over_sea?: boolean | null;
   sent_at: string;
   arrive_at: string;
   opened_at: string | null;
