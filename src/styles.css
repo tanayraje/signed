@@ -802,3 +802,8 @@ body.ench .ach-dots .ach-icon.on { background: var(--gold); color: #141A2E }
 .piece-note { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); text-align: center }
 .worn-note { color: #2F5D50; font-weight: 600 }
 body.ench .speed-tag { color: #141A2E; background: var(--gold) }
+/* rank perches on the shelf, in place of the plain pegs */
+.sh-in > img.sh-rank-hole { inset-inline-start: calc(var(--u) * 14); height: auto; max-width: none; filter: drop-shadow(0 calc(var(--u) * 9) calc(var(--u) * 7) rgba(0, 0, 0, .55)) }
+.sh-in > .sh-mount { inset-inline-start: calc(var(--u) * 13); bottom: calc(var(--u) * 37); width: calc(var(--u) * 7); height: calc(var(--u) * 18); border-radius: calc(var(--u) * 2); background: linear-gradient(180deg, #B08556, #6B4A2B 55%, #33210F) }
+.night .sh-in > img.sh-rank { filter: brightness(.6) saturate(.72) drop-shadow(0 calc(var(--u) * 9) calc(var(--u) * 7) rgba(0, 0, 0, .55)) }
+.sh-perch > img.sh-rank-top { left: 2px; height: auto; max-width: none; filter: drop-shadow(0 6px 5px rgba(43, 30, 18, .35)) }
