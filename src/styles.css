@@ -78,7 +78,10 @@ textarea { resize: vertical; line-height: 1.5 }
 .mark-pick button.on { border-color: var(--ink) }
 .mark-pick .seal { pointer-events: none }
 .seal .mono span { display: block; transform: translateY(var(--mono-y, .03em)) }
-.owl { display: block; flex: none }
+.owl { display: block; flex: none; position: relative; aspect-ratio: 4 / 5 }
+.owl img, .owl-on-perch { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; pointer-events: none; user-select: none }
+.owl .owl-on-perch { inset: auto }
+.owl-on-perch img { position: absolute; inset: 0; width: 100%; height: 100% }
 .stamp { flex: none }
 
 .stone { background: #E4E2DC url(/assets/stone.jpg) center/cover; border-radius: 16px; box-shadow: inset 0 1px 3px rgba(40, 40, 40, .14) }
@@ -581,7 +584,7 @@ label.rec { cursor: pointer }
 .sh-foot { left: 6px; bottom: 0; width: 12px; height: 13px; border-radius: 2px 2px 1px 1px; background: linear-gradient(90deg, rgba(255, 230, 190, .35), rgba(255, 230, 190, 0) 40%, rgba(0, 0, 0, .4)), #6B4A2E url(/assets/wood-v.jpg) center/200px; box-shadow: 0 3px 3px rgba(43, 30, 18, .45) }
 .sh-foot.r { left: 102px }
 .sh-rail { left: 2px; bottom: 9px; width: 116px; height: 9px; border-radius: 5px; background: linear-gradient(90deg, rgba(0, 0, 0, .3) 0, rgba(0, 0, 0, 0) 5px, rgba(0, 0, 0, 0) calc(100% - 5px), rgba(0, 0, 0, .3)), linear-gradient(180deg, #D2A672 0, #AE7F4E 30%, #74502F 75%, #3F2A18); box-shadow: 0 6px 5px rgba(43, 30, 18, .35) }
-.sh-perch > img.sh-perch-owl { left: 23px; bottom: 16px; height: 90px; width: auto; max-width: none; filter: drop-shadow(4px 6px 4px rgba(43, 30, 18, .4)) }
+.sh-perch > .sh-perch-owl { left: 23px; bottom: 16px; height: 90px; width: auto; max-width: none; filter: drop-shadow(4px 6px 4px rgba(43, 30, 18, .4)) }
 .sh-perch > svg.sh-perch-feather { left: -66px; bottom: 1px; width: 64px; height: 22px; transform-origin: 50% 100%; transform: perspective(160px) rotateX(46deg) rotate(6deg); filter: drop-shadow(0 1.5px 1px rgba(43, 30, 18, .6)) }
 .sh-perch-string { left: 30px; bottom: 2px; width: 1px; height: 9px; background: #A8926A }
 .sh-perch-tag { left: 30px; top: calc(100% - 2px); width: max-content; min-width: 72px; max-width: 150px; padding: 8px 8px 5px; box-sizing: border-box; transform: translateX(-50%) rotate(-5deg); transform-origin: 50% 0; text-align: center; line-height: 1.15; color: #2B2622;
@@ -614,7 +617,7 @@ label.rec { cursor: pointer }
   box-shadow: 0 calc(var(--u) * 10) calc(var(--u) * 8) rgba(0, 0, 0, .55) }
 .sh-peg::before { content: ''; position: absolute; left: calc(var(--u) * -1); top: calc(var(--u) * -4); width: calc(var(--u) * 7); height: calc(var(--u) * 18); border-radius: calc(var(--u) * 2); background: linear-gradient(180deg, #B08556, #6B4A2B 55%, #33210F) }
 .flip .sh-peg { transform: scaleX(-1) }
-.sh-in > img.sh-owl { bottom: calc(var(--u) * 45); inset-inline-start: calc(var(--u) * 22); height: calc(var(--u) * 106); width: auto; max-width: none; filter: brightness(.9) saturate(.92) drop-shadow(calc(var(--u) * 5) calc(var(--u) * 9) calc(var(--u) * 6) rgba(0, 0, 0, .6)) }
+.sh-in > .sh-owl { bottom: calc(var(--u) * 45); inset-inline-start: calc(var(--u) * 22); height: calc(var(--u) * 106); width: auto; max-width: none; filter: brightness(.9) saturate(.92) drop-shadow(calc(var(--u) * 5) calc(var(--u) * 9) calc(var(--u) * 6) rgba(0, 0, 0, .6)) }
 .sh-stack { bottom: calc(var(--u) * 8); inset-inline-end: calc(var(--u) * 24); width: calc(var(--u) * 62); display: flex; flex-direction: column-reverse; align-items: flex-start; filter: drop-shadow(0 calc(var(--u) * 4) calc(var(--u) * 3) rgba(0, 0, 0, .65)) }
 .sh-stack.under { inset-inline-end: auto; inset-inline-start: calc(var(--u) * 24) }
 .sh-stack i { display: block; height: calc(var(--u) * 3); border-radius: calc(var(--u) * .5); box-shadow: inset 0 calc(var(--u) * -1) 0 rgba(70, 48, 24, .4) }
@@ -638,7 +641,7 @@ label.rec { cursor: pointer }
 .sh-halo { inset-inline-end: calc(var(--u) * 30); bottom: calc(var(--u) * 24); width: calc(var(--u) * 40); height: calc(var(--u) * 40); border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(255, 206, 128, .5) 0, rgba(255, 180, 90, .18) 45%, rgba(255, 170, 80, 0) 72%) }
 .sh-in > svg.sh-candle { inset-inline-end: calc(var(--u) * 38); bottom: calc(var(--u) * 7); width: calc(var(--u) * 24); height: calc(var(--u) * 48) }
 .night .sh-peg { filter: brightness(.6) saturate(.72) }
-.night .sh-in > img.sh-owl { filter: brightness(.64) saturate(.74) drop-shadow(calc(var(--u) * 5) calc(var(--u) * 9) calc(var(--u) * 6) rgba(0, 0, 0, .6)) }
+.night .sh-in > .sh-owl { filter: brightness(.64) saturate(.74) drop-shadow(calc(var(--u) * 5) calc(var(--u) * 9) calc(var(--u) * 6) rgba(0, 0, 0, .6)) }
 .night .sh-stack { filter: brightness(.55) saturate(.7) drop-shadow(0 calc(var(--u) * 4) calc(var(--u) * 3) rgba(0, 0, 0, .65)) }
 .night .sh-in > svg.sh-feather { filter: brightness(.55) drop-shadow(0 calc(var(--u) * 1.5) calc(var(--u) * 1) rgba(0, 0, 0, .85)) }
 .night .sh-letter { filter: brightness(.7) }
@@ -710,3 +713,85 @@ body.ench .ach-dots .ach-icon.on { background: var(--gold); color: #141A2E }
 @keyframes pinpop { from { opacity: 0; transform: translate(-50%, 6px) } }
 @media (prefers-reduced-motion: reduce) { .pin-line, .pin-dock { animation: none } }
 .profile-sig { font-family: var(--sign); font-weight: 400; font-size: 52px; line-height: 1; color: #1F2A44; padding-top: 6px }
+
+/* ---- owl wardrobe, rank and the compact profile ---- */
+.hscroll { display: flex; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px 6px }
+.hscroll::-webkit-scrollbar { display: none }
+.profile-sig + .icon svg { width: 22px; height: 22px }
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) }
+.duo-half { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 10px 14px; text-align: center }
+.duo-half + .duo-half { border-left: 1px solid var(--line) }
+.duo-half .small { margin-top: -2px; font-size: 13px }
+.duo-pic { height: 118px; display: flex; align-items: flex-end; justify-content: center }
+.duo-half .seal { margin-bottom: 12px }
+.mini-chip, .chips.tight .chip { min-height: 36px; padding: 0 14px; font-size: 14px; border-radius: 18px }
+.duo-half .mini-chip { margin-top: 6px }
+.chips.tight { gap: 6px }
+.speed-tag { align-self: flex-start; font-size: 12px; font-weight: 600; color: #2F5D50; background: #E3ECE7; border-radius: 10px; padding: 2px 8px }
+.speed-tag.corner { position: absolute; top: 10px; right: 10px; z-index: 2 }
+.seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: rgba(43, 38, 34, .06); border-radius: 12px; padding: 3px }
+.seg.five { grid-template-columns: repeat(5, minmax(0, 1fr)) }
+.seg button { min-height: 36px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 14px; padding: 0 2px }
+.seg button.on { background: #FBF8F2; color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(60, 44, 30, .18) }
+.progress-card { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 12px }
+.progress-card b { color: var(--ink); font-weight: 600 }
+.rank-perch { width: 54px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(43, 38, 34, .04); border: 1.5px solid transparent; overflow: hidden }
+.rank-perch img { width: 48px; height: auto }
+.rank-step.now .rank-perch { border-color: var(--ink) }
+.rank-speed { font-size: 11px; color: var(--muted); font-weight: 400 }
+.badge { display: block; flex: none }
+.badge.off { filter: grayscale(1); opacity: .38 }
+.ach-card { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 12px; align-items: stretch }
+.badge-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 12px; column-gap: 2px; padding: 2px 0 4px }
+.badge-tile { position: relative; width: 44px; height: 44px; border: 0; padding: 1px; background: transparent; justify-self: center }
+.badge-bar { position: absolute; left: 6px; right: 6px; bottom: -6px; height: 3px; border-radius: 2px; background: var(--line); overflow: hidden }
+.badge-bar i { display: block; height: 3px; background: #8A7F72 }
+.next-card { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; background: rgba(43, 38, 34, .05); border: 0; text-align: left; color: inherit; width: 100% }
+.next-card .ach-prog, .next-row .ach-prog { width: 100% }
+.ach-card > .mini-chip { align-self: flex-start }
+.gold-text { color: #7A5A1E; font-size: 13px }
+.ach-prog.big .bar { height: 8px; border-radius: 4px }
+.ach-prog.big .bar i { height: 8px; background: var(--wax) }
+.ach-prog .bar i { background: #8A7F72 }
+.eyebrow { font-size: 12px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase }
+.eyebrow.gold { color: #7A5A1E }
+.sheet-title { margin: 0; font-size: 22px; font-weight: 600; font-style: normal; color: var(--ink) }
+.reward-pic { width: 112px; height: 128px; flex: none; border-radius: 12px; background: #EFE8DC; display: flex; align-items: center; justify-content: center; overflow: hidden }
+.all-ach { max-height: 88vh; overflow-y: auto }
+.sheet-back .stamp-sheet { position: relative }
+.all-ach h3.sub, h3.sub { margin: 0 0 4px; font-size: 14px; font-weight: 600; font-style: italic; color: var(--muted) }
+.next-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border: 0; border-top: 1px solid var(--line); background: none; text-align: left; color: inherit; width: 100% }
+.pill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px }
+.ach-pill { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; background: rgba(43, 38, 34, .04); border: 1px solid transparent; text-align: left; color: inherit; font-size: 14px; line-height: 1.2 }
+.ach-pill.off { background: transparent; border: 1px dashed #D8CEBF; color: var(--muted) }
+.friend-cards { gap: 10px }
+.friend-card { flex: none; width: 112px; padding: 12px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; color: inherit }
+.friend-pics { position: relative; display: block; width: 76px; height: 56px }
+.friend-pics .seal { position: absolute; left: 0; top: 4px }
+.friend-pics .owl { position: absolute; right: 0; top: 0 }
+.set-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 8px 0; border: 0; background: none; color: inherit; text-align: left }
+.chev { font-size: 22px; color: var(--muted) }
+.dress-hero { padding: 14px; display: flex; align-items: center; gap: 14px }
+.worn { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px }
+.breed-row { gap: 4px }
+.breed { position: relative; flex: none; width: 72px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; border-radius: 12px; border: 1.5px solid transparent; background: transparent; color: inherit }
+.breed.on { border-color: var(--ink); background: rgba(251, 248, 242, .9) }
+.breed:disabled { cursor: default }
+.breed-pic { display: block; width: 46px; height: 50px; overflow: hidden }
+.breed-pic img { width: 46px; height: 57px; max-width: none }
+.breed.locked .breed-pic img { opacity: .4 }
+.breed-name { font-size: 12px }
+.breed.on .breed-name { font-weight: 600 }
+.breed-lock { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted) }
+.piece-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px }
+.piece { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px 8px; border-radius: 14px; border: 1.5px solid transparent; background: transparent; color: inherit }
+.piece.on { border-color: var(--ink) }
+.piece-pic { position: relative; display: block; width: 92px; height: 92px; border-radius: 12px; background: #EFE8DC; overflow: hidden; color: var(--muted) }
+.piece-pic.none { display: flex; align-items: center; justify-content: center }
+.piece-pic .owl { position: absolute; width: 100px; left: -4px; top: -16px }
+.piece-pic.top .owl { width: 132px; left: -20px; top: 2px }
+.piece-pic.dim .owl { opacity: .45 }
+.piece-name { font-size: 13px; line-height: 1.2; text-align: center }
+.piece-note { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); text-align: center }
+.worn-note { color: #2F5D50; font-weight: 600 }
+body.ench .speed-tag { color: #141A2E; background: var(--gold) }

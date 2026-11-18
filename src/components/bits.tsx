@@ -4,6 +4,7 @@ import { signedUrl } from '../lib/media';
 import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { useStore } from '../lib/store';
+import { breedOf, cleanOutfit, owlLayers, perchOf, rankOf, type Outfit, type RankKey } from '../lib/owl';
 
 /** A pressed wax seal: real wax image with the person's monogram embossed into it. */
 const ON_TOP = ['gold', 'glitter', 'twigs', 'petals', 'marigold', 'cornflower', 'forgetmenot', 'chamomile', 'babysbreath', 'lavender', 'feather'];
@@ -45,10 +46,23 @@ export function Seal({ p, size = 56, label, stage }: { p: Pick<Profile, 'wax' | 
   );
 }
 
-export const owlSrc = (p: Pick<Profile, 'plume' | 'eye'>) => `/assets/owl-${p.plume}-${p.eye}.png`;
-
-export function Owl({ p, width = 76, alt = '' }: { p: Pick<Profile, 'plume' | 'eye'>; width?: number; alt?: string }) {
-  return <img className="owl" src={owlSrc(p)} alt={alt} width={width} height={Math.round(width * 1.25)} />;
+/** Your felt owl: its breed, what it wears, and (optionally) the rank perch under its feet. Stacked image layers. */
+type OwlP = Partial<Pick<Profile, 'breed' | 'outfit' | 'flown_km'>>;
+export function Owl({ p, width, alt = '', perch, outfit, className }: { p: OwlP; width?: number; alt?: string; perch?: boolean | RankKey; outfit?: Outfit; className?: string }) {
+  const breed = breedOf(p.breed);
+  const layers = owlLayers(breed, outfit ?? cleanOutfit(p.outfit));
+  const rank: RankKey | null = perch === true ? rankOf(p.flown_km).id : perch || null;
+  const size = width ? { width, height: Math.round(width * 1.25) } : undefined;
+  const stack = layers.map((s) => <img key={s} src={s} alt="" draggable={false} decoding="async" />);
+  const pc = rank ? perchOf(breed, rank) : null;
+  return (
+    <span className={`owl${className ? ` ${className}` : ''}`} style={size} role={alt ? 'img' : undefined} aria-label={alt || undefined} aria-hidden={alt ? undefined : true}>
+      {pc ? <>
+        <img src={pc.src} alt="" draggable={false} decoding="async" />
+        <span className="owl-on-perch" style={{ left: `${pc.x * 100}%`, top: `${pc.y * 100}%`, width: `${pc.scale * 100}%`, height: `${pc.scale * 100}%` }}>{stack}</span>
+      </> : stack}
+    </span>
+  );
 }
 
 /** The owl seen from above, as it flies across the map. Drawn, not a picture, so its wings can beat. */

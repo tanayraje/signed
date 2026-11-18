@@ -5,7 +5,8 @@ import { ago, timeLeft } from '../lib/format';
 import { km } from '../lib/geo';
 import { Icon, Owl, PATINA, Seal, Stamp, patinaStage } from '../components/bits';
 import FlightMap from '../components/FlightMap';
-import { AchievementGrid, PatinaCard } from '../components/Achievements';
+import { AchievementGrid, ProgressCard } from '../components/Achievements';
+import { breedName } from '../lib/owl';
 import { ACHIEVEMENTS, localStats, useSealStats } from '../lib/achievements';
 import type { Incoming, Letter, Profile } from '../lib/types';
 
@@ -23,12 +24,15 @@ export default function Friend({ id, section }: { id: string; section?: string }
       <main className="app">
         <div className="top">
           <button className="icon" onClick={() => go(`friend/${fp.id}`)} aria-label={`Back to ${fp.name}`}>{Icon.back}</button>
-          <h1 className="grow">{fp.name}’s seal</h1>
+          <h1 className="grow">{fp.name}’s seal and owl</h1>
         </div>
-        <div className="row" style={{ justifyContent: 'center' }}><Seal p={{ ...fp, sealed: theirStats?.sealed ?? fp.sealed }} size={150} label={`${fp.name}'s wax seal`} /></div>
-        <PatinaCard p={{ ...fp, sealed: theirStats?.sealed ?? fp.sealed }} who={fp.name} />
+        <div className="row" style={{ justifyContent: 'center', gap: 18, alignItems: 'flex-end' }}>
+          <Seal p={{ ...fp, sealed: theirStats?.sealed ?? fp.sealed }} size={120} label={`${fp.name}'s wax seal`} />
+          <Owl p={{ ...fp, flown_km: Math.max(fp.flown_km ?? 0, Math.round(theirStats?.km ?? 0)) }} perch width={120} alt={`${fp.owl_name}, ${fp.name}'s ${breedName(fp.breed).toLowerCase()}`} />
+        </div>
+        <ProgressCard p={{ ...fp, sealed: theirStats?.sealed ?? fp.sealed, flown_km: Math.max(fp.flown_km ?? 0, Math.round(theirStats?.km ?? 0)) }} who={fp.name} />
         {theirStats
-          ? <AchievementGrid stats={theirStats} mine={myStats} />
+          ? <AchievementGrid stats={theirStats} mine={myStats} p={fp} />
           : <p className="small muted" style={{ margin: 0 }}>Couldn’t load {fp.name}’s achievements just now. Try again in a moment.</p>}
       </main>
     );

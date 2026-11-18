@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { timeLeft } from '../lib/format';
-import { Icon, Nav, Seal, owlSrc } from '../components/bits';
+import { Icon, Nav, Owl, Seal } from '../components/bits';
 import { useFlights } from '../components/InTheAir';
 import type { Plume, Profile } from '../lib/types';
 
@@ -164,7 +164,7 @@ export default function Friends() {
           {night && <><span className="sh-dusk" /><span className="sh-warm" />{shade}</>}
           <span className="sh-peg" />
           {showStack && <Stack n={Math.min(9, count)} under={night} />}
-          {!away && <img className="sh-owl" src={owlSrc(f)} alt="" />}
+          {!away && <Owl p={f} className="sh-owl" />}
           {onFloor === 'feather' && <Feather id={f.id} plume={f.plume} />}
           {!night && shade}
           {onFloor === 'letter' && <span className="sh-letter" aria-hidden="true"><Seal p={f} size={22} /></span>}
@@ -196,7 +196,7 @@ export default function Friends() {
               </span>
             </>
           ) : (
-            <img className="sh-perch-owl" src={owlSrc(me)} alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
+            <Owl p={me} className="sh-perch-owl" alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
           )}
         </div>
       </div>
