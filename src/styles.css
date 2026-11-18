@@ -813,3 +813,8 @@ body.ench .speed-tag { color: #141A2E; background: var(--gold) }
 .sh-perch > .sh-perch-owl { left: calc(var(--u) * 7); height: calc(var(--u) * 106) }
 .sh-perch > .sh-perch-string { left: 60px; height: 24px }
 .sh-perch > .sh-perch-tag { left: 60px }
+/* contact shadow: where the talons grip the rod */
+.sh-in > .sh-contact, .sh-perch > .sh-contact { width: calc(var(--u) * 52); height: calc(var(--u) * 9); border-radius: 50%; background: radial-gradient(closest-side, rgba(20, 10, 4, .72), rgba(20, 10, 4, .38) 55%, rgba(20, 10, 4, 0)); pointer-events: none }
+.sh-in > .sh-contact { bottom: calc(var(--u) * 43.5); inset-inline-start: calc(var(--u) * 38) }
+.sh-perch > .sh-contact.top { left: calc(var(--u) * 23) }
+.night .sh-in > .sh-contact { opacity: .7 }

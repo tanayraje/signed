@@ -185,7 +185,7 @@ export default function Friends() {
           {night && <><span className="sh-dusk" /><span className="sh-warm" />{shade}</>}
           <RankPerch km={f.flown_km} where="hole" />
           {showStack && <Stack n={Math.min(9, count)} under={night} />}
-          {!away && <Owl p={f} className="sh-owl" />}
+          {!away && <><span className="sh-contact" aria-hidden="true" /><Owl p={f} className="sh-owl" /></>}
           {onFloor === 'feather' && <Feather id={f.id} plume={f.plume} />}
           {!night && shade}
           {onFloor === 'letter' && <span className="sh-letter" aria-hidden="true"><Seal p={f} size={22} /></span>}
@@ -216,9 +216,10 @@ export default function Friends() {
                 <i /><b>{tagWho}</b><small>{timeLeft(mine.arrive_at)}</small>
               </span>
             </>
-          ) : (
+          ) : (<>
+            <span className="sh-contact top" aria-hidden="true" style={{ bottom: `calc(var(--u) * ${(topRod(me.flown_km) - 4).toFixed(2)})` }} />
             <Owl p={me} className="sh-perch-owl" style={{ bottom: `calc(var(--u) * ${(topRod(me.flown_km) - 11).toFixed(2)})` }} alt={`${me.owl_name}, your owl, on its perch on top of the shelf`} />
-          )}
+          </>)}
         </div>
       </div>
       <div className="shelf">
