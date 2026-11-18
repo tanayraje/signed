@@ -118,8 +118,11 @@ function RankPerch({ km, where }: { km?: number; where: 'hole' | 'top' }) {
 const topRod = (km?: number) => { const [h, t] = PEG[`stand-${rankOf(km).id}`]; return (h - t) * 86; };
 
 export default function Friends() {
-  const { me, friends, letters, say, session } = useStore();
+  const { me, friends, letters, say, session, refresh } = useStore();
   const [invite, setInvite] = useState<string | null>(null);
+  const [pasting, setPasting] = useState(false);
+  const [pasted, setPasted] = useState('');
+  const [joining, setJoining] = useState(false);
   const [, tick] = useState(0);
   useEffect(() => { const t = window.setInterval(() => tick((n) => n + 1), 1000); return () => window.clearInterval(t); }, []);
   const flights = useFlights();
@@ -136,6 +139,24 @@ export default function Friends() {
     if (nav.share) {
       try { await nav.share({ title: 'Write to me on Signed', text: `${me!.name} wants to write you letters.`, url: link }); } catch { /* the person closed the share sheet */ }
     }
+  }
+
+  // A friend's invite link that didn't carry through sign-in (opened in another app's browser, or
+  // before installing Signed to the home screen) can still be pasted here.
+  async function useInvite(e: React.FormEvent) {
+    e.preventDefault();
+    const text = pasted.trim();
+    const code = (text.match(/invite\/([A-Za-z0-9]+)/) || text.match(/^([A-Za-z0-9]{6,})$/))?.[1];
+    if (!code) { say('That does not look like an invite link.'); return; }
+    setJoining(true);
+    const { data, error } = await supabase.rpc('accept_invite', { invite_code: code });
+    setJoining(false);
+    if (error) { say(/your own/i.test(error.message) ? 'That is your own invite. Send it to a friend.' : error.message || 'That invite did not work.'); return; }
+    try { localStorage.removeItem('signed.pendingInvite'); } catch { /* fine */ }
+    await refresh();
+    const who = (await supabase.from('profiles').select('name').eq('id', data as string).single()).data?.name;
+    say(who ? `You and ${who} are friends now.` : 'You have a new friend.');
+    setPasted(''); setPasting(false);
   }
 
   // My own owl leaves its perch whenever one of my letters is in the air. The tag names the next to land.
@@ -254,6 +275,16 @@ export default function Friends() {
             try { await navigator.clipboard.writeText(invite); say('Link copied.'); } catch { say('Select the link and copy it.'); }
           }}>Copy link</button>
         </div>
+      )}
+      {!pasting ? (
+        <button className="chip" style={{ alignSelf: 'center', border: 0 }} onClick={() => setPasting(true)}>Got an invite link from a friend?</button>
+      ) : (
+        <form className="card stack" style={{ padding: 14, position: 'relative' }} onSubmit={useInvite}>
+          <button type="button" className="scrap-x" style={{ top: 8, right: 8 }} onClick={() => setPasting(false)} aria-label="Close">{Icon.close}</button>
+          <label htmlFor="paste-invite" className="small muted" style={{ paddingRight: 36 }}>Paste the link your friend sent you.</label>
+          <input id="paste-invite" type="text" autoComplete="off" autoCapitalize="off" spellCheck={false} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="signed-mail.vercel.app/#/invite/…" />
+          <button className="btn wax block" disabled={joining || !pasted.trim()}>{joining ? 'Opening…' : 'Join'}</button>
+        </form>
       )}
       <Nav on="friends" />
     </main>

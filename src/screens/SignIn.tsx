@@ -15,7 +15,12 @@ export function restorePlace() {
   } catch { /* storage blocked */ }
 }
 
+/** Instagram, Facebook, Snapchat and similar open links in their own browser, where Google refuses to
+ *  sign in and anything remembered is lost once the person moves to a real browser. */
+const inAppBrowser = /FBAN|FBAV|FB_IAB|Instagram|Snapchat|Line\/|LinkedInApp|Twitter|MicroMessenger|; wv\)/i.test(navigator.userAgent);
+
 export default function SignIn() {
+  const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState('');
   const [useEmail, setUseEmail] = useState(false);
   const [state, setState] = useState<'idle' | 'busy' | 'sent' | 'error'>('idle');
@@ -47,6 +52,16 @@ export default function SignIn() {
         <p className="muted">Letters between friends, carried by owls.</p>
       </div>
       {!configured && <p className="card small" style={{ padding: 14 }}>This build has no Supabase project yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then rebuild.</p>}
+
+      {inAppBrowser && (
+        <div className="card stack center" style={{ padding: 16 }}>
+          <p>Open Signed in {/iPhone|iPad/i.test(navigator.userAgent) ? 'Safari' : 'Chrome'} to sign in.</p>
+          <p className="small muted">This app's built-in browser can't sign in with Google{window.location.hash.includes('invite') ? ', and your invite would get lost' : ''}. Copy the link and paste it into your browser.</p>
+          <button className="chip" style={{ alignSelf: 'center' }} onClick={async () => {
+            try { await navigator.clipboard.writeText(window.location.href); setCopied(true); } catch { /* select by hand */ }
+          }}>{copied ? 'Link copied' : 'Copy link'}</button>
+        </div>
+      )}
 
       <button className="btn block" style={{ background: '#FBF8F2', gap: 12 }} disabled={state === 'busy' || !configured} onClick={google}>
         <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
