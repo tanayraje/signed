@@ -104,7 +104,7 @@ const PEG: Record<string, [number, number]> = {
   'wall-new': [0.6603, 0.3587], 'wall-courier': [0.462, 0.1551], 'wall-senior': [0.4606, 0.1577], 'wall-veteran': [0.4635, 0.1587], 'wall-master': [0.4665, 0.1629],
   'stand-new': [0.7156, 0.3211], 'stand-courier': [0.4141, 0.0184], 'stand-senior': [0.4232, 0.0219], 'stand-veteran': [0.4193, 0.0217], 'stand-master': [0.4098, 0.0183]
 };
-const TOP_W = 100;   // the standing perch on top of the shelf, in px
+const TOP_W = 76;   // the standing perch on top of the shelf, in px
 function RankPerch({ km, where }: { km?: number; where: 'hole' | 'top' }) {
   const r = rankOf(km).id;
   const key = `${where === 'hole' ? 'wall' : 'stand'}-${r}`;
