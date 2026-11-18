@@ -25,10 +25,10 @@ export const PLUME_OF: Record<Breed, Plume> = {
 export type RankKey = 'new' | 'courier' | 'senior' | 'veteran' | 'master';
 export const RANKS: { id: RankKey; name: string; short: string; at: number; speed: number; perch: string; note: string }[] = [
   { id: 'new', name: 'New courier', short: 'New', at: 0, speed: 1.0, perch: 'a twig perch', note: 'A plain twig with one leaf.' },
-  { id: 'courier', name: 'Courier', short: 'Courier', at: 1000, speed: 1.1, perch: 'a wooden perch', note: 'A plain wooden perch.' },
-  { id: 'senior', name: 'Senior courier', short: 'Senior', at: 5000, speed: 1.2, perch: 'a silver-capped perch', note: 'Silver end caps.' },
-  { id: 'veteran', name: 'Veteran', short: 'Veteran', at: 15000, speed: 1.3, perch: 'a gold-capped perch', note: 'Gold end caps.' },
-  { id: 'master', name: 'Master courier', short: 'Master', at: 25000, speed: 1.4, perch: 'a solid gold perch', note: 'Solid gold.' }
+  { id: 'courier', name: 'Courier', short: 'Courier', at: 10000, speed: 1.1, perch: 'a wooden perch', note: 'A plain wooden perch.' },
+  { id: 'senior', name: 'Senior courier', short: 'Senior', at: 25000, speed: 1.2, perch: 'a silver-capped perch', note: 'Silver end caps.' },
+  { id: 'veteran', name: 'Veteran', short: 'Veteran', at: 40000, speed: 1.3, perch: 'a gold-capped perch', note: 'Gold end caps.' },
+  { id: 'master', name: 'Master courier', short: 'Master', at: 75000, speed: 1.4, perch: 'a solid gold perch', note: 'Solid gold.' }
 ];
 export const rankIndex = (km?: number | null) => { let r = 0; RANKS.forEach((x, i) => { if ((km ?? 0) >= x.at) r = i; }); return r; };
 export const rankOf = (km?: number | null) => RANKS[rankIndex(km)];
