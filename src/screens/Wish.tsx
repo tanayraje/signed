@@ -78,7 +78,7 @@ export default function Wish({ onClose }: { onClose?: () => void }) {
 }
 
 /** A quiet sky: small stars twinkling at their own pace behind the comet. */
-function StarField() {
+export function StarField() {
   const [stars] = useState(() => Array.from({ length: 70 }, () => ({
     l: Math.random() * 100, t: Math.random() * 100, s: Math.random() < 0.15 ? 2.4 : Math.random() < 0.5 ? 1.6 : 1.1,
     d: 2.5 + Math.random() * 4, delay: -Math.random() * 6, o: 0.25 + Math.random() * 0.45

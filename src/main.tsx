@@ -17,7 +17,7 @@ if (inviteMatch) { try { localStorage.setItem('signed.pendingInvite', inviteMatc
 
 // Opening the app always starts on the Wall. Links that bring you somewhere on purpose
 // (an invite, a landed letter from a notification, the 11:11 alarm) are kept.
-const KEEP = ['invite', 'friend', 'wish', 'open', 'read', 'setup'];
+const KEEP = ['invite', 'friend', 'wish', 'wish-ask', 'open', 'read', 'setup'];
 const first = window.location.hash.replace(/^#\/?/, '').split('/')[0];
 if (first && !KEEP.includes(first)) history.replaceState(null, '', `${window.location.pathname}#/wall`);
 

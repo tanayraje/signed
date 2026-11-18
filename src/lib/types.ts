@@ -32,6 +32,8 @@ export interface FriendSettings {
   owner: string;
   friend: string;
   wish_1111: boolean;
+  wish_told?: boolean;
+  wish_declined_at?: string | null;
   since: string;
 }
 

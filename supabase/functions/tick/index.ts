@@ -292,6 +292,24 @@ async function wishAlarm() {
   return ringing.size;
 }
 
+/** A fresh 11:11 request asks the friend to join; joining someone's request tells them. */
+async function wishRequests() {
+  const { data: rows } = await supabase.from('friend_settings').select('owner, friend, wish_1111, wish_told').eq('wish_1111', true);
+  const fresh = (rows ?? []).filter((r) => !r.wish_told);
+  if (!fresh.length) return 0;
+  const ids = [...new Set(fresh.flatMap((r) => [r.owner, r.friend]))];
+  const { data: ppl } = await supabase.from('profiles').select('id, name').in('id', ids);
+  const name = (id: string) => (ppl ?? []).find((p: { id: string; name: string }) => p.id === id)?.name || 'A friend';
+  for (const r of fresh) {
+    const joined = (rows ?? []).some((o) => o.owner === r.friend && o.friend === r.owner);
+    await push(r.friend, joined
+      ? { title: `${name(r.owner)} said yes to 11:11`, body: 'Your wish alarms are set. At 11:11, morning and night, you’ll both make a wish.', url: `/#/friend/${r.owner}`, tag: `wish-ask-${r.owner}` }
+      : { title: `${name(r.owner)} wants to make a wish with you`, body: 'Join, and an alarm rings for you both at 11:11, morning and night. Tap to answer.', url: `/#/wish-ask/${r.owner}`, tag: `wish-ask-${r.owner}` });
+    await supabase.from('friend_settings').update({ wish_told: true }).eq('owner', r.owner).eq('friend', r.friend);
+  }
+  return fresh.length;
+}
+
 Deno.serve(async (req) => {
   const auth = req.headers.get('Authorization') ?? '';
   const tick = Deno.env.get('TICK_SECRET') ?? (await secret('tick'));
@@ -299,7 +317,7 @@ Deno.serve(async (req) => {
   await setupPush();
   const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
   if (body?.test) return Response.json(await push(body.test, { title: 'Signed', body: 'Testing your notifications.', url: '/#/wall', tag: 'test' }));
-  const [took, mid, delivered, wished, seas] = await Promise.all([takeoffs(), midways(), deliver(), wishAlarm(), seaCrossings()]);
+  const [took, mid, delivered, wished, seas, asked] = await Promise.all([takeoffs(), midways(), deliver(), wishAlarm(), seaCrossings(), wishRequests()]);
   const stamped = await stampCheck().catch((e) => { console.error('stamps', e); return -1; });
-  return Response.json({ took, mid, delivered, wished, seas, stamped });
+  return Response.json({ took, mid, delivered, wished, seas, asked, stamped });
 });

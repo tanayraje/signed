@@ -109,11 +109,22 @@ export default function Friend({ id, section }: { id: string; section?: string }
           <span className="small muted">as the crow flies</span>
         </div>
       )}
+      {f.theirs?.wish_1111 && !f.mine.wish_1111 && (
+        <div className="card row" style={{ padding: '12px 16px', gap: 12 }}>
+          <Seal p={p} size={40} />
+          <span className="grow">{p.name} asked to make wishes with you at 11:11</span>
+          <button className="btn primary" style={{ minHeight: 44, padding: '0 16px', fontSize: 15 }} onClick={() => go(`wish-ask/${p.id}`)}>Answer</button>
+        </div>
+      )}
       <div className="card" style={{ padding: '2px 16px' }}>
         <label className="toggle">
           <span className="grow stack" style={{ gap: 0 }}>
             <span>Wish together at 11:11</span>
-            <span className="small muted">{f.mine.wish_1111 && !f.theirs?.wish_1111 ? `Rings once ${p.name} turns it on too` : bothWish ? 'An alarm rings for you both' : 'An alarm rings for you both, morning and night'}</span>
+            <span className="small muted">{f.mine.wish_1111 && !f.theirs?.wish_1111 ? `Asked ${p.name}. Waiting for an answer.`
+              : bothWish ? 'An alarm rings for you both'
+              : f.mine.wish_declined_at ? `${p.name} said not now. You can ask again anytime.`
+              : f.theirs?.wish_1111 ? `${p.name} asked to wish with you. Turn on to join.`
+              : 'Asks ' + p.name + ' to wish with you, morning and night'}</span>
           </span>
           <input type="checkbox" checked={f.mine.wish_1111} onChange={(e) => void saveFriendSettings(p.id, { wish_1111: e.target.checked })} />
         </label>

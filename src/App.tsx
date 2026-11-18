@@ -18,6 +18,7 @@ const Seals = lazy(() => import('./screens/Seals'));
 import Profile, { Settings } from './screens/Profile';
 const Dress = lazy(() => import('./screens/Dress'));
 const Wish = lazy(() => import('./screens/Wish'));
+const WishAsk = lazy(() => import('./screens/WishAsk'));
 const Invite = lazy(() => import('./screens/Invite'));
 const Stamps = lazy(() => import('./screens/Stamps'));
 const Cutter = lazy(() => import('./screens/Cutter'));
@@ -60,7 +61,7 @@ export default function App() {
     const on = () => {
       if (document.hidden) { hiddenAt = Date.now(); return; }
       const route = window.location.hash.replace(/^#\/?/, '').split('/')[0];
-      if (hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000 && !['wall', 'write', 'setup', 'open', 'read', 'wish', 'invite', 'tour'].includes(route)) go('wall');
+      if (hiddenAt && Date.now() - hiddenAt > 5 * 60 * 1000 && !['wall', 'write', 'setup', 'open', 'read', 'wish', 'wish-ask', 'invite', 'tour'].includes(route)) go('wall');
     };
     document.addEventListener('visibilitychange', on);
     return () => document.removeEventListener('visibilitychange', on);
@@ -122,6 +123,7 @@ export default function App() {
     case 'profile': screen = <Profile />; break;
     case 'logbook': screen = <Logbook />; break;
     case 'wish': screen = <Wish />; break;
+    case 'wish-ask': screen = <WishAsk id={r1} />; break;
     case 'friends': screen = <Friends />; break;
     default: screen = <Wall />;
   }
@@ -139,8 +141,8 @@ export default function App() {
           </button>
         );
       })()}
-      {me.onboarded && me.toured !== false && !['tour', 'setup', 'invite', 'cutter', 'open', 'write', 'wish'].includes(r0) && <NotifyAsk me={me} uid={session.user.id} />}
-      {alarm && r0 !== 'wish' && <Suspense fallback={null}><Wish onClose={() => setAlarm(false)} /></Suspense>}
+      {me.onboarded && me.toured !== false && !['tour', 'setup', 'invite', 'cutter', 'open', 'write', 'wish', 'wish-ask'].includes(r0) && <NotifyAsk me={me} uid={session.user.id} />}
+      {alarm && r0 !== 'wish' && r0 !== 'wish-ask' && <Suspense fallback={null}><Wish onClose={() => setAlarm(false)} /></Suspense>}
       {unseenStamps > 0 && stampBanner && !['logbook', 'profile', 'open', 'read', 'write', 'cutter', 'wish', 'setup', 'tour', 'flight'].includes(r0) && (
         <div className="stamp-banner" role="status">
           <button className="stamp-banner-go" onClick={() => { setStampBanner(false); go('logbook'); }}>
