@@ -5,7 +5,7 @@ import { go } from '../lib/router';
 import { randomQuestion } from '../lib/format';
 import { extFor, shrinkImage, upload } from '../lib/media';
 import type { WordTiming } from '../lib/types';
-import { BUILT_IN_STAMPS, Icon, Seal, Stamp } from '../components/bits';
+import { BUILT_IN_STAMPS, Icon, Seal, Stamp, stampAtSend } from '../components/bits';
 import Cutter from './Cutter';
 import SendOff from '../components/SendOff';
 import { setToAnswer, toAnswer, type ToAnswer } from '../lib/answers';
@@ -118,10 +118,11 @@ export default function Compose({ id }: { id: string }) {
     if (unanswered.length) { setNudge(true); say(unanswered.length === 1 ? 'Answer the question first, or tap × to skip it.' : `Answer the ${unanswered.length} questions first, or tap × to skip them.`); return; }
     if (!draft.body.trim() && !photos.length && !audio && !video && !asked.length) { say('Write something first, even one line.'); return; }
     setBusy('Sealing…');
+    const stampSent = stampAtSend(stampOk ? draft.stamp : 'signed');
     const qs = (draft.questions ?? []).map((q) => q.trim()).filter(Boolean);
     const answers = asked.map((q) => ({ question: q.question, answer: (draft.answers?.[q.key] ?? '').trim(), letter_id: q.letter_id, key: q.key })).filter((a) => a.answer);
     const { data, error } = await supabase.from('letters').insert({
-      sender: uid, recipient: id, kind: 'letter', body: draft.body.trim(), question: null, questions: qs.length ? qs : null, stamp: stampOk ? draft.stamp : 'signed',
+      sender: uid, recipient: id, kind: 'letter', body: draft.body.trim(), question: null, questions: qs.length ? qs : null, stamp: stampSent,
       photos: photos.length ? photos.map((x) => ({ path: x.path, caption: x.caption.trim() || null })) : null,
       audio_path: audio?.path ?? null, video_path: video?.path ?? null, transcript: audio?.words.length ? audio.words : null,
       enchanted: enchanted || Boolean(audio || video),
@@ -136,7 +137,7 @@ export default function Compose({ id }: { id: string }) {
     const done = new Set(answers.map((a) => a.key));
     setToAnswer(id, toAnswer(id).filter((q) => !done.has(q.key)));
     await refresh();
-    setSent({ id: data.id, arrive_at: (data as { arrive_at?: string }).arrive_at ?? new Date().toISOString(), stamp: stampOk ? draft.stamp : 'signed' });
+    setSent({ id: data.id, arrive_at: (data as { arrive_at?: string }).arrive_at ?? new Date().toISOString(), stamp: stampSent });
   }
 
   const stampKeys = [...stamps.filter((s) => s.owner === uid && s.status === 'mine').map((s) => `custom:${s.id}`), ...BUILT_IN_STAMPS];

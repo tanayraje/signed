@@ -229,6 +229,8 @@ body.ench .ench-switch .knob { transform: translateX(40px); background: var(--go
   background: conic-gradient(from 210deg, #F1DCA2, #A87C34, #E9CF8C, #8E6526, #F1DCA2); box-shadow: inset 0 0 0 4px rgba(255, 246, 220, .35) }
 .cut-cta-icon svg { width: 24px; height: 24px }
 .album { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 16px 8px; align-items: center; justify-items: center }
+.post-office { padding-top: 14px; border-top: 1px solid var(--line) }
+.office-group { margin: 0; font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted) }
 .album-slot { border: 0; background: none; padding: 4px; cursor: pointer }
 .sheet-back { position: fixed; inset: 0; background: rgba(30, 26, 22, .45); z-index: 35; display: flex; align-items: flex-end; justify-content: center }
 .stamp-sheet { width: 100%; max-width: 480px; background: var(--paper) url(/assets/paper.jpg) center/cover; border-radius: 22px 22px 0 0; padding: 22px 18px calc(20px + env(safe-area-inset-bottom, 0px)); gap: 14px; animation: sheetup .28s ease-out }

@@ -89,18 +89,80 @@ export function FlyingOwl({ breed, wax, gilded = false, width = 72, delay = 0, a
   );
 }
 
-/** Signed's own stamps: always yours, never used up. Older letters used earlier names. */
-export const BUILT_IN_STAMPS = ['signed', 'owlpost', 'route', 'forgetmenot', 'eleven'];
+/** Signed's own stamps, the post office: always yours, never used up. Older letters used earlier names.
+ *  Three are live: "moon" shows the moon of the night it is sent, "sky" the sky of the hour, "clock" the minute.
+ *  When a letter is sealed they are fixed with stampAtSend (moon-3, sky-dusk, clock-0214). */
+export const STAMP_GROUPS: { name: string; keys: string[] }[] = [
+  { name: 'The classics', keys: ['signed', 'owlpost', 'route', 'forgetmenot', 'eleven'] },
+  { name: 'Moon & stars', keys: ['moon', 'moonlight', 'phases', 'papermoon', 'wish', 'constellation', 'starchart', 'telescope'] },
+  { name: 'By the hour', keys: ['sky', 'clock'] },
+  { name: 'Indian post', keys: ['dak', 'pigeon', 'inland', 'postbox'] }
+];
+export const BUILT_IN_STAMPS = STAMP_GROUPS.flatMap((g) => g.keys);
 const LEGACY: Record<string, string> = { lotus: 'signed', peacock: 'owlpost', monsoon: 'route', chai: 'forgetmenot' };
-const STAMP_NAMES: Record<string, string> = { signed: 'Sealed with care', owlpost: 'Night post', route: 'As the owl flies', forgetmenot: 'Forget me not', eleven: 'Make a wish together' };
+export const STAMP_NAMES: Record<string, string> = {
+  signed: 'Sealed with care', owlpost: 'Night post', route: 'As the owl flies', forgetmenot: 'Forget me not', eleven: 'Make a wish together',
+  moon: 'The moon that night', moonlight: 'Crossing the moon', phases: 'One whole moon', papermoon: 'Paper moon', wish: 'Make a wish',
+  constellation: 'Written in the stars', starchart: 'Your sky tonight', telescope: 'Found you',
+  sky: 'Sky of the hour', clock: 'Written at', dak: 'The dak runner', pigeon: 'Pigeon post', inland: 'Inland letter', postbox: 'Posted by nine'
+};
+const MOON_NAMES = ['New moon', 'Waxing crescent', 'First quarter', 'Waxing gibbous', 'Full moon', 'Waning gibbous', 'Last quarter', 'Waning crescent'];
+const SKIES = ['dawn', 'noon', 'dusk', 'night'];
+
+/** Which of the eight moon pictures fits a moment: 0 new moon … 4 full … 7 waning crescent. */
+export function moonIndex(at = new Date()) {
+  const days = (at.getTime() - Date.UTC(2000, 0, 6, 18, 14)) / 864e5;
+  const p = ((days / 29.530588853) % 1 + 1) % 1;
+  return Math.round(p * 8) % 8;
+}
+function skyOf(at = new Date()) {
+  const h = at.getHours();
+  return h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 17 ? 'noon' : h >= 17 && h < 20 ? 'dusk' : 'night';
+}
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** Fix a live stamp to the moment the letter is sealed. Every other stamp passes through. */
+export function stampAtSend(id: string, at = new Date()) {
+  if (id === 'moon') return `moon-${moonIndex(at)}`;
+  if (id === 'sky') return `sky-${skyOf(at)}`;
+  if (id === 'clock') return `clock-${pad(at.getHours())}${pad(at.getMinutes())}`;
+  return id;
+}
+
+/** The pocket watch: a printed face for the time of day, with the hands and the caption drawn on top. */
+function ClockStamp({ hh, mm, size }: { hh: number; mm: number; size: number }) {
+  const face = hh < 5 || hh >= 20 ? 'night' : hh < 8 ? 'early' : 'day';
+  const h12 = hh % 12 === 0 ? 12 : hh % 12;
+  const time = `${h12}:${pad(mm)} ${hh < 12 ? 'am' : 'pm'}`;
+  const ox = 30, oy = 44; // the picture window inside the stamp
+  return (
+    <span className="cutstamp" style={{ width: size, height: Math.round(size / 0.78) }} role="img" aria-label={`Stamp: Written at ${time}`}>
+      <img src={`/assets/stamp-clock-${face}.png`} alt="" draggable={false} />
+      <svg viewBox="0 0 342 439" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} aria-hidden="true">
+        <g transform={`translate(${ox} ${oy})`}>
+          <path d="M141 174 L134 160 L141 112 L148 160 Z" fill="#2B2622" transform={`rotate(${(hh % 12) * 30 + mm * 0.5} 141 160)`} />
+          <path d="M141 178 L136 160 L141 92 L146 160 Z" fill="#2B2622" transform={`rotate(${mm * 6} 141 160)`} />
+          <circle cx="141" cy="160" r="4" fill="#B08A4A" />
+        </g>
+        <text x="171" y="413" textAnchor="middle" fontFamily="Newsreader, Georgia, serif" fontStyle="italic" fontSize="18" fill="#6B4E22">Written at {time}</text>
+      </svg>
+    </span>
+  );
+}
 
 export function Stamp({ id, size = 44, postmark = true }: { id: string; size?: number; postmark?: boolean }) {
   const { stamps } = useStore();
   const custom = id.startsWith('custom:') ? stamps.find((s) => `custom:${s.id}` === id) : undefined;
   if (id.startsWith('custom:')) return <CutStamp s={custom} size={size} postmark={postmark} />;
-  const key = BUILT_IN_STAMPS.includes(id) ? id : LEGACY[id] ?? 'signed';
+  const live = stampAtSend(id);
+  const clock = live.match(/^clock-(\d{2})(\d{2})$/);
+  if (clock) return <ClockStamp hh={Math.min(23, +clock[1])} mm={Math.min(59, +clock[2])} size={size} />;
+  const moon = live.match(/^moon-([0-7])$/);
+  const sky = live.match(/^sky-(\w+)$/);
+  const key = moon || (sky && SKIES.includes(sky[1])) ? live : BUILT_IN_STAMPS.includes(id) ? id : LEGACY[id] ?? 'signed';
+  const name = moon ? `The moon that night, ${MOON_NAMES[+moon[1]].toLowerCase()}` : sky ? `Sent at ${sky[1] === 'night' ? 'night' : sky[1]}` : STAMP_NAMES[key];
   return (
-    <span className="cutstamp" style={{ width: size, height: Math.round(size / 0.78) }} role="img" aria-label={`Stamp: ${STAMP_NAMES[key]}`}>
+    <span className="cutstamp" style={{ width: size, height: Math.round(size / 0.78) }} role="img" aria-label={`Stamp: ${name}`}>
       <img src={`/assets/stamp-${key}.png`} alt="" draggable={false} />
     </span>
   );
