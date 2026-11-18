@@ -16,22 +16,28 @@ const topSrc = (m: string, plume?: string) => (m === 'feather' ? `/assets/mix-fe
 /** Patina: a seal ages as its owner writes. */
 export const PATINA: { at: number; name: string; note: string }[] = [
   { at: 0, name: 'Fresh', note: 'Crisp edges and a matte pour.' },
-  { at: 10, name: 'Warmed', note: 'The wax has softened and picked up a gentle sheen.' },
-  { at: 25, name: 'Gilded', note: 'The rim around the initials is touched with gold.' },
-  { at: 50, name: 'Burnished', note: 'The raised wax has polished smooth, like it has been handled often.' },
-  { at: 100, name: 'Heirloom', note: 'The wax has deepened and caught a few flecks of gold leaf.' }
+  { at: 15, name: 'Warmed', note: 'The wax has softened and picked up a gentle sheen.' },
+  { at: 40, name: 'Gilded', note: 'The rim around the initials is touched with gold.' },
+  { at: 80, name: 'Burnished', note: 'The raised wax has polished smooth, like it has been handled often.' },
+  { at: 150, name: 'Heirloom', note: 'The wax has deepened and caught a few flecks of gold leaf.' }
 ];
-export const patinaStage = (sealed?: number | null) => { let s = 0; PATINA.forEach((p, i) => { if ((sealed ?? 0) >= p.at) s = i; }); return s; };
+/** Heirloom also needs the seal to be a year old. */
+export const HEIRLOOM_DAYS = 365;
+export const sealAgeDays = (since?: string | null) => (since ? (Date.now() - new Date(since).getTime()) / 864e5 : 0);
+export const patinaStage = (sealed?: number | null, since?: string | null) => {
+  let s = 0; PATINA.forEach((p, i) => { if ((sealed ?? 0) >= p.at) s = i; });
+  return s === PATINA.length - 1 && sealAgeDays(since) < HEIRLOOM_DAYS ? s - 1 : s;
+};
 
 /** Marks that can be pressed into the wax instead of letters (pre-rendered reliefs that sit on any wax). */
 export const MARKS: [string, string][] = [['owl', 'Owl'], ['letter', 'Letter'], ['quill', 'Quill and ink'], ['comet', 'Comet'], ['moon', 'Moon and stars'], ['sprig', 'Forget-me-nots'], ['rose', 'Rose'], ['key', 'Key']];
 const isMark = (k?: string | null) => !!k && MARKS.some(([m]) => m === k);
 
-export function Seal({ p, size = 56, label, stage }: { p: Pick<Profile, 'wax' | 'monogram' | 'name'> & Partial<Pick<Profile, 'mixins' | 'edge' | 'mark' | 'plume' | 'sealed'>>; size?: number; label?: string; stage?: number }) {
+export function Seal({ p, size = 56, label, stage }: { p: Pick<Profile, 'wax' | 'monogram' | 'name'> & Partial<Pick<Profile, 'mixins' | 'edge' | 'mark' | 'plume' | 'sealed' | 'created_at'>>; size?: number; label?: string; stage?: number }) {
   const mono = (p.monogram || p.name.slice(0, 1) || '·').toUpperCase();
   const mix = p.mixins ?? [];
   const clean = p.edge === 'clean' ? '-clean' : '';
-  const st = stage ?? patinaStage(p.sealed);
+  const st = stage ?? patinaStage(p.sealed, p.created_at);
   return (
     <span className={`seal wax-${p.wax}`} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}
       style={{ width: size, height: size, fontSize: size * (mono.length > 1 ? 0.24 : 0.32) }}>

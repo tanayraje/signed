@@ -149,7 +149,7 @@ export default function Friend({ id, section }: { id: string; section?: string }
         <Seal p={{ ...p, sealed: theirStats?.sealed ?? p.sealed }} size={36} />
         <span className="grow stack" style={{ gap: 0 }}>
           <span>{p.name}’s seal and achievements</span>
-          <span className="small muted">{theirStats ? `${PATINA[patinaStage(theirStats.sealed)].name} seal · ${ACHIEVEMENTS.filter((a) => a.done(theirStats)).length} of ${ACHIEVEMENTS.length} achievements` : 'Patina and milestones'}</span>
+          <span className="small muted">{theirStats ? `${PATINA[patinaStage(theirStats.sealed, theirStats.seal_since ?? p.created_at)].name} seal · ${ACHIEVEMENTS.filter((a) => a.done(theirStats)).length} of ${ACHIEVEMENTS.length} achievements` : 'Patina and milestones'}</span>
         </span>
         <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--muted)' }}>›</span>
       </button>

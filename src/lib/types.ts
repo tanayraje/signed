@@ -22,6 +22,7 @@ export interface Profile {
   onboarded: boolean;
   toured: boolean;
   sealed?: number;
+  created_at?: string;          // when the account (and its seal) was made
   breed?: string;               // which felt owl (see lib/owl)
   outfit?: Record<string, string>; // one piece per slot
   flown_km?: number;            // distance flown in all: sets the owl's rank

@@ -32,7 +32,7 @@ export default function Profile() {
         <div className="duo-half">
           <span className="duo-pic"><Seal p={p} size={92} label="Your wax seal" /></span>
           <b>Your seal</b>
-          <span className="small muted">{PATINA[patinaStage(sealed)].name} · {sealed} sealed</span>
+          <span className="small muted">{PATINA[patinaStage(sealed, me.created_at)].name} · {sealed} sealed</span>
           <button className="chip mini-chip" onClick={() => go('setup/seal')}>Redesign</button>
         </div>
         <div className="duo-half">
@@ -58,7 +58,7 @@ export default function Profile() {
               <button key={f.id} className="card friend-card" onClick={() => go(`friend/${f.id}/achievements`)}>
                 <span className="friend-pics"><Seal p={f} size={48} /><Owl p={f} width={42} /></span>
                 <span className="friend-ach-name">{f.name}</span>
-                <span className="small muted" style={{ fontSize: 12 }}>{f.sealed != null ? PATINA[patinaStage(f.sealed)].name : 'Seal'} · {rankOf(f.flown_km).short}</span>
+                <span className="small muted" style={{ fontSize: 12 }}>{f.sealed != null ? PATINA[patinaStage(f.sealed, f.created_at)].name : 'Seal'} · {rankOf(f.flown_km).short}</span>
               </button>
             ))}
           </div>

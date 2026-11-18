@@ -4,7 +4,7 @@ import type { Profile } from '../lib/types';
 import { ACHIEVEMENTS, type Achievement, type SealStats } from '../lib/achievements';
 import { RANKS, pieceOf, rankIndex, type Outfit } from '../lib/owl';
 import { go } from '../lib/router';
-import { Icon, Owl, PATINA, Seal, patinaStage } from './bits';
+import { HEIRLOOM_DAYS, Icon, Owl, PATINA, Seal, patinaStage, sealAgeDays } from './bits';
 
 const MIX_NAMES: Record<string, string> = {
   feather: 'owl feather', cornflower: 'cornflower petals', babysbreath: "baby's breath", chamomile: 'chamomile',
@@ -19,15 +19,20 @@ export function Badge({ a, done, size = 42 }: { a: Achievement; done: boolean; s
   return <img className={`badge${done ? '' : ' off'}`} src={`/assets/badges/${a.id}.webp`} alt="" width={size} height={size} draggable={false} />;
 }
 
-type Who = Pick<Profile, 'wax' | 'monogram' | 'name' | 'mixins' | 'edge' | 'mark' | 'plume' | 'breed' | 'outfit' | 'owl_name'> & { sealed?: number; flown_km?: number };
+type Who = Pick<Profile, 'wax' | 'monogram' | 'name' | 'mixins' | 'edge' | 'mark' | 'plume' | 'breed' | 'outfit' | 'owl_name'> & { sealed?: number; flown_km?: number; created_at?: string };
 
 /** How far a seal has aged, with the five stages and a bar to the next one. */
 function PatinaSteps({ p, who }: { p: Who; who?: string }) {
   const sealed = p.sealed ?? 0;
-  const st = patinaStage(sealed);
+  const st = patinaStage(sealed, p.created_at);
+  const last = PATINA.length - 1;
+  // enough letters for Heirloom, but the seal isn't a year old yet
+  const waiting = st === last - 1 && sealed >= PATINA[last].at;
+  const daysLeft = Math.max(1, Math.ceil(HEIRLOOM_DAYS - sealAgeDays(p.created_at)));
   const next = PATINA[st + 1];
   const from = PATINA[st].at;
-  const pct = next ? Math.round(((sealed - from) / (next.at - from)) * 100) : 100;
+  const pct = waiting ? Math.round(Math.min(1, sealAgeDays(p.created_at) / HEIRLOOM_DAYS) * 100)
+    : next ? Math.round(((sealed - from) / (next.at - from)) * 100) : 100;
   const subject = who ? `${who} has` : 'You’ve';
   const sealOf = who ? `${who}’s seal` : 'your seal';
   return (
@@ -42,12 +47,16 @@ function PatinaSteps({ p, who }: { p: Who; who?: string }) {
       </div>
       <p className="small muted">
         {st === 0
-          ? <>{subject} sealed {sealed} letter{sealed === 1 ? '' : 's'}. At 10, {sealOf} starts to age.</>
+          ? <>{subject} sealed {sealed} letter{sealed === 1 ? '' : 's'}. At {PATINA[1].at}, {sealOf} starts to age.</>
           : <>Because {who ? `${who} has` : 'you’ve'} sealed {sealed} letters, {sealOf} is <b>{PATINA[st].name}</b>: {PATINA[st].note.charAt(0).toLowerCase() + PATINA[st].note.slice(1)}</>}
+        {' '}<>{PATINA[last].name} needs {PATINA[last].at} letters and a seal at least a year old.</>
       </p>
       <div className="stack" style={{ gap: 4 }}>
-        <div className="bar" role="progressbar" aria-valuemin={from} aria-valuemax={next?.at ?? sealed} aria-valuenow={sealed} aria-label={next ? `Letters to ${next.name}` : 'Fully aged'}><i style={{ width: `${pct}%` }} /></div>
-        <div className="row small muted" style={{ justifyContent: 'space-between' }}><span>{sealed} sealed</span><span>{next ? `${next.at - sealed} more to ${next.name}` : 'Fully aged'}</span></div>
+        <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={next ? `Progress to ${next.name}` : 'Fully aged'}><i style={{ width: `${pct}%` }} /></div>
+        <div className="row small muted" style={{ justifyContent: 'space-between' }}>
+          <span>{sealed} sealed</span>
+          <span>{waiting ? `${PATINA[last].name} in ${daysLeft} day${daysLeft === 1 ? '' : 's'}, when the seal turns one` : next ? `${next.at - sealed} more to ${next.name}` : 'Fully aged'}</span>
+        </div>
       </div>
     </div>
   );
