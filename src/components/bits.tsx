@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import type { CustomStamp, Profile } from '../lib/types';
 import { signedUrl } from '../lib/media';
 import { supabase } from '../lib/supabase';
@@ -48,11 +48,11 @@ export function Seal({ p, size = 56, label, stage }: { p: Pick<Profile, 'wax' | 
 
 /** Your felt owl: its breed, what it wears, and (optionally) the rank perch under its feet. Stacked image layers. */
 type OwlP = Partial<Pick<Profile, 'breed' | 'outfit' | 'flown_km'>>;
-export function Owl({ p, width, alt = '', perch, outfit, className }: { p: OwlP; width?: number; alt?: string; perch?: boolean | RankKey; outfit?: Outfit; className?: string }) {
+export function Owl({ p, width, alt = '', perch, outfit, className, style }: { p: OwlP; width?: number; alt?: string; perch?: boolean | RankKey; outfit?: Outfit; className?: string; style?: CSSProperties }) {
   const breed = breedOf(p.breed);
   const layers = owlLayers(breed, outfit ?? cleanOutfit(p.outfit));
   const rank: RankKey | null = perch === true ? rankOf(p.flown_km).id : perch || null;
-  const size = width ? { width, height: Math.round(width * 1.25) } : undefined;
+  const size = width ? { width, height: Math.round(width * 1.25), ...style } : style;
   const stack = layers.map((s) => <img key={s} src={s} alt="" draggable={false} decoding="async" />);
   const pc = rank ? perchOf(breed, rank) : null;
   return (

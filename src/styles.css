@@ -803,7 +803,10 @@ body.ench .ach-dots .ach-icon.on { background: var(--gold); color: #141A2E }
 .worn-note { color: #2F5D50; font-weight: 600 }
 body.ench .speed-tag { color: #141A2E; background: var(--gold) }
 /* rank perches on the shelf, in place of the plain pegs */
-.sh-in > img.sh-rank-hole { inset-inline-start: calc(var(--u) * 14); height: auto; max-width: none; filter: drop-shadow(0 calc(var(--u) * 9) calc(var(--u) * 7) rgba(0, 0, 0, .55)) }
-.sh-in > .sh-mount { inset-inline-start: calc(var(--u) * 13); bottom: calc(var(--u) * 37); width: calc(var(--u) * 7); height: calc(var(--u) * 18); border-radius: calc(var(--u) * 2); background: linear-gradient(180deg, #B08556, #6B4A2B 55%, #33210F) }
-.night .sh-in > img.sh-rank { filter: brightness(.6) saturate(.72) drop-shadow(0 calc(var(--u) * 9) calc(var(--u) * 7) rgba(0, 0, 0, .55)) }
-.sh-perch > img.sh-rank-top { left: 2px; height: auto; max-width: none; filter: drop-shadow(0 6px 5px rgba(43, 30, 18, .35)) }
+.sh-in > img.sh-rank-hole { inset-inline-start: calc(var(--u) * 15); height: auto; max-width: none; filter: drop-shadow(0 calc(var(--u) * 8) calc(var(--u) * 6) rgba(0, 0, 0, .55)) }
+.flip .sh-in > img.sh-rank-hole { transform: scaleX(-1) }
+.night .sh-in > img.sh-rank-hole { filter: brightness(.6) saturate(.72) drop-shadow(0 calc(var(--u) * 8) calc(var(--u) * 6) rgba(0, 0, 0, .55)) }
+.sh-perch > img.sh-rank-top { left: 10px; height: auto; max-width: none; filter: drop-shadow(0 5px 4px rgba(43, 30, 18, .35)) }
+.sh-perch > .sh-perch-owl { left: 26px; height: 84px }
+.sh-perch > .sh-perch-string { left: 60px; height: 24px }
+.sh-perch > .sh-perch-tag { left: 60px }
