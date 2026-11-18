@@ -30,6 +30,8 @@ export const RANKS: { id: RankKey; name: string; short: string; at: number; spee
   { id: 'veteran', name: 'Veteran', short: 'Veteran', at: 40000, speed: 1.3, perch: 'a gold-capped perch', note: 'Gold end caps.' },
   { id: 'master', name: 'Master courier', short: 'Master', at: 75000, speed: 1.4, perch: 'a solid gold perch', note: 'Solid gold.' }
 ];
+/** How much faster than a new courier, as a percent: 1.2 → "20%". */
+export const speedPct = (speed: number) => `${Math.round((speed - 1) * 100)}%`;
 export const rankIndex = (km?: number | null) => { let r = 0; RANKS.forEach((x, i) => { if ((km ?? 0) >= x.at) r = i; }); return r; };
 export const rankOf = (km?: number | null) => RANKS[rankIndex(km)];
 export const breedUnlocked = (b: Breed, km?: number | null) => {

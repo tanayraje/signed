@@ -4,7 +4,7 @@ import { go } from '../lib/router';
 import type { Profile } from '../lib/types';
 import { Owl, Top } from '../components/bits';
 import { ACHIEVEMENTS, localStats, unlocked, useSealStats } from '../lib/achievements';
-import { BREEDS, PIECES, PLUME_OF, RANKS, SLOTS, breedName, breedOf, breedUnlocked, cleanOutfit, pieceOf, rankOf, type Breed, type Outfit, type Slot } from '../lib/owl';
+import { BREEDS, PIECES, PLUME_OF, RANKS, SLOTS, breedName, breedOf, breedUnlocked, cleanOutfit, pieceOf, rankOf, speedPct, type Breed, type Outfit, type Slot } from '../lib/owl';
 
 const OWL_NAMES = ['Wren', 'Postscript', 'Detour', 'Quill', 'Inkwell', 'Vellum', 'Sepia', 'Moth', 'Dusk', 'Comet', 'Nimbus', 'Ember', 'Vesper',
   'Hazel', 'Juniper', 'Bramble', 'Clementine', 'Tara', 'Megh', 'Kesar', 'Chandu', 'Archibald', 'Bartholomew', 'Sir Reginald', 'The Professor', 'Courier', 'Wanderer', 'Pip', 'Biscuit', 'Mango'];
@@ -97,7 +97,7 @@ export default function Dress() {
         <div className="stack" style={{ gap: 8, minWidth: 0, flex: 1 }}>
           <OwlName value={name} set={setName} />
           <span className="small muted">{breedName(breed)} · {rank.name}</span>
-          {rank.speed > 1 && <span className="speed-tag">{rank.speed.toFixed(1)}× faster</span>}
+          {rank.speed > 1 && <span className="speed-tag">{speedPct(rank.speed)} faster</span>}
           <ul className="worn small muted">
             {worn.map((w) => <li key={w.s.id}>{w.s.name} · {w.p!.name}</li>)}
             <li>Perch · {rank.perch.replace(/^an? /, '').replace(/^./, (c) => c.toUpperCase())}, from rank</li>

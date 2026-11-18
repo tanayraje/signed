@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Profile } from '../lib/types';
 import { ACHIEVEMENTS, type Achievement, type SealStats } from '../lib/achievements';
-import { RANKS, pieceOf, rankIndex, type Outfit } from '../lib/owl';
+import { RANKS, pieceOf, rankIndex, speedPct, type Outfit } from '../lib/owl';
 import { go } from '../lib/router';
 import { HEIRLOOM_DAYS, Icon, Owl, PATINA, Seal, patinaStage, sealAgeDays } from './bits';
 
@@ -77,13 +77,13 @@ function RankSteps({ p, who }: { p: Who; who?: string }) {
           <div key={x.id} className={`patina-step rank-step${i === r ? ' now' : ''}${i > r ? ' later' : ''}`}>
             <span className="rank-perch"><img src={`/owls/perch-${x.id}.webp`} alt="" /></span>
             <span className="small">{x.short}</span>
-            <span className="rank-speed">{x.speed.toFixed(1)}×</span>
+            <span className="rank-speed">{x.speed > 1 ? `+${speedPct(x.speed)}` : 'Usual'}</span>
           </div>
         ))}
       </div>
       <p className="small muted">
         {owl} has flown {km.toLocaleString('en-GB')} km, so {owl} is a <b>{RANKS[r].name}</b>
-        {r === 0 ? ': a twig perch, and letters fly at the usual speed.' : `: ${RANKS[r].perch}, and letters land ${RANKS[r].speed.toFixed(1)}× faster.`}
+        {r === 0 ? ': a twig perch, and letters fly at the usual speed.' : `: ${RANKS[r].perch}, and letters fly ${speedPct(RANKS[r].speed)} faster.`}
       </p>
       <div className="stack" style={{ gap: 4 }}>
         <div className="bar" role="progressbar" aria-valuemin={from} aria-valuemax={next?.at ?? km} aria-valuenow={km} aria-label={next ? `Kilometres to ${next.name}` : 'Top rank'}><i style={{ width: `${pct}%` }} /></div>
