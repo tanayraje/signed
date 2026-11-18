@@ -12,5 +12,16 @@
       "source": "/((?!assets/|sw.js|manifest.webmanifest|workbox-|where-data.json|privacy|terms).*)",
       "destination": "/index.html"
     }
+  ],
+  "headers": [
+    {
+      "source": "/(assets|owls)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    }
   ]
 }

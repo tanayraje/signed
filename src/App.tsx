@@ -1,26 +1,27 @@
 import { syncPush } from './lib/push';
 import NotifyAsk from './components/NotifyAsk';
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useStore } from './lib/store';
 import { useRoute, go } from './lib/router';
 import { supabase } from './lib/supabase';
 import SignIn, { restorePlace } from './screens/SignIn';
-import Setup from './screens/Setup';
+const Setup = lazy(() => import('./screens/Setup'));
 import Friends from './screens/Friends';
 import Friend from './screens/Friend';
-import Compose from './screens/Compose';
-import Flight, { PairMap } from './screens/Flight';
-import Opening from './screens/Opening';
-import Reader from './screens/Reader';
+const Compose = lazy(() => import('./screens/Compose'));
+const Flight = lazy(() => import('./screens/Flight'));
+const PairMap = lazy(() => import('./screens/Flight').then((m) => ({ default: m.PairMap })));
+const Opening = lazy(() => import('./screens/Opening'));
+const Reader = lazy(() => import('./screens/Reader'));
 import Wall from './screens/Wall';
-import Seals from './screens/Seals';
+const Seals = lazy(() => import('./screens/Seals'));
 import Profile, { Settings } from './screens/Profile';
-import Dress from './screens/Dress';
-import Wish from './screens/Wish';
-import Invite from './screens/Invite';
-import Stamps from './screens/Stamps';
-import Cutter from './screens/Cutter';
-import Tour from './screens/Tour';
+const Dress = lazy(() => import('./screens/Dress'));
+const Wish = lazy(() => import('./screens/Wish'));
+const Invite = lazy(() => import('./screens/Invite'));
+const Stamps = lazy(() => import('./screens/Stamps'));
+const Cutter = lazy(() => import('./screens/Cutter'));
+const Tour = lazy(() => import('./screens/Tour'));
 import Logbook from './screens/Logbook';
 import { useUnseenStamps } from './lib/achievements';
 import { Icon, Owl } from './components/bits';
@@ -127,7 +128,7 @@ export default function App() {
 
   return (
     <>
-      {screen}
+      <Suspense fallback={<main className="app" />}>{screen}</Suspense>
       {waiting.length > 0 && !['open', 'read', 'cutter', 'wish', 'setup'].includes(r0) && (() => {
         const l = waiting[0]; const p = friend(l.sender)?.profile;
         if (!p) return null;
@@ -139,7 +140,7 @@ export default function App() {
         );
       })()}
       {me.onboarded && me.toured !== false && !['tour', 'setup', 'invite', 'cutter', 'open', 'write', 'wish'].includes(r0) && <NotifyAsk me={me} uid={session.user.id} />}
-      {alarm && r0 !== 'wish' && <Wish onClose={() => setAlarm(false)} />}
+      {alarm && r0 !== 'wish' && <Suspense fallback={null}><Wish onClose={() => setAlarm(false)} /></Suspense>}
       {unseenStamps > 0 && stampBanner && !['logbook', 'profile', 'open', 'read', 'write', 'cutter', 'wish', 'setup', 'tour', 'flight'].includes(r0) && (
         <div className="stamp-banner" role="status">
           <button className="stamp-banner-go" onClick={() => { setStampBanner(false); go('logbook'); }}>

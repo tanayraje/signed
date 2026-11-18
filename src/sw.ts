@@ -1,9 +1,19 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { StaleWhileRevalidate } from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: Array<{ url: string; revision: string | null }> };
 
 precacheAndRoute(self.__WB_MANIFEST);
+
+// Pictures (seals, owls, perches, paper, stamps) come from this phone straight away, and are refreshed in the
+// background, so a redrawn picture still shows up on the next visit.
+registerRoute(
+  ({ request, url }) => url.origin === self.location.origin && (request.destination === 'image' || /^\/(assets|owls)\//.test(url.pathname)),
+  new StaleWhileRevalidate({ cacheName: 'signed-pictures', plugins: [new ExpirationPlugin({ maxEntries: 600, maxAgeSeconds: 60 * 60 * 24 * 60 })] })
+);
 self.addEventListener('install', () => { void self.skipWaiting(); });
 self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
 
