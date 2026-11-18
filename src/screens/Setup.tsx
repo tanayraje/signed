@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import type { Profile, Wax } from '../lib/types';
 import { PLUME_OF, breedName, breedOf } from '../lib/owl';
@@ -20,6 +20,9 @@ export function SealDesigner({ draft, set }: { draft: Profile; set: (p: Partial<
   const uid = session?.user.id;
   const stats = useSealStats(uid, uid ? localStats(uid, letters, friends) : undefined);
   const anyLocked = MIXINS.some(([k]) => !unlocked(k, stats));
+  // anything not earned (yet) comes off the seal
+  const locked = draft.mixins.filter((m) => !unlocked(m, stats));
+  useEffect(() => { if (stats && locked.length) set({ mixins: draft.mixins.filter((m) => unlocked(m, stats)) }); }, [stats, locked.join()]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>
       <div className="row" style={{ justifyContent: 'center' }}><Seal p={draft} size={190} label="Your wax seal" /></div>
@@ -56,7 +59,7 @@ export function SealDesigner({ draft, set }: { draft: Profile; set: (p: Partial<
       <section className="stack"><h2>Pressed into the wax</h2>
         <div className="chips">{MIXINS.map(([k, label]) => {
           const on = draft.mixins.includes(k);
-          if (!unlocked(k, stats) && !on) {
+          if (!unlocked(k, stats)) {
             const a = earnedBy(k);
             return <button key={k} className="chip locked" disabled aria-label={`${label}, earned with ${a?.title}`} title={`Earn it with ${a?.title}`}>{LOCK}{label}</button>;
           }

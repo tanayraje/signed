@@ -68,6 +68,12 @@ export default function Dress() {
   const [outfit, setOutfit] = useState<Outfit>(cleanOutfit(me?.outfit));
   const [name, setName] = useState(me?.owl_name ?? '');
   const [slot, setSlot] = useState<Slot>('head');
+  // anything not earned (yet) comes off
+  useEffect(() => {
+    if (!stats) return;
+    const kept = Object.fromEntries(Object.entries(outfit).filter(([, id]) => id && unlocked(id, stats))) as Outfit;
+    if (Object.keys(kept).length !== Object.values(outfit).filter(Boolean).length) setOutfit(kept);
+  }, [stats]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!me) return null;
   const km = Math.max(me.flown_km ?? 0, stats?.km ?? 0);
   const rank = rankOf(km);
@@ -76,7 +82,9 @@ export default function Dress() {
   const pieces = PIECES.filter((p) => p.slot === slot);
 
   async function save() {
-    await saveMe({ breed, plume: PLUME_OF[breed], outfit: outfit as Record<string, string>, owl_name: name.trim() || me!.owl_name || 'Wren' });
+    // only pieces that are earned can be worn
+    const kept = Object.fromEntries(Object.entries(outfit).filter(([, id]) => id && unlocked(id, stats))) as Record<string, string>;
+    await saveMe({ breed, plume: PLUME_OF[breed], outfit: kept, owl_name: name.trim() || me!.owl_name || 'Wren' });
     say(`${name.trim() || 'Your owl'} is dressed.`);
     go('profile');
   }
