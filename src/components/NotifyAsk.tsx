@@ -54,10 +54,14 @@ export default function NotifyAsk({ me, uid }: { me: Profile; uid: string }) {
   useEffect(() => {
     if (askedThisOpen) return;
     void (async () => {
+      // Phones (iPhones above all, and Home Screen apps) often report the permission wrongly, saying
+      // "denied" or "prompt" after it was allowed. So trust an actual read of the location instead.
       const g = await geoState();
+      const r = g === 'granted' ? 'ok' : await locate();
       let step: Step | null = null;
-      if (g === 'denied') step = 'locBlocked';
-      else if (me.last_lat == null || g === 'prompt') step = 'location';
+      if (r === 'ok') step = await notifyStep();
+      else if (r === 'denied' && g === 'denied') step = 'locBlocked';
+      else if (me.last_lat == null) step = 'location';
       else step = await notifyStep();
       if (askedThisOpen || !step) return;
       askedThisOpen = true;
