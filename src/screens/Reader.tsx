@@ -7,6 +7,7 @@ import { Icon, Polaroid, Stamp, useSigned } from '../components/bits';
 import type { Letter, WallPin } from '../lib/types';
 import { toAnswer, toggleAnswer } from '../lib/answers';
 import { lettersOn } from '../lib/days';
+import { hasDraft } from '../lib/drafts';
 
 /** `from` is the page the letter was opened from (wall, seals); closing goes back there. */
 /** Which side the next letter of the day slides in from. */
@@ -232,7 +233,7 @@ export default function Reader({ id, from, day }: { id: string; from?: string; d
               <button className="btn" style={{ color: '#F4EFE6', borderColor: '#8C8174' }} onClick={() => file('wall')}>{l.place === 'wall' ? 'On your wall' : 'Pin to wall'}</button>
               <button className="btn" style={{ color: '#F4EFE6', borderColor: '#8C8174' }} onClick={() => file('trunk')}>{l.place === 'trunk' ? 'In the trunk' : 'Into trunk'}</button>
             </div>
-            <button className="btn block" style={{ background: '#F4EFE6', color: '#2B2622', borderColor: '#F4EFE6', fontWeight: 600 }} onClick={() => go(`write/${other.id}`)}>Write back</button>
+            <button className="btn block" style={{ background: '#F4EFE6', color: '#2B2622', borderColor: '#F4EFE6', fontWeight: 600 }} onClick={() => go(`write/${other.id}`)}>{hasDraft(other.id) ? 'Finish your reply' : 'Write back'}</button>
           </>
         )}
       </main>

@@ -922,3 +922,9 @@ body.ench .logbook { color: #2B2622 }
   .moment-card, .m-intro, .m-blank, .m-ink, .m-ripple, .m-after, .m-after2, .moment-dim, .stamp-banner, .stamp-banner-go svg { animation-duration: .01s !important; animation-delay: 0s !important }
   .m-tool { display: none }
 }
+
+/* A letter you left half-written, picked up again */
+.draft-note { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 10px 14px; font-size: 15px; color: var(--ink); font-style: italic }
+.draft-note small { display: block; font-style: normal; font-size: 13px; color: var(--muted) }
+.draft-note button { border: 0; background: none; color: var(--wax); font: inherit; font-style: normal; font-weight: 600; font-size: 14px; padding: 6px 2px; cursor: pointer; white-space: nowrap }
+.write-pick .draft-tag { font-size: 12px; color: var(--wax); font-style: italic; margin-top: -4px }

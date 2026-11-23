@@ -8,6 +8,7 @@ import FlightMap from '../components/FlightMap';
 import Logbook from './Logbook';
 import { ACHIEVEMENTS, useSealStats } from '../lib/achievements';
 import type { Incoming, Letter, Profile } from '../lib/types';
+import { hasDraft } from '../lib/drafts';
 
 export default function Friend({ id, section }: { id: string; section?: string }) {
   const { me, friend, letters, incoming, session, saveFriendSettings } = useStore();
@@ -145,7 +146,7 @@ export default function Friend({ id, section }: { id: string; section?: string }
         <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--muted)' }}>›</span>
       </button>
       <div className="foot">
-        <button className="btn primary" onClick={() => go(`write/${p.id}`)}>Write a letter</button>
+        <button className="btn primary" onClick={() => go(`write/${p.id}`)}>{hasDraft(p.id) ? 'Continue your letter' : 'Write a letter'}</button>
       </div>
     </main>
   );

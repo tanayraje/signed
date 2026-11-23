@@ -6,6 +6,7 @@ import { go } from '../lib/router';
 import { useStore } from '../lib/store';
 import { breedOf, cleanOutfit, owlLayers, perchOf, rankOf, type Outfit, type RankKey } from '../lib/owl';
 import { useUnseenStamps } from '../lib/achievements';
+import { hasDraft } from '../lib/drafts';
 
 /** A pressed wax seal: real wax image with the person's monogram embossed into it. */
 const ON_TOP = ['gold', 'glitter', 'twigs', 'petals', 'marigold', 'cornflower', 'forgetmenot', 'chamomile', 'babysbreath', 'lavender', 'feather'];
@@ -278,7 +279,7 @@ export function Nav({ on }: { on?: 'friends' | 'wall' | 'stamps' | 'profile' }) 
             <h2 style={{ fontSize: 18 }}>Write to</h2>
             <div className="write-pick">
               {friends.map(({ profile: p }) => (
-                <button key={p.id} onClick={() => go(`write/${p.id}`)}><Seal p={p} size={54} /><span>{p.name}</span></button>
+                <button key={p.id} onClick={() => go(`write/${p.id}`)}><Seal p={p} size={54} /><span>{p.name}</span>{hasDraft(p.id) && <span className="draft-tag">Draft waiting</span>}</button>
               ))}
             </div>
           </div>

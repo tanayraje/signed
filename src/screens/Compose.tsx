@@ -3,16 +3,15 @@ import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { go } from '../lib/router';
 import { randomQuestion } from '../lib/format';
-import { extFor, shrinkImage, upload } from '../lib/media';
+import { extFor, shrinkImage, signedUrl, upload } from '../lib/media';
+import { EMPTY_DRAFT, clearDraft, hasContent, readDraft, writeDraft, type Draft } from '../lib/drafts';
 import type { WordTiming } from '../lib/types';
 import { BUILT_IN_STAMPS, Icon, Seal, Stamp, stampAtSend } from '../components/bits';
 import Cutter from './Cutter';
 import SendOff from '../components/SendOff';
 import { setToAnswer, toAnswer, type ToAnswer } from '../lib/answers';
 
-interface Draft { body: string; caption?: string; question?: string | null; questions?: string[]; stamp: string; answers?: Record<string, string> }
 interface Photo { path: string; url: string; caption: string }
-const draftKey = (id: string) => `signed.draft.${id}`;
 
 type SpeechRec = { start: () => void; stop: () => void; continuous: boolean; interimResults: boolean; lang: string;
   onresult: ((e: { results: ArrayLike<{ 0: { transcript: string }; isFinal: boolean }> }) => void) | null };
@@ -20,16 +19,17 @@ type SpeechRec = { start: () => void; stop: () => void; continuous: boolean; int
 export default function Compose({ id }: { id: string }) {
   const { me, friend, session, stamps, say, refresh } = useStore();
   const uid = session!.user.id;
+  // A letter you walked away from opens again exactly where you left it.
+  const [saved] = useState(() => readDraft(id));
+  const [resumed, setResumed] = useState(() => hasContent(saved));
   const [draft, setDraft] = useState<Draft>(() => {
-    try {
-      const d = JSON.parse(localStorage.getItem(draftKey(id)) || '') as Draft;
-      return { ...d, questions: d.questions ?? (d.question ? [d.question] : []) };
-    } catch { return { body: '', questions: [], stamp: 'signed' }; }
+    const { photos: _p, audio: _a, video: _v, enchanted: _e, saved_at: _s, ...words } = saved ?? EMPTY_DRAFT;
+    return { ...EMPTY_DRAFT, ...words };
   });
-  const [enchanted, setEnchanted] = useState(false);
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [audio, setAudio] = useState<{ path: string; url: string; words: WordTiming[] } | null>(null);
-  const [video, setVideo] = useState<{ path: string; url: string } | null>(null);
+  const [enchanted, setEnchanted] = useState(() => Boolean(saved?.enchanted));
+  const [photos, setPhotos] = useState<Photo[]>(() => (saved?.photos ?? []).map((x) => ({ ...x, url: '' })));
+  const [audio, setAudio] = useState<{ path: string; url: string; words: WordTiming[] } | null>(() => saved?.audio ? { ...saved.audio, url: '' } : null);
+  const [video, setVideo] = useState<{ path: string; url: string } | null>(() => saved?.video ? { ...saved.video, url: '' } : null);
   const [recording, setRecording] = useState(false);
   const [mode, setMode] = useState<'voice' | 'video' | 'dictate'>('voice');
   const [dictating, setDictating] = useState(false);
@@ -42,7 +42,30 @@ export default function Compose({ id }: { id: string }) {
   const rec = useRef<MediaRecorder | null>(null);
   const speech = useRef<SpeechRec | null>(null);
 
-  useEffect(() => { try { localStorage.setItem(draftKey(id), JSON.stringify(draft)); } catch { /* storage full */ } }, [draft, id]);
+  // Everything on the page is kept as you go, so leaving (or the phone dying) never loses a line.
+  const sentRef = useRef(false);
+  useEffect(() => {
+    if (sentRef.current) return;
+    writeDraft(id, {
+      ...draft, enchanted,
+      photos: photos.map(({ path, caption }) => ({ path, caption })),
+      audio: audio ? { path: audio.path, words: audio.words } : null,
+      video: video ? { path: video.path } : null
+    });
+  }, [draft, enchanted, photos, audio, video, id]);
+  // Saved Polaroids and recordings live in storage; fetch fresh links to show them again.
+  useEffect(() => {
+    if (!saved) return;
+    let live = true;
+    (saved.photos ?? []).forEach(async (ph) => {
+      const url = await signedUrl(ph.path);
+      if (live && url) setPhotos((cur) => cur.map((x) => x.path === ph.path ? { ...x, url } : x));
+    });
+    if (saved.audio) void signedUrl(saved.audio.path).then((url) => { if (live && url) setAudio((a) => a && a.path === saved.audio!.path ? { ...a, url } : a); });
+    if (saved.video) void signedUrl(saved.video.path).then((url) => { if (live && url) setVideo((v) => v && v.path === saved.video!.path ? { ...v, url } : v); });
+    if (saved.audio) setMode('voice'); else if (saved.video) setMode('video');
+    return () => { live = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!recording) return;
     const t = window.setInterval(() => setElapsed((n) => n + 1), 1000);
@@ -58,6 +81,17 @@ export default function Compose({ id }: { id: string }) {
   if (!me || !f) return null;
   const p = f.profile;
   const set = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch });
+  const hasWork = hasContent({ ...draft, photos, audio, video });
+
+  function leave() {
+    if (hasWork && !sentRef.current) say(`Saved to drafts. It’ll be here next time you write to ${p.name}.`);
+    go(`friend/${id}`);
+  }
+  function startFresh() {
+    clearDraft(id, true);
+    setDraft({ ...EMPTY_DRAFT, stamp: draft.stamp });
+    setPhotos([]); setAudio(null); setVideo(null); setEnchanted(false); setResumed(false);
+  }
 
   // Enchanted letters carry one of three things: a voice note, a moving picture, or words you speak onto the page.
   async function startRecording() {
@@ -133,7 +167,8 @@ export default function Compose({ id }: { id: string }) {
       if (error?.message.includes('stamp')) { set({ stamp: 'signed' }); await refresh(); say('That stamp has already flown. Pick another.'); return; }
       say('Your letter did not send. Check your connection and try again.'); return;
     }
-    try { localStorage.removeItem(draftKey(id)); } catch { /* fine */ }
+    sentRef.current = true;
+    clearDraft(id);
     const done = new Set(answers.map((a) => a.key));
     setToAnswer(id, toAnswer(id).filter((q) => !done.has(q.key)));
     await refresh();
@@ -147,12 +182,19 @@ export default function Compose({ id }: { id: string }) {
     <main className="app">
       {enchanted && <Sparks />}
       <div className="top">
-        <button className="icon" onClick={() => go(`friend/${id}`)} aria-label="Back">{Icon.back}</button>
+        <button className="icon" onClick={leave} aria-label="Back">{Icon.back}</button>
         <h1 className="grow" style={{ fontSize: 24 }}>{enchanted ? `Speak to ${p.name}` : `Dear ${p.name}`}</h1>
         <button className="ench-switch" role="switch" aria-checked={enchanted} aria-label="Enchanted mode" onClick={() => setEnchanted(!enchanted)}>
           <span className="knob">{enchanted ? Icon.star : Icon.quill}</span>
         </button>
       </div>
+
+      {resumed && hasWork && (
+        <div className="draft-note" role="status">
+          <span className="grow">Picking up where you left off{saved?.saved_at ? <small>Saved {since(saved.saved_at)}</small> : null}</span>
+          <button onClick={startFresh}>Start fresh</button>
+        </div>
+      )}
 
       {enchanted && (() => {
         const locked = audio ? 'voice' : video ? 'video' : null;
@@ -175,7 +217,7 @@ export default function Compose({ id }: { id: string }) {
             {mode === 'voice' && (
               audio ? (
                 <div className="stack" style={{ gap: 10 }}>
-                  <audio src={audio.url} controls playsInline style={{ width: '100%' }} />
+                  <audio src={audio.url || undefined} controls playsInline style={{ width: '100%' }} />
                   <button className="chip ench-chip" onClick={() => setAudio(null)}>Remove howler</button>
                 </div>
               ) : (
@@ -193,7 +235,7 @@ export default function Compose({ id }: { id: string }) {
             {mode === 'video' && (
               video ? (
                 <div className="stack" style={{ gap: 10 }}>
-                  <video src={video.url} controls playsInline style={{ width: '100%', border: '6px solid #FDFCF8' }} />
+                  <video src={video.url || undefined} controls playsInline style={{ width: '100%', border: '6px solid #FDFCF8' }} />
                   <button className="chip ench-chip" onClick={() => setVideo(null)}>Remove moving picture</button>
                 </div>
               ) : (
@@ -246,7 +288,7 @@ export default function Compose({ id }: { id: string }) {
             {photos.map((ph, n) => (
               <figure key={ph.path} className="polaroid edit" style={{ transform: `rotate(${[3, -2, 2, -3][n % 4]}deg)` }}>
                 <button className="scrap-x" onClick={() => { setPhotos(photos.filter((x) => x.path !== ph.path)); void supabase.storage.from('mail').remove([ph.path]); }} aria-label="Remove this Polaroid">{Icon.close}</button>
-                <img src={ph.url} alt={ph.caption || 'Your Polaroid'} />
+                <img src={ph.url || undefined} alt={ph.caption || 'Your Polaroid'} />
                 <textarea className="pol-cap" rows={1} maxLength={90} value={ph.caption} placeholder="Write a little note"
                   aria-label="Note on the Polaroid" onInput={(e) => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = `${t.scrollHeight}px`; }} onChange={(e) => setPhotos(photos.map((x) => x.path === ph.path ? { ...x, caption: e.target.value } : x))} />
               </figure>
@@ -305,6 +347,16 @@ export default function Compose({ id }: { id: string }) {
   );
 }
 
+
+function since(t: number): string {
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 2) return 'a moment ago';
+  if (m < 60) return `${m} minutes ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return h === 1 ? 'an hour ago' : `${h} hours ago`;
+  const d = Math.round(h / 24);
+  return d === 1 ? 'yesterday' : `${d} days ago`;
+}
 
 export function Sparks() {
   const [dots] = useState(() => Array.from({ length: 22 }, () => ({ l: Math.random() * 100, t: Math.random() * 100, d: Math.random() * 3 })));
