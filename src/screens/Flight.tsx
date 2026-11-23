@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
-import { timeLeft } from '../lib/format';
+import { letterKind, timeLeft } from '../lib/format';
 import { km } from '../lib/geo';
 import { Icon, Owl, Seal } from '../components/bits';
 import FlightMap, { type MapOwl } from '../components/FlightMap';
@@ -30,13 +30,13 @@ export function PairMap({ friendId, focus }: { friendId: string; focus?: string 
   const out = letters.filter((x) => x.sender === uid && x.recipient === friendId && new Date(x.arrive_at).getTime() > now);
   const inc = incoming.filter((x) => x.sender === friendId && new Date(x.arrive_at).getTime() > now);
   const all = [
-    ...out.map((x) => ({ id: x.id, arrive: x.arrive_at, t: prog(x), out: true, ench: x.enchanted })),
-    ...inc.map((x) => ({ id: x.id, arrive: x.arrive_at, t: prog(x), out: false, ench: false }))
+    ...out.map((x) => ({ id: x.id, arrive: x.arrive_at, t: prog(x), out: true, ench: x.enchanted, kind: letterKind(x) })),
+    ...inc.map((x) => ({ id: x.id, arrive: x.arrive_at, t: prog(x), out: false, ench: false, kind: 'letter' }))
   ].sort((a, b) => (a.id === focus ? -1 : b.id === focus ? 1 : a.arrive.localeCompare(b.arrive)));
   const owls: MapOwl[] = all.map((o) => ({
     t: o.t, back: !o.out, ench: o.ench, breed: o.out ? me.breed : p.breed, wax: o.out ? me.wax : p.wax, name: o.out ? me.owl_name : p.owl_name,
-    note: o.out ? `Carrying your letter to ${p.name} · lands in ${timeLeft(o.arrive)}` : `Carrying a letter to you · lands in ${timeLeft(o.arrive)}`,
-    alt: o.out ? `${me.owl_name} carrying your letter` : `${p.owl_name} carrying a letter to you`
+    note: o.out ? `Carrying your ${o.kind} to ${p.name} · lands in ${timeLeft(o.arrive)}` : `Carrying a letter to you · lands in ${timeLeft(o.arrive)}`,
+    alt: o.out ? `${me.owl_name} carrying your ${o.kind}` : `${p.owl_name} carrying a letter to you`
   }));
 
   const has = me.last_lat != null && p.last_lat != null;

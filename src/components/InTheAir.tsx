@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
-import { timeLeft } from '../lib/format';
+import { letterKind, timeLeft } from '../lib/format';
 import { Owl, Seal } from './bits';
 import { owlAt, whereabouts } from '../lib/geo';
 import type { Profile } from '../lib/types';
 
-export interface Flight { id: string; friendId: string; out: boolean; sent_at: string; arrive_at: string }
+export interface Flight { id: string; friendId: string; out: boolean; kind: string; sent_at: string; arrive_at: string }
 
 /** Every letter flying right now, both ways, soonest first. */
 export function useFlights(): Flight[] {
@@ -16,9 +16,9 @@ export function useFlights(): Flight[] {
   const uid = session?.user.id;
   const now = Date.now();
   const out = letters.filter((l) => l.sender === uid && new Date(l.arrive_at).getTime() > now)
-    .map((l) => ({ id: l.id, friendId: l.recipient, out: true, sent_at: l.sent_at, arrive_at: l.arrive_at }));
+    .map((l) => ({ id: l.id, friendId: l.recipient, out: true, kind: letterKind(l), sent_at: l.sent_at, arrive_at: l.arrive_at }));
   const inc = incoming.filter((l) => new Date(l.arrive_at).getTime() > now)
-    .map((l) => ({ id: l.id, friendId: l.sender, out: false, sent_at: l.sent_at, arrive_at: l.arrive_at }));
+    .map((l) => ({ id: l.id, friendId: l.sender, out: false, kind: 'letter', sent_at: l.sent_at, arrive_at: l.arrive_at }));
   return [...out, ...inc].sort((a, b) => new Date(a.arrive_at).getTime() - new Date(b.arrive_at).getTime());
 }
 

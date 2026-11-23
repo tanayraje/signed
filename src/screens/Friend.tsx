@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { go } from '../lib/router';
-import { ago, timeLeft } from '../lib/format';
+import { ago, letterKind, timeLeft } from '../lib/format';
 import { km } from '../lib/geo';
 import { Icon, Owl, PATINA, Seal, Stamp, patinaStage } from '../components/bits';
 import FlightMap from '../components/FlightMap';
@@ -56,7 +56,7 @@ export default function Friend({ id, section }: { id: string; section?: string }
     hero = (
       <button className="stone stack center" onClick={() => go(`flight/${out[0].id}`)} style={{ alignItems: 'center', padding: '20px 16px', gap: 8, border: 0, width: '100%' }}>
         <Owl p={me} width={56} />
-        <span>{me.owl_name} is carrying your letter to {p.name}.</span>
+        <span>{me.owl_name} is carrying your {letterKind(out[0])} to {p.name}.</span>
         <span className="small muted">Lands in {timeLeft(out[0].arrive_at)}. Tap to watch.</span>
       </button>
     );
@@ -74,7 +74,7 @@ export default function Friend({ id, section }: { id: string; section?: string }
   const prog = (l: { sent_at: string; arrive_at: string }) => Math.max(0, Math.min(1, (now - new Date(l.sent_at).getTime()) / (new Date(l.arrive_at).getTime() - new Date(l.sent_at).getTime() || 1)));
   const flight = inc[0] ? { l: inc[0], out: false } : out[0] ? { l: out[0], out: true } : null;
   const owls = [
-    ...out.map((l) => ({ t: prog(l), breed: me.breed, wax: me.wax, ench: l.enchanted, alt: `${me.owl_name} flying your letter to ${p.name}` })),
+    ...out.map((l) => ({ t: prog(l), breed: me.breed, wax: me.wax, ench: l.enchanted, alt: `${me.owl_name} flying your ${letterKind(l)} to ${p.name}` })),
     ...inc.map((l) => ({ t: prog(l), back: true, breed: p.breed, wax: p.wax, alt: `${p.owl_name} flying a letter to you` }))
   ];
   const mapEl = me.last_lat != null && p.last_lat != null

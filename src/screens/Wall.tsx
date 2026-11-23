@@ -142,7 +142,7 @@ function WallCallouts() {
         <button className="callout" onClick={() => go('friends')}>
           <Owl p={next.out ? me : nf} width={36} />
           <span className="grow stack" style={{ gap: 0 }}>
-            <span style={{ fontWeight: 600 }}>{flights.length === 1 ? (next.out ? `Your letter to ${nf.name} is in the air` : `${nf.name}’s letter is in the air`) : `${flights.length} letters in the air`}</span>
+            <span style={{ fontWeight: 600 }}>{flights.length === 1 ? (next.out ? `Your ${next.kind} to ${nf.name} is in the air` : `${nf.name}’s letter is in the air`) : `${flights.length} letters in the air`}</span>
             <span className="small owl-where">
               {(() => { const w = flightWhere(next, me, nf); return w && <span>{next.out ? me.owl_name : nf.owl_name} is {w}</span>; })()}
               <span>{next.out ? `Lands with ${nf.name}` : 'Reaches you'} in {timeLeft(next.arrive_at)}{flights.length > 1 ? ', the next one' : ''}</span>

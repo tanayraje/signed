@@ -32,3 +32,11 @@ export const QUESTIONS = [
   'What should we do next time we meet?'
 ];
 export const randomQuestion = () => QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+
+/** What kind of letter this is, in words: a howler, a moving picture, talking ink, or just a letter. */
+export function letterKind(l: { audio_path?: string | null; video_path?: string | null; enchanted?: boolean | null }): string {
+  if (l.audio_path) return 'howler';
+  if (l.video_path) return 'moving picture';
+  if (l.enchanted) return 'talking ink';
+  return 'letter';
+}
